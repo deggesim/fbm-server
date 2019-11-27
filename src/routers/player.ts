@@ -6,7 +6,7 @@ import Player from '../schemas/player';
 const playerRouter: Router = new Router<IPlayer>();
 
 playerRouter.get('/players', async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const players: IPlayer[] = await Player.find();
+    const players: IPlayer[] = await Player.find().populate('role');
     console.log(players);
 
     ctx.body = players;
