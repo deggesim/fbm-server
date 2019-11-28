@@ -2,6 +2,11 @@
   "name": "fbm-server",
   "version": "3.0.0",
   "description": "Fantabasket Manager",
+  "author": "Simone De Gennaro",
+  "engines": {
+    "node": "10.16.1",
+    "npm": "6.9.0"
+  },
   "main": "index.js",
   "scripts": {
     "build": "tsc --rootDir ./src/",
@@ -41,7 +46,5 @@
     "ts-node": "^8.5.0",
     "tslint": "^5.20.1",
     "typescript": "^3.7.2"
-  },
-  "author": "Simone De Gennaro",
-  "license": "ISC"
+  }
 }
