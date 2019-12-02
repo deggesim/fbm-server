@@ -1,5 +1,20 @@
-import { model, Schema } from 'mongoose';
-import { IPlayer } from '../models/player';
+import { model, Model, Schema } from 'mongoose';
+import { IPlayerDocument } from './player-document';
+
+/**
+ * Estensione del Document per l'aggiunta di metodi d'istanza
+ */
+// tslint:disable-next-line: no-empty-interface
+export interface IPlayer extends IPlayerDocument {
+    // metodi d'istanza
+}
+
+/**
+ * Estensione del Model per l'aggiunta di metodi statici
+ */
+export interface IPlayerModel extends Model<IPlayer> {
+    // metodi statici
+}
 
 const playerSchema = new Schema<IPlayer>({
     name: {
@@ -42,6 +57,6 @@ const playerSchema = new Schema<IPlayer>({
     timestamps: true,
 });
 
-const Player = model<IPlayer>('Player', playerSchema);
+const Player = model<IPlayer, IPlayerModel>('Player', playerSchema);
 
 export default Player;

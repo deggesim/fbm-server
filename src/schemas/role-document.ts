@@ -1,6 +1,6 @@
 import { Document } from 'mongoose';
 
-export interface IRole extends Document {
+export interface IRoleDocument extends Document {
     name: string;
     shortName: string;
     spot: number[];

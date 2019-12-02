@@ -1,12 +1,12 @@
 import { Document } from 'mongoose';
-import { IRole } from './role';
+import { IRoleDocument } from './role-document';
 
-export interface IPlayer extends Document {
+export interface IPlayerDocument extends Document {
     name: string;
     nationality: string;
     number: string;
     yearBirth: number;
     height: number;
     weight: number;
-    role: IRole['_id'];
+    role: IRoleDocument['_id'];
 }

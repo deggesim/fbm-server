@@ -1,40 +1,34 @@
 import { model, Model, Schema } from 'mongoose';
-import { IRoleDocument } from './role-document';
+import { ILeagueDocument, RoundRobinFormatEnum } from './league-document';
+import * as _ from 'lodash';
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
  */
 // tslint:disable-next-line: no-empty-interface
-export interface IRole extends IRoleDocument {
+export interface ILeague extends ILeagueDocument {
     // metodi d'istanza
 }
 
 /**
  * Estensione del Model per l'aggiunta di metodi statici
  */
-export interface IRoleModel extends Model<IRole> {
+export interface ILeagueModel extends Model<ILeague> {
     // metodi statici
 }
 
-const roleSchema = new Schema<IRoleDocument>({
+const leagueSchema = new Schema<ILeagueDocument>({
     name: {
         type: String,
         required: true,
         trim: true,
     },
-    shortName: {
+    roundRobinFormat: {
         type: String,
         required: true,
-        trim: true,
-    },
-    spot: [{
-        type: Number,
-        required: true,
-        min: 1,
-        max: 12,
-    }],
+    }
 });
 
-const Role = model<IRole, IRoleModel>('Role', roleSchema);
+const League = model<ILeague, ILeagueModel>('League', leagueSchema);
 
-export default Role;
+export default League;
