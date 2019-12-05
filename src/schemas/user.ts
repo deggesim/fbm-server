@@ -39,15 +39,15 @@ const userSchema = new Schema<IUser>({
         trim: true,
         validate: (value: string) => !value.toLowerCase().includes('password'),
     },
+    admin: {
+        type: Boolean,
+        required: true,
+    },
     leagues: [{
         league: {
             type: Number,
             required: true,
             ref: 'League',
-        },
-        admin: {
-            type: Boolean,
-            required: true,
         },
     }],
     tokens: [{
