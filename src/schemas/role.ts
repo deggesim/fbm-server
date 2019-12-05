@@ -33,6 +33,11 @@ const roleSchema = new Schema<IRoleDocument>({
         min: 1,
         max: 12,
     }],
+    league: {
+        type: Number,
+        required: true,
+        ref: 'League',
+    },
 });
 
 const Role = model<IRole, IRoleModel>('Role', roleSchema);

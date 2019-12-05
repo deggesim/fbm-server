@@ -53,6 +53,11 @@ const playerSchema = new Schema<IPlayer>({
         required: true,
         ref: 'Role',
     },
+    league: {
+        type: Number,
+        required: true,
+        ref: 'League',
+    },
 }, {
     timestamps: true,
 });

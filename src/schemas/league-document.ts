@@ -1,21 +1,18 @@
 import { Document } from 'mongoose';
+import { CupFormat } from './formats/cup-format';
+import { PlayoffFormat } from './formats/playoff-format';
+import { PlayoutFormat } from './formats/playout-format';
+import { RegularSeasonFormat } from './formats/regular-season-format';
 
 export interface ILeagueDocument extends Document {
     name: string;
-    roundRobinFormat: RoundRobinFormatEnum;
-    playoffFormat: string;
-    playoutFormat: string;
-    cupFormat: string;
+    regularSeasonFormat: RegularSeasonFormat;
+    playoffFormat: PlayoffFormat;
+    playoutFormat: PlayoutFormat;
+    cupFormat: CupFormat;
     realGames: number;
     roundRobinFirstRealFixture: number;
     playoffFirstRealFixture: number;
     playoutFirstRealFixture: number;
     cupFirstRealFixture: number;
-}
-
-export enum RoundRobinFormatEnum {
-    Single = 'Girone unico',
-    Double = 'Girone andata e ritorno',
-    DoublePlus = 'Girone andata e ritorno più girone unico',
-    TwoDouble = 'Doppio girone andata e ritorno',
 }

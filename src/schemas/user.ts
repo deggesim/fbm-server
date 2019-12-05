@@ -37,15 +37,18 @@ const userSchema = new Schema<IUser>({
         required: true,
         minlength: 7,
         trim: true,
-        validate: (value: string) => value.toLowerCase().includes('password'),
-    },
-    admin: {
-        type: Boolean,
-        required: true,
+        validate: (value: string) => !value.toLowerCase().includes('password'),
     },
     leagues: [{
-        type: Number,
-        required: true,
+        league: {
+            type: Number,
+            required: true,
+            ref: 'League',
+        },
+        admin: {
+            type: Boolean,
+            required: true,
+        },
     }],
     tokens: [{
         type: String,
@@ -66,7 +69,9 @@ userSchema.methods.toJSON = function() {
 
 userSchema.methods.generateAuthToken = async function() {
     const user = this;
-    const token = jwt.sign({ _id: user._id.toString() }, String(process.env.PUBLIC_KEY));
+    const token = jwt.sign({ _id: user._id.toString() }, String(process.env.PUBLIC_KEY), {
+        expiresIn: '14d',
+      });
     user.tokens = user.tokens.concat(token);
     await user.save();
 
@@ -78,7 +83,12 @@ userSchema.statics.findByCredentials = async (email: string, password: string) =
     if (!user) {
         throw new Error('Email o password errate');
     }
+    console.log('password', password);
+    console.log('user.password', user.password);
+
     const isMatch = await bcrypt.compare(password, user.password);
+
+    console.log('isMatch', isMatch);
 
     if (!isMatch) {
         throw new Error('Email o password errate');
@@ -86,6 +96,16 @@ userSchema.statics.findByCredentials = async (email: string, password: string) =
 
     return user;
 };
+
+// Hash the plain text password before saving
+userSchema.pre<IUser>('save', async function (next) {
+    const user = this;
+    if (user.isModified('password')) {
+        user.password = await bcrypt.hash(user.password, 8);
+    }
+
+    next();
+});
 
 const User = model<IUser, IUserModel>('User', userSchema);
 
