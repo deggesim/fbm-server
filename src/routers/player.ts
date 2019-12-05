@@ -1,7 +1,7 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
+import { IPlayerDocument } from '../schemas/documents/player-document';
 import Player from '../schemas/player';
-import { IPlayerDocument } from '../schemas/player-document';
 
 const playerRouter: Router = new Router<IPlayerDocument>();
 

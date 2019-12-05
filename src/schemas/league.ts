@@ -1,9 +1,5 @@
 import { model, Model, Schema } from 'mongoose';
-import { CupFormat } from './formats/cup-format';
-import { PlayoffFormat } from './formats/playoff-format';
-import { PlayoutFormat } from './formats/playout-format';
-import { RegularSeasonFormat } from './formats/regular-season-format';
-import { ILeagueDocument } from './league-document';
+import { ILeagueDocument } from './documents/league-document';
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza

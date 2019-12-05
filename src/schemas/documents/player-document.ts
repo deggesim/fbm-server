@@ -1,7 +1,7 @@
-import { Document } from 'mongoose';
 import { IRoleDocument } from './role-document';
+import { ITenantDocument } from './tenant-document';
 
-export interface IPlayerDocument extends Document {
+export interface IPlayerDocument extends ITenantDocument {
     name: string;
     nationality: string;
     number: string;

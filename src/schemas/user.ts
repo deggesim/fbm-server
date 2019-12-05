@@ -2,7 +2,7 @@ import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { model, Model, Schema } from 'mongoose';
 import validator from 'validator';
-import { IUserDocument } from './user-document';
+import { IUserDocument } from './documents/user-document';
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza

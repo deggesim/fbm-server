@@ -1,7 +1,7 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
+import { IRoleDocument } from '../schemas/documents/role-document';
 import Role from '../schemas/role';
-import { IRoleDocument } from '../schemas/role-document';
 
 const roleRouter: Router = new Router<IRoleDocument>();
 

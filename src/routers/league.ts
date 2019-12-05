@@ -1,7 +1,7 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
+import { ILeagueDocument } from '../schemas/documents/league-document';
 import League from '../schemas/league';
-import { ILeagueDocument } from '../schemas/league-document';
 
 const leagueRouter: Router = new Router<ILeagueDocument>();
 

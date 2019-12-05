@@ -1,5 +1,5 @@
 import { model, Model, Schema } from 'mongoose';
-import { IPlayerDocument } from './player-document';
+import { IPlayerDocument } from './documents/player-document';
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza

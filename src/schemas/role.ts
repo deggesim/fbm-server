@@ -1,5 +1,5 @@
 import { model, Model, Schema } from 'mongoose';
-import { IRoleDocument } from './role-document';
+import { IRoleDocument } from './documents/role-document';
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
