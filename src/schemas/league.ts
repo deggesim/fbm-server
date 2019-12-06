@@ -17,89 +17,109 @@ export interface ILeagueModel extends Model<ILeague> {
 }
 
 const leagueSchema = new Schema<ILeagueDocument>({
-    _id: {
-        type: Number,
-        required: true,
-    },
     name: {
         type: String,
         required: true,
         trim: true,
     },
     regularSeasonFormat: {
-        label: {
+        key: {
             type: String,
             required: true,
         },
-        rounds: {
-            type: Number,
-            required: true,
+        value: {
+            label: {
+                type: String,
+                required: true,
+            },
+            rounds: {
+                type: Number,
+                required: true,
+            },
         },
     },
     playoffFormat: {
-        label: {
+        key: {
             type: String,
             required: true,
         },
-        games: {
-            type: Number,
-            required: true,
-        },
-        qfGames: {
-            type: Number,
-        },
-        sfGames: {
-            type: Number,
-            required: true,
-        },
-        fGames: {
-            type: Number,
-            required: true,
+        value: {
+            label: {
+                type: String,
+                required: true,
+            },
+            games: {
+                type: Number,
+                required: true,
+            },
+            qfGames: {
+                type: Number,
+            },
+            sfGames: {
+                type: Number,
+                required: true,
+            },
+            fGames: {
+                type: Number,
+                required: true,
+            },
         },
     },
     playoutFormat: {
-        label: {
+        key: {
             type: String,
             required: true,
         },
-        games: {
-            type: Number,
-            required: true,
-        },
-        rounds: {
-            type: Number,
-        },
-        roundRobinTeams: {
-            type: Number,
-        },
-        sfGames: {
-            type: Number,
-        },
-        fGames: {
-            type: Number,
-            required: true,
+        value: {
+            label: {
+                type: String,
+                required: true,
+            },
+            games: {
+                type: Number,
+                required: true,
+            },
+            rounds: {
+                type: Number,
+            },
+            roundRobinTeams: {
+                type: Number,
+            },
+            sfGames: {
+                type: Number,
+            },
+            fGames: {
+                type: Number,
+                required: true,
+            },
         },
     },
     cupFormat: {
-        label: {
+        key: {
             type: String,
             required: true,
         },
-        games: {
-            type: Number,
-            required: true,
-        },
-        qfRoundTrip: {
-            type: Boolean,
-            required: true,
-        },
-        sfRoundTrip: {
-            type: Boolean,
-            required: true,
-        },
-        fRoundTrip: {
-            type: Boolean,
-            required: true,
+        value: {
+            label: {
+                type: String,
+                required: true,
+            },
+            games: {
+                type: Number,
+                required: true,
+            },
+            qfRoundTrip: {
+                type: Boolean,
+                required: true,
+            },
+            sfRoundTrip: {
+                type: Boolean,
+                required: true,
+            },
+            fRoundTrip: {
+                type: Boolean,
+                required: true,
+            },
         },
     },
     realGames: {
@@ -125,7 +145,8 @@ const leagueSchema = new Schema<ILeagueDocument>({
     parameters: [{
         parameter: {
             type: String,
-            enum: ['DRAFT',
+            enum: [
+                'DRAFT',
                 'MAX_CONTRACTS',
                 'MAX_EXT_OPT_345',
                 'MAX_PLAYERS_IN_ROSTER',
@@ -144,7 +165,7 @@ const leagueSchema = new Schema<ILeagueDocument>({
             required: true,
         },
     }],
-}, { _id: false });
+});
 
 const League = model<ILeague, ILeagueModel>('League', leagueSchema);
 

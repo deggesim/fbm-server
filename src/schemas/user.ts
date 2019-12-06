@@ -58,7 +58,7 @@ const userSchema = new Schema<IUser>({
     timestamps: true,
 });
 
-userSchema.methods.toJSON = function() {
+userSchema.methods.toJSON = function () {
     const user = this;
     const userObject = user.toObject();
 
@@ -67,11 +67,11 @@ userSchema.methods.toJSON = function() {
     return userObject;
 };
 
-userSchema.methods.generateAuthToken = async function() {
+userSchema.methods.generateAuthToken = async function () {
     const user = this;
     const token = jwt.sign({ _id: user._id.toString() }, String(process.env.PUBLIC_KEY), {
         expiresIn: '14d',
-      });
+    });
     user.tokens = user.tokens.concat(token);
     await user.save();
 
@@ -83,13 +83,7 @@ userSchema.statics.findByCredentials = async (email: string, password: string) =
     if (!user) {
         throw new Error('Email o password errate');
     }
-    console.log('password', password);
-    console.log('user.password', user.password);
-
     const isMatch = await bcrypt.compare(password, user.password);
-
-    console.log('isMatch', isMatch);
-
     if (!isMatch) {
         throw new Error('Email o password errate');
     }

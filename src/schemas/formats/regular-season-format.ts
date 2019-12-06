@@ -1,5 +1,5 @@
 // tslint:disable-next-line: interface-over-type-literal
-type RoundRobinType = {
+type RegularSeasonType = {
     label: string;
     rounds: number;
 };
@@ -25,8 +25,8 @@ export class RegularSeasonFormat {
     // private to disallow creating other instances of this type
     private constructor(
         private readonly key: string,
-        public readonly value: RoundRobinType,
-    ) {}
+        public readonly value: RegularSeasonType,
+    ) { }
 
     public toString() {
         return this.key;

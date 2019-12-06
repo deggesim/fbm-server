@@ -23,13 +23,10 @@ const freeRouter: Router = new Router<IUser>();
 freeRouter.post('/users', async (ctx: Router.IRouterContext) => {
     try {
         const newUser: IUser = ctx.request.body;
-        console.log('newUser', newUser);
         const user = await User.create(newUser);
-        console.log('user', user);
         ctx.body = user;
         ctx.status = 201;
     } catch (error) {
-        console.log(error);
         ctx.throw(400, 'Impossibile creare un nuovo utente');
     }
 });

@@ -7,7 +7,6 @@ const playerRouter: Router = new Router<IPlayerDocument>();
 
 playerRouter.get('/players', async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const players: IPlayerDocument[] = await Player.find().populate('role');
-    console.log(players);
 
     ctx.body = players;
 });
