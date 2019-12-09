@@ -4,7 +4,7 @@ import User, { IUser } from '../schemas/user';
 const userRouter: Router = new Router<IUser>();
 
 userRouter.get('/users', async (ctx: Router.IRouterContext) => {
-    const users = User.find();
+    const users = await User.find();
     ctx.body = users;
 });
 

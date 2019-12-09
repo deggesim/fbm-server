@@ -49,9 +49,40 @@ const playerSchema = new Schema<IPlayer>({
         max: 199,
     },
     role: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'Role',
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+            enum: [
+                'Playmaker',
+                'Play/Guardia',
+                'Guardia',
+                'Guardia/Ala',
+                'Ala',
+                'Ala/Centro',
+                'Centro',
+            ],
+        },
+        shortName: {
+            type: String,
+            required: true,
+            trim: true,
+            enum: [
+                'P',
+                'P/G',
+                'G',
+                'G/A',
+                'A',
+                'A/C',
+                'C',
+            ],
+        },
+        spot: [{
+            type: Number,
+            required: true,
+            min: 1,
+            max: 12,
+        }],
     },
     league: {
         type: Number,

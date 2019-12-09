@@ -84,3 +84,33 @@ export class PlayoutFormat {
         return this.key;
     }
 }
+
+export const playoutFormat = {
+    key: {
+        type: String,
+        required: true,
+    },
+    value: {
+        label: {
+            type: String,
+            required: true,
+        },
+        games: {
+            type: Number,
+            required: true,
+        },
+        rounds: {
+            type: Number,
+        },
+        roundRobinTeams: {
+            type: Number,
+        },
+        sfGames: {
+            type: Number,
+        },
+        fGames: {
+            type: Number,
+            required: true,
+        },
+    },
+};

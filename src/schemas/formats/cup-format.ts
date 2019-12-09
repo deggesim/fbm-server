@@ -47,3 +47,32 @@ export class CupFormat {
         return this.key;
     }
 }
+
+export const cupFormat = {
+    key: {
+        type: String,
+        required: true,
+    },
+    value: {
+        label: {
+            type: String,
+            required: true,
+        },
+        games: {
+            type: Number,
+            required: true,
+        },
+        qfRoundTrip: {
+            type: Boolean,
+            required: true,
+        },
+        sfRoundTrip: {
+            type: Boolean,
+            required: true,
+        },
+        fRoundTrip: {
+            type: Boolean,
+            required: true,
+        },
+    },
+};

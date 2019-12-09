@@ -6,7 +6,7 @@ import * as Router from 'koa-router';
 import './db/mongoose';
 import leagueRouter from './routers/league';
 import playerRouter from './routers/player';
-import roleRouter from './routers/role';
+import userRouter from './routers/user';
 import User, { IUser } from './schemas/user';
 
 const app: Koa = new Koa();
@@ -27,6 +27,7 @@ freeRouter.post('/users', async (ctx: Router.IRouterContext) => {
         ctx.body = user;
         ctx.status = 201;
     } catch (error) {
+        console.log(error);
         ctx.throw(400, 'Impossibile creare un nuovo utente');
     }
 });
@@ -46,8 +47,18 @@ app.use(freeRouter.routes());
 // Middleware below this line is only reached if JWT token is valid
 app.use(jwt({ secret: String(process.env.PUBLIC_KEY) }));
 
+// memorizzo i dati del token nella request
+app.use(async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    const token = ctx.request.header.authorization.replace('Bearer ', '');
+    const id = ctx.state.user.id;
+    const user = await User.findById(id);
+    ctx.state.user = user;
+    ctx.state.token = token;
+    await next();
+});
+
+app.use(userRouter.routes());
 app.use(leagueRouter.routes());
-app.use(roleRouter.routes());
 app.use(playerRouter.routes());
 app.use(router.allowedMethods());
 console.log(`Started listening on port ${process.env.PORT}...`);

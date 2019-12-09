@@ -78,3 +78,31 @@ export class PlayoffFormat {
         return this.key;
     }
 }
+
+export const playoffFormat = {
+    key: {
+        type: String,
+        required: true,
+    },
+    value: {
+        label: {
+            type: String,
+            required: true,
+        },
+        games: {
+            type: Number,
+            required: true,
+        },
+        qfGames: {
+            type: Number,
+        },
+        sfGames: {
+            type: Number,
+            required: true,
+        },
+        fGames: {
+            type: Number,
+            required: true,
+        },
+    },
+};

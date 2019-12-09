@@ -35,9 +35,8 @@ const userSchema = new Schema<IUser>({
     password: {
         type: String,
         required: true,
-        minlength: 7,
+        minlength: 8,
         trim: true,
-        validate: (value: string) => !value.toLowerCase().includes('password'),
     },
     admin: {
         type: Boolean,
@@ -60,8 +59,8 @@ const userSchema = new Schema<IUser>({
 
 userSchema.methods.toJSON = function () {
     const user = this;
+    console.log('user', user);
     const userObject = user.toObject();
-
     delete userObject.password;
     delete userObject.tokens;
     return userObject;
@@ -69,12 +68,11 @@ userSchema.methods.toJSON = function () {
 
 userSchema.methods.generateAuthToken = async function () {
     const user = this;
-    const token = jwt.sign({ _id: user._id.toString() }, String(process.env.PUBLIC_KEY), {
+    const token = jwt.sign({ id: user._id.toString() }, String(process.env.PUBLIC_KEY), {
         expiresIn: '14d',
     });
     user.tokens = user.tokens.concat(token);
     await user.save();
-
     return Promise.resolve(token);
 };
 

@@ -32,3 +32,20 @@ export class RegularSeasonFormat {
         return this.key;
     }
 }
+
+export const regularSeasonFormat = {
+    key: {
+        type: String,
+        required: true,
+    },
+    value: {
+        label: {
+            type: String,
+            required: true,
+        },
+        rounds: {
+            type: Number,
+            required: true,
+        },
+    },
+};

@@ -1,4 +1,3 @@
-import { IRoleDocument } from './role-document';
 import { ITenantDocument } from './tenant-document';
 
 export interface IPlayerDocument extends ITenantDocument {
@@ -8,5 +7,9 @@ export interface IPlayerDocument extends ITenantDocument {
     yearBirth: number;
     height: number;
     weight: number;
-    role: IRoleDocument['_id'];
+    role: {
+        name: string;
+        shortName: string;
+        spot: number[];
+    };
 }
