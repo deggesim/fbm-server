@@ -1,8 +1,8 @@
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
-import { model, Model, Schema } from 'mongoose';
+import { HookNextFunction, model, Model, Schema } from 'mongoose';
 import validator from 'validator';
-import { IUserDocument } from './documents/user-document';
+import { IUserDocument } from './documents/user.document';
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -43,11 +43,9 @@ const userSchema = new Schema<IUser>({
         required: true,
     },
     leagues: [{
-        league: {
-            type: Number,
-            required: true,
-            ref: 'League',
-        },
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'League',
     }],
     tokens: [{
         type: String,
@@ -59,7 +57,6 @@ const userSchema = new Schema<IUser>({
 
 userSchema.methods.toJSON = function () {
     const user = this;
-    console.log('user', user);
     const userObject = user.toObject();
     delete userObject.password;
     delete userObject.tokens;
@@ -68,7 +65,7 @@ userSchema.methods.toJSON = function () {
 
 userSchema.methods.generateAuthToken = async function () {
     const user = this;
-    const token = jwt.sign({ id: user._id.toString() }, String(process.env.PUBLIC_KEY), {
+    const token = jwt.sign({ _id: user._id.toString() }, String(process.env.PUBLIC_KEY), {
         expiresIn: '14d',
     });
     user.tokens = user.tokens.concat(token);
@@ -90,7 +87,7 @@ userSchema.statics.findByCredentials = async (email: string, password: string) =
 };
 
 // Hash the plain text password before saving
-userSchema.pre<IUser>('save', async function (next) {
+userSchema.pre<IUser>('save', async function (next: HookNextFunction) {
     const user = this;
     if (user.isModified('password')) {
         user.password = await bcrypt.hash(user.password, 8);

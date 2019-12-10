@@ -1,4 +1,4 @@
-import { ITenantDocument } from './tenant-document';
+import { ITenantDocument } from './tenant.document';
 
 export interface IPlayerDocument extends ITenantDocument {
     name: string;
