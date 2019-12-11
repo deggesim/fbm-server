@@ -38,9 +38,14 @@ const userSchema = new Schema<IUser>({
         minlength: 8,
         trim: true,
     },
-    admin: {
-        type: Boolean,
+    role: {
+        type: String,
         required: true,
+        enum: [
+            'User',
+            'Admin',
+            'SuperAdmin',
+        ],
     },
     leagues: [{
         type: Schema.Types.ObjectId,

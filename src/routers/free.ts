@@ -16,7 +16,8 @@ freeRouter.post('/users', async (ctx: Router.IRouterContext) => {
 
 freeRouter.post('/users/login', async (ctx: Router.IRouterContext) => {
     try {
-        const user = await User.findByCredentials(ctx.request.body.email, ctx.request.body.password);
+        const user: IUser = await User.findByCredentials(ctx.request.body.email, ctx.request.body.password);
+        await user.populate('leagues').execPopulate();
         const token = await user.generateAuthToken();
         user.tokens = user.tokens.concat(token);
         ctx.body = { user, token };

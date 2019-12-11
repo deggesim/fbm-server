@@ -5,7 +5,7 @@ export interface IUserDocument extends Document {
     name: string;
     email: string;
     password: string;
-    amdin: boolean;
+    role: string;
     leagues: Array<ILeagueDocument['id']>;
     tokens: string[];
 }

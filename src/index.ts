@@ -8,7 +8,7 @@ import freeRouter from './routers/free';
 import leagueRouter from './routers/league';
 import playerRouter from './routers/player';
 import userRouter from './routers/user';
-import User from './schemas/user';
+import User, { IUser } from './schemas/user';
 
 const app: Koa = new Koa();
 const router: Router = new Router();
@@ -27,10 +27,11 @@ app.use(jwt({ secret: String(process.env.PUBLIC_KEY) }));
 
 // memorizzo i dati del token nella request
 app.use(async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const token = ctx.request.header.authorization.replace('Bearer ', '');
     const id = ctx.state.user._id;
-    const user = await User.findById(id);
+    const user: IUser = await User.findById(id) as IUser;
     ctx.state.user = user;
+
+    const token: string = ctx.request.header.authorization.replace('Bearer ', '');
     ctx.state.token = token;
     await next();
 });

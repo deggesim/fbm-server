@@ -1,11 +1,11 @@
 import { model, Model, Schema } from 'mongoose';
-import { fantasyTeam, IFantasyTeamDocument } from './documents/fantasy-team.document';
+import { fantasyTeam } from './documents/fantasy-team.document';
 import { ILeagueDocument } from './documents/league.document';
+import { team } from './documents/team.document';
 import { cupFormat } from './formats/cup-format';
 import { playoffFormat } from './formats/playoff-format';
 import { playoutFormat } from './formats/playout-format';
 import { regularSeasonFormat } from './formats/regular-season-format';
-import * as _ from 'lodash';
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -76,6 +76,7 @@ const leagueSchema = new Schema<ILeagueDocument>({
         },
     }],
     fantasyTeams: [fantasyTeam],
+    teams: [team],
 });
 
 const League = model<ILeague, ILeagueModel>('League', leagueSchema);
