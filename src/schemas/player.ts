@@ -16,7 +16,7 @@ export interface IPlayerModel extends Model<IPlayer> {
     // metodi statici
 }
 
-const playerSchema = new Schema<IPlayer>({
+const schema = new Schema<IPlayer>({
     name: {
         type: String,
         required: true,
@@ -85,7 +85,7 @@ const playerSchema = new Schema<IPlayer>({
         }],
     },
     league: {
-        type: Number,
+        type: Schema.Types.ObjectId,
         required: true,
         ref: 'League',
     },
@@ -93,6 +93,6 @@ const playerSchema = new Schema<IPlayer>({
     timestamps: true,
 });
 
-const Player = model<IPlayer, IPlayerModel>('Player', playerSchema);
+const Player = model<IPlayer, IPlayerModel>('Player', schema);
 
 export default Player;

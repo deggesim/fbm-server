@@ -18,7 +18,7 @@ export interface IUserModel extends Model<IUser> {
     findByCredentials: (email: string, password: string) => Promise<IUser>;
 }
 
-const userSchema = new Schema<IUser>({
+const schema = new Schema<IUser>({
     name: {
         type: String,
         required: true,
@@ -47,20 +47,25 @@ const userSchema = new Schema<IUser>({
             'SuperAdmin',
         ],
     },
+    tokens: [{
+        type: String,
+        required: true,
+    }],
+    fantasyTeams: [{
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'FantasyTeam',
+    }],
     leagues: [{
         type: Schema.Types.ObjectId,
         required: true,
         ref: 'League',
     }],
-    tokens: [{
-        type: String,
-        required: true,
-    }],
 }, {
     timestamps: true,
 });
 
-userSchema.methods.toJSON = function () {
+schema.methods.toJSON = function () {
     const user = this;
     const userObject = user.toObject();
     delete userObject.password;
@@ -68,7 +73,7 @@ userSchema.methods.toJSON = function () {
     return userObject;
 };
 
-userSchema.methods.generateAuthToken = async function () {
+schema.methods.generateAuthToken = async function () {
     const user = this;
     const token = jwt.sign({ _id: user._id.toString() }, String(process.env.PUBLIC_KEY), {
         expiresIn: '14d',
@@ -78,7 +83,7 @@ userSchema.methods.generateAuthToken = async function () {
     return Promise.resolve(token);
 };
 
-userSchema.statics.findByCredentials = async (email: string, password: string) => {
+schema.statics.findByCredentials = async (email: string, password: string) => {
     const user = await User.findOne({ email });
     if (!user) {
         throw new Error('Email o password errate');
@@ -92,7 +97,7 @@ userSchema.statics.findByCredentials = async (email: string, password: string) =
 };
 
 // Hash the plain text password before saving
-userSchema.pre<IUser>('save', async function (next: HookNextFunction) {
+schema.pre<IUser>('save', async function (next: HookNextFunction) {
     const user = this;
     if (user.isModified('password')) {
         user.password = await bcrypt.hash(user.password, 8);
@@ -101,6 +106,6 @@ userSchema.pre<IUser>('save', async function (next: HookNextFunction) {
     next();
 });
 
-const User = model<IUser, IUserModel>('User', userSchema);
+const User = model<IUser, IUserModel>('User', schema);
 
 export default User;

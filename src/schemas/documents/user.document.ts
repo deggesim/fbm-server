@@ -1,4 +1,5 @@
 import { Document } from 'mongoose';
+import { IFantasyTeamDocument } from './fantasy-team.document';
 import { ILeagueDocument } from './league.document';
 
 export interface IUserDocument extends Document {
@@ -6,6 +7,7 @@ export interface IUserDocument extends Document {
     email: string;
     password: string;
     role: string;
-    leagues: Array<ILeagueDocument['id']>;
     tokens: string[];
+    fantasyTeams: Array<IFantasyTeamDocument['id']>;
+    leagues: Array<ILeagueDocument['id']>;
 }

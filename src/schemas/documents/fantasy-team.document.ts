@@ -1,9 +1,8 @@
-import { Document, Schema } from 'mongoose';
-import { IUserDocument } from './user.document';
+import { IFormationDocument } from './formation.document';
+import { ITenantDocument } from './tenant.document';
 
-export interface IFantasyTeamDocument extends Document {
+export interface IFantasyTeamDocument extends ITenantDocument {
     name: string;
-    owners: Array<IUserDocument['id']>;
     initialBalance: number;
     outgo: number;
     totalContracts: number;
@@ -11,52 +10,5 @@ export interface IFantasyTeamDocument extends Document {
     extraPlayers: number;
     pointsPenalty: number;
     balancePenalty: number;
+    formation: Array<IFormationDocument['id']>;
 }
-
-export const fantasyTeam = {
-    name: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    owners: [{
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'User',
-    }],
-    initialBalance: {
-        type: Number,
-        required: true,
-        default: 200,
-    },
-    outgo: {
-        type: Number,
-        required: true,
-        default: 0,
-    },
-    totalContracts: {
-        type: Number,
-        required: true,
-        default: 0,
-    },
-    playersInRoster: {
-        type: Number,
-        required: true,
-        default: 0,
-    },
-    extraPlayers: {
-        type: Number,
-        required: true,
-        default: 0,
-    },
-    pointsPenalty: {
-        type: Number,
-        required: true,
-        default: 0,
-    },
-    balancePenalty: {
-        type: Number,
-        required: true,
-        default: 0,
-    },
-};

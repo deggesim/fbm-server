@@ -1,6 +1,6 @@
-import { Document } from 'mongoose';
+import { ITenantDocument } from './tenant.document';
 
-export interface ITeamDocument extends Document {
+export interface ITeamDocument extends ITenantDocument {
     fullName: string;
     sponsor: string;
     name: string;
@@ -8,32 +8,3 @@ export interface ITeamDocument extends Document {
     abbreviation: string;
     real: boolean;
 }
-
-export const team = {
-    fullName: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    sponsor: {
-        type: String,
-        trim: true,
-    },
-    name: {
-        type: String,
-        trim: true,
-    },
-    city: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    abbreviation: {
-        type: String,
-        trim: true,
-    },
-    real: {
-        type: Boolean,
-        required: true,
-    },
-};

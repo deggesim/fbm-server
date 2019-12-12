@@ -27,7 +27,6 @@ leagueRouter.post('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next)
                 await user.save();
             }
         }
-
     }
 
     ctx.body = league;

@@ -27,3 +27,16 @@ export class RoundFormat {
         return this.key;
     }
 }
+
+export const roundFormat = {
+    key: {
+        type: String,
+        required: true,
+    },
+    value: {
+        label: {
+            type: String,
+            required: true,
+        },
+    },
+};

@@ -1,11 +1,10 @@
 import { model, Model, Schema } from 'mongoose';
-import { fantasyTeam } from './documents/fantasy-team.document';
 import { ILeagueDocument } from './documents/league.document';
-import { team } from './documents/team.document';
 import { cupFormat } from './formats/cup-format';
 import { playoffFormat } from './formats/playoff-format';
 import { playoutFormat } from './formats/playout-format';
 import { regularSeasonFormat } from './formats/regular-season-format';
+
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -22,7 +21,7 @@ export interface ILeagueModel extends Model<ILeague> {
     // metodi statici
 }
 
-const leagueSchema = new Schema<ILeagueDocument>({
+const schema = new Schema<ILeagueDocument>({
     name: {
         type: String,
         required: true,
@@ -75,10 +74,8 @@ const leagueSchema = new Schema<ILeagueDocument>({
             required: true,
         },
     }],
-    fantasyTeams: [fantasyTeam],
-    teams: [team],
 });
 
-const League = model<ILeague, ILeagueModel>('League', leagueSchema);
+const League = model<ILeague, ILeagueModel>('League', schema);
 
 export default League;

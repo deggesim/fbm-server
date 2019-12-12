@@ -20,12 +20,8 @@ userRouter.get('/users/me', async (ctx: Router.IRouterContext) => {
 userRouter.post('/users/logout', async (ctx: Router.IRouterContext) => {
     const id = ctx.state.user._id;
     const token = ctx.state.token;
-    console.log('id', id);
-    console.log('token', token);
     const user: IUser = await User.findById(id) as IUser;
-    console.log('user.tokens BEFORE', user.tokens);
     user.tokens = user.tokens.filter((userToken: string) => userToken !== token);
-    console.log('user.tokens AFTER', user.tokens);
     await user.save();
     ctx.body = null;
 });
