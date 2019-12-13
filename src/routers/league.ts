@@ -12,10 +12,26 @@ leagueRouter.get('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next) 
     ctx.body = leagues;
 });
 
+leagueRouter.get('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    const league = await League.findById(ctx.params.id);
+    ctx.body = league;
+});
+
 leagueRouter.post('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const newLeague: ILeagueDocument = ctx.request.body;
     const league: ILeague = await League.create(newLeague);
     ctx.body = league;
+});
+
+leagueRouter.patch('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    const updatedLeague: ILeagueDocument = ctx.request.body;
+    const leagueToUpdate = await League.findById(ctx.params.id) as ILeague;
+    if (!leagueToUpdate) {
+        ctx.throw(404, 'Lega non trovata');
+    }
+    leagueToUpdate.set(updatedLeague);
+    leagueToUpdate.save();
+    ctx.body = leagueToUpdate;
 });
 
 leagueRouter.post('/leagues/:id/fantasy-teams', async (ctx: Router.IRouterContext, next: Koa.Next) => {
