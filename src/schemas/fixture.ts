@@ -16,7 +16,7 @@ export interface IFixtureModel extends Model<IFixtureDocument> {
     // metodi statici
 }
 
-const schema = new Schema<IFixtureDocument>({
+const schema = new Schema<IFixture>({
     name: {
         type: String,
         required: true,
@@ -31,6 +31,11 @@ const schema = new Schema<IFixtureDocument>({
         required: true,
         default: false,
     },
+    matches: [{
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'Match',
+    }]
     league: {
         type: Schema.Types.ObjectId,
         required: true,

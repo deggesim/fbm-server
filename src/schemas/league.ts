@@ -21,7 +21,7 @@ export interface ILeagueModel extends Model<ILeague> {
     // metodi statici
 }
 
-const schema = new Schema<ILeagueDocument>({
+const schema = new Schema<ILeague>({
     name: {
         type: String,
         required: true,
@@ -74,6 +74,7 @@ const schema = new Schema<ILeagueDocument>({
             required: true,
         },
     }],
+
 });
 
 const League = model<ILeague, ILeagueModel>('League', schema);

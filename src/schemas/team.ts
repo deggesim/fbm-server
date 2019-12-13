@@ -16,7 +16,7 @@ export interface ITeamModel extends Model<ITeam> {
     // metodi statici
 }
 
-const schema = new Schema<ITeamDocument>({
+const schema = new Schema<ITeam>({
     fullName: {
         type: String,
         required: true,

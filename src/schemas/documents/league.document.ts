@@ -3,6 +3,7 @@ import { CupFormat } from '../formats/cup-format';
 import { PlayoffFormat } from '../formats/playoff-format';
 import { PlayoutFormat } from '../formats/playout-format';
 import { RegularSeasonFormat } from '../formats/regular-season-format';
+import { IFantasyTeamDocument } from './fantasy-team.document';
 
 export interface ILeagueDocument extends Document {
     name: string;
@@ -19,4 +20,5 @@ export interface ILeagueDocument extends Document {
         parameter: string;
         value: number;
     }];
+    fantasyTeams: Array<IFantasyTeamDocument['id']>;
 }

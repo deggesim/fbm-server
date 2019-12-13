@@ -16,7 +16,7 @@ export interface IFantasyTeamModel extends Model<IFantasyTeam> {
     // metodi statici
 }
 
-const schema = new Schema<IFantasyTeamDocument>({
+const schema = new Schema<IFantasyTeam>({
     name: {
         type: String,
         required: true,
@@ -61,6 +61,11 @@ const schema = new Schema<IFantasyTeamDocument>({
         type: Schema.Types.ObjectId,
         required: true,
         ref: 'Formation',
+    }],
+    owners: [{
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'User',
     }],
     league: {
         type: Schema.Types.ObjectId,

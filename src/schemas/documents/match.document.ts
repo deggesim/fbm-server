@@ -2,8 +2,8 @@ import { IFantasyTeamDocument } from './fantasy-team.document';
 import { ITenantDocument } from './tenant.document';
 
 export interface IMatchDocument extends ITenantDocument {
-    homeTeam: IFantasyTeamDocument;
-    awayTeam: IFantasyTeamDocument;
+    homeTeam: IFantasyTeamDocument['id'];
+    awayTeam: IFantasyTeamDocument['id'];
     homeRanking: number;
     homeRanking40Min: number;
     awayRanking: number;

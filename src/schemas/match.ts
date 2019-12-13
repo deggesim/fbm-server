@@ -16,7 +16,7 @@ export interface IMatchModel extends Model<IMatch> {
     // metodi statici
 }
 
-const schema = new Schema<IMatchDocument>({
+const schema = new Schema<IMatch>({
     homeTeam: {
         type: Schema.Types.ObjectId,
         required: true,

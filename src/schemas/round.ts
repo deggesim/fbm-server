@@ -17,7 +17,7 @@ export interface IRoundModel extends Model<IRound> {
     // metodi statici
 }
 
-const schema = new Schema<IRoundDocument>({
+const schema = new Schema<IRound>({
     name: {
         type: String,
         required: true,

@@ -17,7 +17,7 @@ export interface ICompetitionModel extends Model<ICompetitionDocument> {
     // metodi statici
 }
 
-const schema = new Schema<ICompetitionDocument>({
+const schema = new Schema<ICompetition>({
     name: {
         type: String,
         required: true,

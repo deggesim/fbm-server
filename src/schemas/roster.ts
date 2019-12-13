@@ -16,7 +16,7 @@ export interface IFantasyRosterModel extends Model<IRoster> {
     // metodi statici
 }
 
-const schema = new Schema<IRosterDocument>({
+const schema = new Schema<IRoster>({
     team: {
         type: Schema.Types.ObjectId,
         required: true,

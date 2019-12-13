@@ -16,7 +16,7 @@ export interface IFormationModel extends Model<IFormationDocument> {
     // metodi statici
 }
 
-const schema = new Schema<IFormationDocument>({
+const schema = new Schema<IFormation>({
     spot: {
         type: Number,
         required: true,

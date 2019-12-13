@@ -16,7 +16,7 @@ export interface IPerformanceModel extends Model<IPerformance> {
     // metodi statici
 }
 
-const schema = new Schema<IPerformanceDocument>({
+const schema = new Schema<IPerformance>({
     player: {
         type: Schema.Types.ObjectId,
         required: true,

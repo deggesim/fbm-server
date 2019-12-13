@@ -16,7 +16,7 @@ export interface IRealFixtureModel extends Model<IRealFixture> {
     // metodi statici
 }
 
-const schema = new Schema<IRealFixtureDocument>({
+const schema = new Schema<IRealFixture>({
     name: {
         type: String,
         required: true,
