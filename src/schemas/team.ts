@@ -42,6 +42,7 @@ const schema = new Schema<ITeam>({
     real: {
         type: Boolean,
         required: true,
+        default: true,
     },
     league: {
         type: Schema.Types.ObjectId,

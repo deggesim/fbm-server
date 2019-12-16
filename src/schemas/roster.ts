@@ -36,6 +36,7 @@ const schema = new Schema<IRoster>({
         draft: {
             type: Boolean,
             required: true,
+            default: false,
         },
         contract: {
             type: Number,

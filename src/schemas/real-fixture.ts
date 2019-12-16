@@ -23,6 +23,7 @@ const schema = new Schema<IRealFixture>({
     },
     prepared: {
         type: Boolean,
+        deafault: false,
     },
     performances: [{
         type: Schema.Types.ObjectId,

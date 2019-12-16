@@ -65,14 +65,17 @@ export const cupFormat = {
         qfRoundTrip: {
             type: Boolean,
             required: true,
+            default: false,
         },
         sfRoundTrip: {
             type: Boolean,
             required: true,
+            efault: false,
         },
         fRoundTrip: {
             type: Boolean,
             required: true,
+            efault: false,
         },
     },
 };

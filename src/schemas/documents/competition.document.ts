@@ -3,7 +3,7 @@ import { ITenantDocument } from './tenant.document';
 
 export interface ICompetitionDocument extends ITenantDocument {
     name: string;
-    prepared: boolean;
+    completed: boolean;
     rounds: Array<IRoundDocument['id']>;
 }
 

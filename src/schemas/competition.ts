@@ -22,7 +22,7 @@ const schema = new Schema<ICompetition>({
         type: String,
         required: true,
     },
-    prepared: {
+    completed: {
         type: Boolean,
         required: true,
         default: false,

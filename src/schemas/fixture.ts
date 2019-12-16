@@ -35,7 +35,7 @@ const schema = new Schema<IFixture>({
         type: Schema.Types.ObjectId,
         required: true,
         ref: 'Match',
-    }]
+    }],
     league: {
         type: Schema.Types.ObjectId,
         required: true,
