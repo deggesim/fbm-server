@@ -9,19 +9,19 @@ type PlayoutType = {
 };
 
 export class PlayoutFormat {
-    public static readonly SF3F5 = new PlayoutFormat('SF3F5', {
+    public static readonly SF3_F5 = new PlayoutFormat('SF3_F5', {
         label: 'Semifinali al meglio delle 3, spareggio al meglio delle 5',
         games: 8,
         sfGames: 3,
         fGames: 5,
     });
-    public static readonly SF5F5 = new PlayoutFormat('SF5F5', {
+    public static readonly SF5_F5 = new PlayoutFormat('SF5_F5', {
         label: 'Semifinali al meglio delle 5, spareggio al meglio delle 5',
         games: 10,
         sfGames: 5,
         fGames: 5,
     });
-    public static readonly SRR4SF3F5 = new PlayoutFormat('SRR4SF3F5', {
+    public static readonly SRR4_SF3_F5 = new PlayoutFormat('SRR4_SF3_F5', {
         label: 'Girone unico a 4, semifinali al meglio delle 3, spareggio al meglio delle 5',
         games: 11,
         rounds: 1,
@@ -29,7 +29,7 @@ export class PlayoutFormat {
         sfGames: 3,
         fGames: 5,
     });
-    public static readonly SRR4SF5F5 = new PlayoutFormat('SRR4SF5F5', {
+    public static readonly SRR4_SF5_F5 = new PlayoutFormat('SRR4_SF5_F5', {
         label: 'Girone unico a 4, semifinali al meglio delle 5, spareggio al meglio delle 5',
         games: 13,
         rounds: 1,
@@ -37,7 +37,7 @@ export class PlayoutFormat {
         sfGames: 5,
         fGames: 5,
     });
-    public static readonly DRR4SF3F5 = new PlayoutFormat('DRR4SF3F5', {
+    public static readonly DRR4_SF3_F5 = new PlayoutFormat('DRR4_SF3_F5', {
         label: 'Girone andata e ritorno a 4, semifinali al meglio delle 3, spareggio al meglio delle 5',
         games: 14,
         rounds: 2,
@@ -45,7 +45,7 @@ export class PlayoutFormat {
         sfGames: 3,
         fGames: 5,
     });
-    public static readonly DRR4SF5F5 = new PlayoutFormat('DRR4SF5F5', {
+    public static readonly DRR4_SF5_F5 = new PlayoutFormat('DRR4_SF5_F5', {
         label: 'Girone andata e ritorno a 4, semifinali al meglio delle 4, spareggio al meglio delle 5',
         games: 16,
         rounds: 2,
@@ -53,21 +53,21 @@ export class PlayoutFormat {
         sfGames: 5,
         fGames: 5,
     });
-    public static readonly SRR4F5 = new PlayoutFormat('SRR4F5', {
+    public static readonly SRR4_F5 = new PlayoutFormat('SRR4_F5', {
         label: 'Girone unico a 4, spareggio al meglio delle 5',
         games: 8,
         rounds: 1,
         roundRobinTeams: 4,
         fGames: 5,
     });
-    public static readonly DRR4F5 = new PlayoutFormat('DRR4F5', {
+    public static readonly DRR4_F5 = new PlayoutFormat('DRR4_F5', {
         label: 'Girone unico a 4, semifinali al meglio delle 3, spareggio al meglio delle 5',
         games: 11,
         rounds: 2,
         roundRobinTeams: 4,
         fGames: 5,
     });
-    public static readonly SF5F7 = new PlayoutFormat('SF5F7', {
+    public static readonly SF5_F7 = new PlayoutFormat('SF5_F7', {
         label: 'Semifinali al meglio delle 5, spareggio al meglio delle 7',
         games: 12,
         roundRobinTeams: 5,

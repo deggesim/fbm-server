@@ -121,13 +121,7 @@ games.set(20, [
     [0, 15, 18, 3, 16, 19, 5, 1, 11, 17, 12, 6, 10, 9, 8, 13, 4, 14, 2, 7],
 ]);
 
-export const createStaticMatchList = async (
-    idLeague: number,
-    rounds: number,
-    fixtures: IFixture[],
-    fantasyTeams: IFantasyTeam[],
-) => {
-    const matches: IMatch[] = [];
+export const roundRobinMatchList = async (idLeague: number, rounds: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]) => {
     const numTeams = fantasyTeams.length;
     // get static calendar
     const teamsSlots = games.get(numTeams);
@@ -140,10 +134,9 @@ export const createStaticMatchList = async (
                 awayTeam: fantasyTeams[teamsSlots[g][i + 1]],
                 league: idLeague,
             };
-            const createdMatch: IMatch = await Match.create(match);
-            matches.push(createdMatch);
+            const newMatch: IMatch = await Match.create(match);
+            fixture.matches.push(newMatch);
         }
-        fixture.matches.push(matches);
         fixture.save();
     }
 
@@ -157,11 +150,41 @@ export const createStaticMatchList = async (
                     awayTeam: fantasyTeams[teamsSlots[g][i]],
                     league: idLeague,
                 };
-                const createdMatch: IMatch = await Match.create(match);
-                matches.push(createdMatch);
+                const newMatch: IMatch = await Match.create(match);
+                fixture.matches.push(newMatch);
             }
-            fixture.matches.push(matches);
             fixture.save();
         }
+    }
+};
+
+export const playoffMatchList = async (idLeague: number, rounds: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]) => {
+    const size = fantasyTeams.length;
+    const upperSublist = fantasyTeams.slice(0, size / 2);
+    const lowerSublist = fantasyTeams.slice(size / 2, size);
+    for (let i = 0; i < fixtures.length; i++) {
+        const fixture = fixtures[i];
+        for (let j = 0; j < size / 2; j++) {
+            if (i % 2 === 0) {
+                // i pari
+                const match = {
+                    homeTeam: upperSublist[j],
+                    awayTeam: lowerSublist[size / 2 - (j + 1)],
+                    league: idLeague,
+                };
+                const newMatch: IMatch = await Match.create(match);
+                fixture.matches.push(newMatch);
+            } else {
+                // i dispari: inverto squadra di casa con la squadra in trasferta
+                const match = {
+                    homeTeam: lowerSublist[size / 2 - (j + 1)],
+                    awayTeam: upperSublist[j],
+                    league: idLeague,
+                };
+                const newMatch: IMatch = await Match.create(match);
+                fixture.matches.push(newMatch);
+            }
+        }
+        fixture.save();
     }
 };

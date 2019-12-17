@@ -6,7 +6,6 @@ import { ITenant } from './league';
 
 interface IRoundDocument extends ITenant {
     name: string;
-    roundFormat: RoundFormat;
     completed: boolean;
     homeFactor: number;
     fantasyTeam: Array<IFantasyTeam['_id']>;
@@ -33,7 +32,6 @@ const schema = new Schema<IRound>({
         type: String,
         required: true,
     },
-    roundFormat,
     completed: {
         type: Boolean,
         required: true,
@@ -42,6 +40,7 @@ const schema = new Schema<IRound>({
     homeFactor: {
         type: Number,
         required: true,
+        default: 0,
     },
     fantasyTeams: [{
         type: Schema.Types.ObjectId,

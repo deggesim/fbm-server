@@ -4,11 +4,13 @@ import * as jwt from 'koa-jwt';
 import * as logger from 'koa-logger';
 import * as Router from 'koa-router';
 import './db/mongoose';
+import competitionRouter from './routers/competition';
+import fantasyTeamRouter from './routers/fantasy-team';
 import freeRouter from './routers/free';
 import leagueRouter from './routers/league';
 import playerRouter from './routers/player';
 import userRouter from './routers/user';
-import User, { IUser } from './schemas/user';
+import { IUser, User } from './schemas/user';
 
 const app: Koa = new Koa();
 const router: Router = new Router();
@@ -38,6 +40,8 @@ app.use(async (ctx: Router.IRouterContext, next: Koa.Next) => {
 
 app.use(userRouter.routes());
 app.use(leagueRouter.routes());
+app.use(fantasyTeamRouter.routes());
+app.use(competitionRouter.routes());
 app.use(playerRouter.routes());
 app.use(router.allowedMethods());
 console.log(`Started listening on port ${process.env.PORT}...`);

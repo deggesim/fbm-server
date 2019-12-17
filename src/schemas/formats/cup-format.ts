@@ -15,21 +15,21 @@ export class CupFormat {
         sfRoundTrip: false,
         fRoundTrip: false,
     });
-    public static readonly QF2F4 = new CupFormat('QF2F4', {
+    public static readonly QF2_F4 = new CupFormat('QF2_F4', {
         label: 'Quarti andata e ritorno, final 4',
         games: 4,
         qfRoundTrip: true,
         sfRoundTrip: false,
         fRoundTrip: false,
     });
-    public static readonly QF2SF2F = new CupFormat('QF2SF2F', {
+    public static readonly QF2_SF2_F = new CupFormat('QF2_SF2_F', {
         label: 'Quarti andata e ritorno, semifinali andata e ritorno, finale',
         games: 5,
         qfRoundTrip: true,
         sfRoundTrip: true,
         fRoundTrip: false,
     });
-    public static readonly QF2SF2F2 = new CupFormat('QF2SF2F2', {
+    public static readonly QF2_SF2_F2 = new CupFormat('QF2_SF2_F2', {
         label: 'Quarti andata e ritorno, semifinali andata e ritorno, finale andata e ritorno',
         games: 6,
         qfRoundTrip: true,

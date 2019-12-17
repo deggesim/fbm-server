@@ -1,4 +1,6 @@
 import { Document, model, Model, Schema } from 'mongoose';
+import { createCup, createPlayoff, createPlayout, createRegularSeason, populateCompetition, populateRealFixture } from '../util/new-season.util';
+import { FantasyTeam } from './fantasy-team';
 import { cupFormat, CupFormat } from './formats/cup-format';
 import { playoffFormat, PlayoffFormat } from './formats/playoff-format';
 import { playoutFormat, PlayoutFormat } from './formats/playout-format';
@@ -31,6 +33,7 @@ export interface ITenant extends Document {
 // tslint:disable-next-line: no-empty-interface
 export interface ILeague extends ILeagueDocument {
     // metodi d'istanza
+    populateLeague: () => Promise<ILeague>;
 }
 
 /**
@@ -95,5 +98,17 @@ const schema = new Schema<ILeague>({
     }],
 
 });
+
+schema.methods.populateLeague = async function () {
+    const league = this;
+    await populateCompetition(league);
+    const realFixtures = await populateRealFixture(league);
+    const fantasyTeams = await FantasyTeam.find({ league: league.id });
+    await createRegularSeason(league, realFixtures, fantasyTeams);
+    await createPlayoff(league, realFixtures);
+    await createPlayout(league, realFixtures);
+    await createCup(league, realFixtures);
+    return Promise.resolve(league);
+};
 
 export const League = model<ILeague, ILeagueModel>('League', schema);
