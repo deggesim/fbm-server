@@ -1,5 +1,5 @@
 import * as Router from 'koa-router';
-import User, { IUser } from '../schemas/user';
+import { IUser, User } from '../schemas/user';
 
 const freeRouter: Router = new Router<IUser>();
 freeRouter.post('/users', async (ctx: Router.IRouterContext) => {

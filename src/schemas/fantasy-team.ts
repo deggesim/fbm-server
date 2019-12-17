@@ -1,5 +1,20 @@
 import { Model, model, Schema } from 'mongoose';
-import { IFantasyTeamDocument } from './documents/fantasy-team.document';
+import { IFormation } from './formation';
+import { ITenant } from './league';
+import { IUser } from './user';
+
+interface IFantasyTeamDocument extends ITenant {
+    name: string;
+    initialBalance: number;
+    outgo: number;
+    totalContracts: number;
+    playersInRoster: number;
+    extraPlayers: number;
+    pointsPenalty: number;
+    balancePenalty: number;
+    formations: Array<IFormation['_id']>;
+    owners: Array<IUser['_id']>;
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -74,6 +89,4 @@ const schema = new Schema<IFantasyTeam>({
     },
 });
 
-const FantasyTeam = model<IFantasyTeam, IFantasyTeamModel>('FantasyTeam', schema);
-
-export default FantasyTeam;
+export const FantasyTeam = model<IFantasyTeam, IFantasyTeamModel>('FantasyTeam', schema);

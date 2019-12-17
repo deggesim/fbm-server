@@ -1,10 +1,29 @@
-import { model, Model, Schema } from 'mongoose';
-import { ILeagueDocument } from './documents/league.document';
-import { cupFormat } from './formats/cup-format';
-import { playoffFormat } from './formats/playoff-format';
-import { playoutFormat } from './formats/playout-format';
-import { regularSeasonFormat } from './formats/regular-season-format';
+import { Document, model, Model, Schema } from 'mongoose';
+import { cupFormat, CupFormat } from './formats/cup-format';
+import { playoffFormat, PlayoffFormat } from './formats/playoff-format';
+import { playoutFormat, PlayoutFormat } from './formats/playout-format';
+import { regularSeasonFormat, RegularSeasonFormat } from './formats/regular-season-format';
 
+interface ILeagueDocument extends Document {
+    name: string;
+    regularSeasonFormat: RegularSeasonFormat;
+    playoffFormat: PlayoffFormat;
+    playoutFormat: PlayoutFormat;
+    cupFormat: CupFormat;
+    realGames: number;
+    roundRobinFirstRealFixture: number;
+    playoffFirstRealFixture: number;
+    playoutFirstRealFixture: number;
+    cupFirstRealFixture: number;
+    parameters: [{
+        parameter: string;
+        value: number;
+    }];
+}
+
+export interface ITenant extends Document {
+    league: ILeague['_id'];
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -77,6 +96,4 @@ const schema = new Schema<ILeague>({
 
 });
 
-const League = model<ILeague, ILeagueModel>('League', schema);
-
-export default League;
+export const League = model<ILeague, ILeagueModel>('League', schema);

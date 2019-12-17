@@ -1,8 +1,19 @@
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
-import { HookNextFunction, model, Model, Schema } from 'mongoose';
+import { Document, HookNextFunction, model, Model, Schema } from 'mongoose';
 import validator from 'validator';
-import { IUserDocument } from './documents/user.document';
+import { IFantasyTeam } from './fantasy-team';
+import { ILeague } from './league';
+
+interface IUserDocument extends Document {
+    name: string;
+    email: string;
+    password: string;
+    role: string;
+    tokens: string[];
+    fantasyTeams: Array<IFantasyTeam['_id']>;
+    leagues: Array<ILeague['id']>;
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -106,6 +117,4 @@ schema.pre<IUser>('save', async function (next: HookNextFunction) {
     next();
 });
 
-const User = model<IUser, IUserModel>('User', schema);
-
-export default User;
+export const User = model<IUser, IUserModel>('User', schema);

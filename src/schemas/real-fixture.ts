@@ -1,5 +1,16 @@
 import { Model, model, Schema } from 'mongoose';
-import { IRealFixtureDocument } from './documents/real-fixture.document';
+import { IFixture } from './fixture';
+import { ITenant } from './league';
+import { IPerformance } from './performance';
+import { IRoster } from './roster';
+
+interface IRealFixtureDocument extends ITenant {
+    name: string;
+    prepared: boolean;
+    performances: Array<IPerformance['_id']>;
+    fixtures: Array<IFixture['_id']>;
+    rosters: Array<IRoster['_id']>;
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -47,6 +58,4 @@ const schema = new Schema<IRealFixture>({
     },
 });
 
-const RealFixture = model<IRealFixture, IRealFixtureModel>('RealFixture', schema);
-
-export default RealFixture;
+export const RealFixture = model<IRealFixture, IRealFixtureModel>('RealFixture', schema);

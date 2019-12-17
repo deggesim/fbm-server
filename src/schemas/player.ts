@@ -1,5 +1,19 @@
 import { model, Model, Schema } from 'mongoose';
-import { IPlayerDocument } from './documents/player.document';
+import { ITenant } from './league';
+
+interface IPlayerDocument extends ITenant {
+    name: string;
+    nationality: string;
+    number: string;
+    yearBirth: number;
+    height: number;
+    weight: number;
+    role: {
+        name: string;
+        shortName: string;
+        spot: number[];
+    };
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -93,6 +107,4 @@ const schema = new Schema<IPlayer>({
     timestamps: true,
 });
 
-const Player = model<IPlayer, IPlayerModel>('Player', schema);
-
-export default Player;
+export const Player = model<IPlayer, IPlayerModel>('Player', schema);

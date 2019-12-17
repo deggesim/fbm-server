@@ -1,11 +1,10 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
-import { IFantasyTeamDocument } from '../schemas/documents/fantasy-team.document';
-import FantasyTeam, { IFantasyTeam } from '../schemas/fantasy-team';
-import League, { ILeague } from '../schemas/league';
-import User, { IUser } from '../schemas/user';
+import { FantasyTeam, IFantasyTeam } from '../schemas/fantasy-team';
+import { ILeague, League } from '../schemas/league';
+import { IUser, User } from '../schemas/user';
 
-const fantasyTeamRouter: Router = new Router<IFantasyTeamDocument>();
+const fantasyTeamRouter: Router = new Router<IFantasyTeam>();
 
 fantasyTeamRouter.post('/fantasy-teams', async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await League.findById(ctx.query.id) as ILeague;
@@ -45,7 +44,7 @@ fantasyTeamRouter.get('/fantasy-teams', async (ctx: Router.IRouterContext, next:
 });
 
 fantasyTeamRouter.patch('/fantasy-teams/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const updatedFantasyTeam: IFantasyTeamDocument = ctx.request.body;
+    const updatedFantasyTeam: IFantasyTeam = ctx.request.body;
     const fantasyTeamToUpdate = await FantasyTeam.findById(ctx.params.id) as IFantasyTeam;
     if (!fantasyTeamToUpdate) {
         ctx.throw(404, 'Fantasquadra non trovata');

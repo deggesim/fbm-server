@@ -1,5 +1,18 @@
 import { Model, model, Schema } from 'mongoose';
-import IRosterDocument from './documents/roster.document';
+import { ITenant } from './league';
+import { IPlayer } from './player';
+import { ITeam } from './team';
+
+interface IRosterDocument extends ITenant {
+    team: ITeam;
+    player: IPlayer;
+    fantasyRoster: {
+        status: string;
+        draft: boolean;
+        contract: number;
+        yearContract: number;
+    };
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -54,6 +67,4 @@ const schema = new Schema<IRoster>({
     },
 });
 
-const FantasyRoster = model<IRoster, IFantasyRosterModel>('FantasyRoster', schema);
-
-export default FantasyRoster;
+export const FantasyRoster = model<IRoster, IFantasyRosterModel>('FantasyRoster', schema);

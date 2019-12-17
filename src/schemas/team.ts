@@ -1,5 +1,14 @@
 import { Model, model, Schema } from 'mongoose';
-import { ITeamDocument } from './documents/team.document';
+import { ITenant } from './league';
+
+interface ITeamDocument extends ITenant {
+    fullName: string;
+    sponsor: string;
+    name: string;
+    city: string;
+    abbreviation: string;
+    real: boolean;
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -51,6 +60,4 @@ const schema = new Schema<ITeam>({
     },
 });
 
-const Team = model<ITeam, ITeamModel>('Team', schema);
-
-export default Team;
+export const Team = model<ITeam, ITeamModel>('Team', schema);

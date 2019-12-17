@@ -1,6 +1,12 @@
 import { Model, model, Schema } from 'mongoose';
-import ICompetitionDocument from './documents/competition.document';
-import { roundFormat } from './formats/round-format';
+import { ITenant } from './league';
+import { IRound } from './round';
+
+interface ICompetitionDocument extends ITenant {
+    name: string;
+    completed: boolean;
+    rounds: Array<IRound['_id']>;
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -39,6 +45,4 @@ const schema = new Schema<ICompetition>({
     },
 });
 
-const Competition = model<ICompetition, ICompetitionModel>('Competition', schema);
-
-export default Competition;
+export const Competition = model<ICompetition, ICompetitionModel>('Competition', schema);

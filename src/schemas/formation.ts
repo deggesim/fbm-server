@@ -1,5 +1,19 @@
 import { Model, model, Schema } from 'mongoose';
-import { IFormationDocument } from './documents/formation.document';
+import { IFixture } from './fixture';
+import { ITenant } from './league';
+import { IPlayer } from './player';
+
+interface IFormationDocument extends ITenant {
+    spot: number;
+    benchOrder: number;
+    player: IPlayer;
+    fixture: IFixture;
+    matchReport: {
+        realRanking: number;
+        realRanking40Min: number;
+        minutesUsed: number;
+    };
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -59,6 +73,4 @@ const schema = new Schema<IFormation>({
     },
 });
 
-const Formation = model<IFormation, IFormationModel>('Formation', schema);
-
-export default Formation;
+export const Formation = model<IFormation, IFormationModel>('Formation', schema);

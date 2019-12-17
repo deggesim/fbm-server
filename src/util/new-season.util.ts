@@ -1,10 +1,10 @@
-import Competition from '../schemas/competition';
-import ICompetitionDocument from '../schemas/documents/competition.document';
-import Fixture from '../schemas/fixture';
+import { Competition, ICompetition } from '../schemas/competition';
+import { IFantasyTeam } from '../schemas/fantasy-team';
+import { Fixture, IFixture } from '../schemas/fixture';
 import { RoundFormat } from '../schemas/formats/round-format';
 import { ILeague } from '../schemas/league';
-import RealFixture, { IRealFixture } from '../schemas/real-fixture';
-import Round from '../schemas/round';
+import { IRealFixture, RealFixture } from '../schemas/real-fixture';
+import { Round } from '../schemas/round';
 
 export const populateCompetition = async (league: ILeague) => {
     const championship = {
@@ -20,23 +20,25 @@ export const populateCompetition = async (league: ILeague) => {
     await Competition.create(cup);
 };
 
-export const populateRealFixture = async (league: ILeague): Promise<IRealFixture[]> => {
+export const populateRealFixture = async (league: ILeague) => {
     const games: number = league.realGames;
-    const realFixtures = [];
+    const realFixtures: IRealFixture[] = [];
     for (let i = 1; i <= games; i++) {
         const realFixture = {
             name: `Giornata #${i}`,
             prepared: false,
             league: league.id,
         };
-        realFixtures.push(realFixture);
+        const createdRealFixture: IRealFixture = await RealFixture.create(realFixture);
+        realFixtures.push(createdRealFixture);
     }
-    return await RealFixture.insertMany(realFixtures);
 };
 
-export const createRegularSeason = async (league: ILeague, realFixtures: IRealFixture[]) => {
+export const createRegularSeason = async (league: ILeague, realFixtures: IRealFixture[], fantasyTeams: IFantasyTeam[]) => {
     const regularSeasonFormat = league.regularSeasonFormat;
-    const championship: ICompetitionDocument = await Competition.findOne({ league: league.id, name: 'Campionato' }) as ICompetitionDocument;
+
+    // creazione round 'Stagione regolare'
+    const championship: ICompetition = await Competition.findOne({ league: league.id, name: 'Campionato' }) as ICompetition;
     const regularSeason = {
         name: 'Stagione Regolare',
         roundFormat: RoundFormat.ROUND_ROBIN,
@@ -46,20 +48,25 @@ export const createRegularSeason = async (league: ILeague, realFixtures: IRealFi
     championship.rounds.push(regularSeason);
     championship.save();
 
+    // estrapolo la lista delle partite reali
+    const numTeams = fantasyTeams.length;
     const realFixturesSubList = realFixtures.slice(
         league.roundRobinFirstRealFixture - 1,
-        league.roundRobinFirstRealFixture - 1 + ((league.fantasyTeams.length - 1) * league.regularSeasonFormat.value.rounds),
+        league.roundRobinFirstRealFixture - 1 + ((numTeams - 1) * league.regularSeasonFormat.value.rounds),
     );
 
+    // creazione giornate
     const fixtures = [];
     for (let i = 0; i < realFixturesSubList.length; i++) {
         const fixture = {
             name: `Giornata #${i}`,
             league: league.id,
         };
-        fixtures.push(fixture);
+        const createdFixture: IFixture = await Fixture.create(fixture) as IFixture;
+        fixtures.push(createdFixture);
+        realFixturesSubList[i].fixtures.push(createdFixture);
+        await realFixturesSubList[i].save();
     }
-    await Fixture.insertMany(fixtures);
 };
 
 export const createPlayoff = async (league: ILeague) => {

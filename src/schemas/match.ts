@@ -1,5 +1,24 @@
 import { Model, model, Schema } from 'mongoose';
-import { IMatchDocument } from './documents/match.document';
+import { IFantasyTeam } from './fantasy-team';
+import { ITenant } from './league';
+
+interface IMatchDocument extends ITenant {
+    homeTeam: IFantasyTeam['_id'];
+    awayTeam: IFantasyTeam['_id'];
+    homeRanking: number;
+    homeRanking40Min: number;
+    awayRanking: number;
+    awayRanking40Min: number;
+    homeFactor: number;
+    homeOer: number;
+    awayOer: number;
+    homePlusMinus: number;
+    awayPlusMinus: number;
+    homeGrade: number;
+    awayGrade: number;
+    overtime: number;
+    completed: boolean;
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -75,6 +94,4 @@ const schema = new Schema<IMatch>({
     },
 });
 
-const Match = model<IMatch, IMatchModel>('Match', schema);
-
-export default Match;
+export const Match = model<IMatch, IMatchModel>('Match', schema);

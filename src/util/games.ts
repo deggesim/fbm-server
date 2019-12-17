@@ -1,3 +1,7 @@
+import { IFantasyTeam } from '../schemas/fantasy-team';
+import { IFixture } from '../schemas/fixture';
+import { IMatch, Match } from '../schemas/match';
+
 export const games = new Map();
 games.set(4, [
     [0, 1, 2, 3],
@@ -116,3 +120,48 @@ games.set(20, [
     [3, 16, 19, 4, 14, 12, 15, 2, 7, 0, 1, 11, 9, 5, 6, 18, 17, 8, 13, 10],
     [0, 15, 18, 3, 16, 19, 5, 1, 11, 17, 12, 6, 10, 9, 8, 13, 4, 14, 2, 7],
 ]);
+
+export const createStaticMatchList = async (
+    idLeague: number,
+    rounds: number,
+    fixtures: IFixture[],
+    fantasyTeams: IFantasyTeam[],
+) => {
+    const matches: IMatch[] = [];
+    const numTeams = fantasyTeams.length;
+    // get static calendar
+    const teamsSlots = games.get(numTeams);
+    for (let g = 0; g < teamsSlots.length; g++) {
+        // andata
+        const fixture = fixtures[g];
+        for (let i = 0; i < teamsSlots[g].length; i += 2) {
+            const match = {
+                homeTeam: fantasyTeams[teamsSlots[g][i]],
+                awayTeam: fantasyTeams[teamsSlots[g][i + 1]],
+                league: idLeague,
+            };
+            const createdMatch: IMatch = await Match.create(match);
+            matches.push(createdMatch);
+        }
+        fixture.matches.push(matches);
+        fixture.save();
+    }
+
+    if (rounds > 1) {
+        // ritorno
+        for (let g = 0, gg = teamsSlots.length; g < teamsSlots.length; g++ , gg++) {
+            const fixture = fixtures[gg];
+            for (let i = 0; i < teamsSlots[g].length; i += 2) {
+                const match = {
+                    homeTeam: fantasyTeams[teamsSlots[g][i + 1]],
+                    awayTeam: fantasyTeams[teamsSlots[g][i]],
+                    league: idLeague,
+                };
+                const createdMatch: IMatch = await Match.create(match);
+                matches.push(createdMatch);
+            }
+            fixture.matches.push(matches);
+            fixture.save();
+        }
+    }
+};

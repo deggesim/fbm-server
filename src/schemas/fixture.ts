@@ -1,5 +1,13 @@
 import { Model, model, Schema } from 'mongoose';
-import IFixtureDocument from './documents/fixture.document';
+import { ITenant } from './league';
+import { IMatch } from './match';
+
+interface IFixtureDocument extends ITenant {
+    name: string;
+    unnecessary: boolean;
+    completed: boolean;
+    matches: Array<IMatch['_id']>;
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -43,6 +51,4 @@ const schema = new Schema<IFixture>({
     },
 });
 
-const Fixture = model<IFixture, IFixtureModel>('Fixture', schema);
-
-export default Fixture;
+export const Fixture = model<IFixture, IFixtureModel>('Fixture', schema);

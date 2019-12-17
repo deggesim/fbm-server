@@ -1,5 +1,15 @@
 import { Model, model, Schema } from 'mongoose';
-import IPerformanceDocument from './documents/performance.document';
+import { ITenant } from './league';
+import { IPlayer } from './player';
+
+interface IPerformanceDocument extends ITenant {
+    player: IPlayer;
+    ranking: number;
+    minutes: number;
+    oer: number;
+    plusMinus: number;
+    grade: number;
+}
 
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
@@ -44,6 +54,4 @@ const schema = new Schema<IPerformance>({
     },
 });
 
-const Performance = model<IPerformance, IPerformanceModel>('Performance', schema);
-
-export default Performance;
+export const Performance = model<IPerformance, IPerformanceModel>('Performance', schema);
