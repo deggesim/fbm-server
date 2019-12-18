@@ -11,10 +11,8 @@ userRouter.get('/users', async (ctx: Router.IRouterContext) => {
 userRouter.get('/users/me', async (ctx: Router.IRouterContext) => {
     const id = ctx.state.user._id;
     const user: IUser = await User.findById(id) as IUser;
-    console.log(user);
     await user.populate('leagues').execPopulate();
     await user.populate('fantasyTeams').execPopulate();
-    console.log(user);
     const token = await user.generateAuthToken();
     user.tokens = user.tokens.concat(token);
     ctx.body = { user, token };
@@ -35,13 +33,10 @@ userRouter.patch('/users/me', async (ctx: Router.IRouterContext) => {
         const userToUpdate = ctx.state.user;
         updates.forEach((update) => userToUpdate[update] = ctx.request.body[update]);
         await userToUpdate.save();
-        console.log(userToUpdate);
         await userToUpdate.populate('leagues').execPopulate();
         await userToUpdate.populate('fantasyTeams').execPopulate();
-        console.log(userToUpdate);
         ctx.body = userToUpdate;
     } catch (error) {
-        console.log(error.message);
         ctx.throw(400, error.message);
     }
 });
