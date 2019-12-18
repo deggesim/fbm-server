@@ -31,24 +31,3 @@ fantasyTeamRouter.patch('/fantasy-teams/:id', async (ctx: Router.IRouterContext,
 });
 
 export default fantasyTeamRouter;
-async function insertFantasyTeams(fantasyTeams: IFantasyTeam[], league: ILeague) {
-    for await (const item of fantasyTeams) {
-        item.league = league.id;
-        const fantasyTeam = await FantasyTeam.create(item);
-        for await (const owner of fantasyTeam.owners) {
-            const user: IUser = await User.findById(owner) as IUser;
-            // aggiunta lega all'utente
-            const leagueFound = user.leagues.find((managedLeague) => {
-                return String(managedLeague) === String(league._id);
-            });
-            if (!leagueFound) {
-                user.leagues.push(league._id);
-            }
-            // aggiunta squadra all'utente
-            user.fantasyTeams.push(fantasyTeam._id);
-            // salvataggio
-            await user.save();
-        }
-    }
-}
-

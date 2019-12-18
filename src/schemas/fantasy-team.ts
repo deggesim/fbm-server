@@ -92,7 +92,7 @@ const schema = new Schema<IFantasyTeam>({
 
 schema.statics.insertFantasyTeams = async (fantasyTeams: IFantasyTeam[], league: ILeague) => {
     for await (const fantasyTeam of fantasyTeams) {
-        fantasyTeam.league = league.id;
+        fantasyTeam.league = league._id;
         const newFantasyTeam = await FantasyTeam.create(fantasyTeam);
         for await (const owner of newFantasyTeam.owners) {
             const user: IUser = await User.findById(owner) as IUser;
@@ -104,7 +104,7 @@ schema.statics.insertFantasyTeams = async (fantasyTeams: IFantasyTeam[], league:
                 user.leagues.push(league._id);
             }
             // aggiunta squadra all'utente
-            user.fantasyTeams.push(fantasyTeam._id);
+            user.fantasyTeams.push(newFantasyTeam._id);
             // salvataggio
             await user.save();
         }

@@ -103,7 +103,7 @@ schema.methods.populateLeague = async function () {
     const league = this;
     await populateCompetition(league);
     const realFixtures = await populateRealFixture(league);
-    const fantasyTeams = await FantasyTeam.find({ league: league.id });
+    const fantasyTeams = await FantasyTeam.find({ league: league._id });
     await createRegularSeason(league, realFixtures, fantasyTeams);
     await createPlayoff(league, realFixtures);
     await createPlayout(league, realFixtures);
