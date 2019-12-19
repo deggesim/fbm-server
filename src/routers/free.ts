@@ -5,8 +5,7 @@ const freeRouter: Router = new Router<IUser>();
 freeRouter.post('/users', async (ctx: Router.IRouterContext) => {
     try {
         const newUser: IUser = ctx.request.body;
-        const user = await User.create(newUser);
-        ctx.body = user;
+        ctx.body = await User.create(newUser);
         ctx.status = 201;
     } catch (error) {
         console.log(error);

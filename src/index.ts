@@ -9,6 +9,7 @@ import fantasyTeamRouter from './routers/fantasy-team';
 import freeRouter from './routers/free';
 import leagueRouter from './routers/league';
 import playerRouter from './routers/player';
+import teamRouter from './routers/team';
 import userRouter from './routers/user';
 import { IUser, User } from './schemas/user';
 
@@ -38,11 +39,12 @@ app.use(async (ctx: Router.IRouterContext, next: Koa.Next) => {
     await next();
 });
 
-app.use(userRouter.routes());
-app.use(leagueRouter.routes());
-app.use(fantasyTeamRouter.routes());
 app.use(competitionRouter.routes());
+app.use(fantasyTeamRouter.routes());
+app.use(leagueRouter.routes());
 app.use(playerRouter.routes());
+app.use(teamRouter.routes());
+app.use(userRouter.routes());
 app.use(router.allowedMethods());
 console.log(`Started listening on port ${process.env.PORT}...`);
 app.listen(process.env.PORT || 5000);

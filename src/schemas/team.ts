@@ -1,5 +1,5 @@
 import { Model, model, Schema } from 'mongoose';
-import { ITenant } from './league';
+import { ILeague, ITenant } from './league';
 
 interface ITeamDocument extends ITenant {
     fullName: string;
@@ -23,6 +23,7 @@ export interface ITeam extends ITeamDocument {
  */
 export interface ITeamModel extends Model<ITeam> {
     // metodi statici
+    insertTeams: (teams: ITeam[], league: ILeague) => null;
 }
 
 const schema = new Schema<ITeam>({
@@ -41,7 +42,6 @@ const schema = new Schema<ITeam>({
     },
     city: {
         type: String,
-        required: true,
         trim: true,
     },
     abbreviation: {
@@ -59,5 +59,13 @@ const schema = new Schema<ITeam>({
         ref: 'League',
     },
 });
+
+schema.statics.insertTeams = async (teams: ITeam[], league: ILeague) => {
+    const teamsToInsert: ITeam[] = teams.map((team: ITeam) => {
+        team.league = league._id;
+        return team;
+    });
+    return await Team.insertMany(teamsToInsert);
+};
 
 export const Team = model<ITeam, ITeamModel>('Team', schema);

@@ -1,45 +1,74 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
-import { FantasyTeam } from '../schemas/fantasy-team';
 import { ILeague, League } from '../schemas/league';
-import { createPlayoff, createPlayout, createRegularSeason, populateCompetition, populateRealFixture, createCup } from '../util/new-season.util';
 
 const leagueRouter: Router = new Router<ILeague>();
 
 leagueRouter.get('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const leagues = await League.find();
-    ctx.body = leagues;
+    try {
+        ctx.body = await League.find();
+    } catch (error) {
+        ctx.throw(500, error.message);
+    }
 });
 
 leagueRouter.get('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const league = await League.findById(ctx.params.id);
-    ctx.body = league;
+    try {
+        const league = await League.findById(ctx.params.id);
+        if (league == null) {
+            ctx.throw(400, 'Lega non trovata');
+        }
+        ctx.body = league;
+    } catch (error) {
+        ctx.throw(500, error.message);
+    }
 });
 
 leagueRouter.post('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const newLeague: ILeague = ctx.request.body;
-    const league: ILeague = await League.create(newLeague);
-    ctx.body = league;
+    try {
+        const newLeague: ILeague = ctx.request.body;
+        ctx.body = await League.create(newLeague);
+    } catch (error) {
+        ctx.throw(400, error.message);
+    }
 });
 
 leagueRouter.post('/leagues/:id/populate', async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const league = await League.findById(ctx.params.id) as ILeague;
-    if (!league) {
-        ctx.throw(404, 'Lega non trovata');
+    try {
+        const league = await League.findById(ctx.params.id) as ILeague;
+        if (league == null) {
+            ctx.throw(404, 'Lega non trovata');
+        }
+        ctx.body = await league.populateLeague();
+    } catch (error) {
+        ctx.throw(400, error.message);
     }
-    await league.populateLeague();
-    ctx.body = league;
 });
 
 leagueRouter.patch('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const updatedLeague: ILeague = ctx.request.body;
-    const leagueToUpdate = await League.findById(ctx.params.id) as ILeague;
-    if (!leagueToUpdate) {
-        ctx.throw(404, 'Lega non trovata');
+    try {
+        const updatedLeague: ILeague = ctx.request.body;
+        const leagueToUpdate = await League.findById(ctx.params.id) as ILeague;
+        if (!leagueToUpdate) {
+            ctx.throw(404, 'Lega non trovata');
+        }
+        leagueToUpdate.set(updatedLeague);
+        ctx.body = await leagueToUpdate.save();
+    } catch (error) {
+        ctx.throw(400, error.message);
     }
-    leagueToUpdate.set(updatedLeague);
-    leagueToUpdate.save();
-    ctx.body = leagueToUpdate;
+});
+
+leagueRouter.delete('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+        const league = await League.findOneAndDelete({ _id: ctx.params.id}) as ILeague;
+        if (league == null) {
+            ctx.throw(404, 'Lega non trovata');
+        }
+        ctx.body = league;
+    } catch (error) {
+        ctx.throw(500, error.message);
+    }
 });
 
 export default leagueRouter;
