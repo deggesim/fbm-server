@@ -60,12 +60,15 @@ const schema = new Schema<ITeam>({
     },
 });
 
-schema.statics.insertTeams = async (teams: ITeam[], league: ILeague) => {
+schema.statics.insertTeams = (teams: ITeam[], league: ILeague) => {
     const teamsToInsert: ITeam[] = teams.map((team: ITeam) => {
         team.league = league._id;
+        team.real = true;
         return team;
     });
-    return await Team.insertMany(teamsToInsert);
+    console.log(teamsToInsert);
+
+    return Team.insertMany(teamsToInsert);
 };
 
 export const Team = model<ITeam, ITeamModel>('Team', schema);

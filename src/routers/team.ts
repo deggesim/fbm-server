@@ -5,10 +5,6 @@ import { ILeague, League } from '../schemas/league';
 import { ITeam, Team } from '../schemas/team';
 import { parseCsv } from '../util/parse';
 
-// tslint:disable-next-line: no-var-requires
-const multer = require('@koa/multer');
-const upload = multer();
-
 const teamRouter: Router = new Router<ITeam>();
 
 teamRouter.get('/teams', async (ctx: Router.IRouterContext, next: Koa.Next) => {
@@ -39,12 +35,22 @@ teamRouter.post('/teams', async (ctx: Router.IRouterContext, next: Koa.Next) => 
     }
 });
 
+// tslint:disable-next-line: no-var-requires
+const multer = require('@koa/multer');
+const upload = multer({
+    storage: multer.memoryStorage(),
+});
 teamRouter.post('/teams/upload', upload.single('teams'), async (ctx: any) => {
     try {
-        const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
-        const teams = parseCsv(ctx.file.buffer) as ITeam[];
-        ctx.body = Team.insertTeams(teams, league);
+        // console.log(ctx.file.buffer);
+        // console.log(ctx.request.file.buffer);
+        // const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
+        const teams = await parseCsv(ctx.file.buffer, ['fullName', 'sponsor', 'name', 'city', 'abbreviation']) as ITeam[];
+        // ctx.body = await Team.insertTeams(teams, league);
+        ctx.status = 201;
     } catch (error) {
+        console.log(error);
+
         ctx.throw(400, error.message);
     }
 });

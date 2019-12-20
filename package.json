@@ -3,6 +3,15 @@
   "version": "3.0.0",
   "description": "Fantabasket Manager",
   "author": "Simone De Gennaro",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deggesim/fbm-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/deggesim/fbm-server/issues"
+  },
+  "homepage": "https://github.com/deggesim/fbm-server#readme",
   "engines": {
     "node": "10.16.1",
     "npm": "6.9.0"
