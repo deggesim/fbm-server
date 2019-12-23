@@ -23,7 +23,7 @@ export interface ITeam extends ITeamDocument {
  */
 export interface ITeamModel extends Model<ITeam> {
     // metodi statici
-    insertTeams: (teams: ITeam[], league: ILeague) => null;
+    insertTeams: (teams: ITeam[], league: ILeague) => Promise<ITeam[]>;
 }
 
 const schema = new Schema<ITeam>({

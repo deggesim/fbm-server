@@ -42,11 +42,12 @@ const upload = multer({
 });
 teamRouter.post('/teams/upload', upload.single('teams'), async (ctx: any) => {
     try {
-        // console.log(ctx.file.buffer);
-        // console.log(ctx.request.file.buffer);
-        // const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
-        const teams = await parseCsv(ctx.file.buffer, ['fullName', 'sponsor', 'name', 'city', 'abbreviation']) as ITeam[];
-        // ctx.body = await Team.insertTeams(teams, league);
+        console.log(ctx.file.buffer);
+        console.log(ctx.request.file.buffer);
+        const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
+        await parseCsv(ctx.file.buffer, ['fullName', 'sponsor', 'name', 'city', 'abbreviation'], async (teams: any[]) => {
+            ctx.body = await Team.insertTeams(teams, league);
+        });
         ctx.status = 201;
     } catch (error) {
         console.log(error);
