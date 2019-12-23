@@ -88,6 +88,8 @@ const schema = new Schema<IFantasyTeam>({
         required: true,
         ref: 'League',
     },
+}, {
+    timestamps: true,
 });
 
 schema.statics.insertFantasyTeams = async (fantasyTeams: IFantasyTeam[], league: ILeague) => {

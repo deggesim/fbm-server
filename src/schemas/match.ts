@@ -92,6 +92,8 @@ const schema = new Schema<IMatch>({
         required: true,
         ref: 'League',
     },
+}, {
+    timestamps: true,
 });
 
 export const Match = model<IMatch, IMatchModel>('Match', schema);

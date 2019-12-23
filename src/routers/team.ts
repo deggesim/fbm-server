@@ -3,6 +3,7 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { ITeam, Team } from '../schemas/team';
+import { decodeData } from '../util/decode';
 import { parseCsv } from '../util/parse';
 
 const teamRouter: Router = new Router<ITeam>();
@@ -40,18 +41,15 @@ const multer = require('@koa/multer');
 const upload = multer({
     storage: multer.memoryStorage(),
 });
-teamRouter.post('/teams/upload', upload.single('teams'), async (ctx: any) => {
+teamRouter.post('/teams/upload', upload.single('teams'), async (ctx: Router.IRouterContext) => {
     try {
-        console.log(ctx.file.buffer);
-        console.log(ctx.request.file.buffer);
+        const raw = decodeData(ctx.request.body.teams.toString());
         const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
-        await parseCsv(ctx.file.buffer, ['fullName', 'sponsor', 'name', 'city', 'abbreviation'], async (teams: any[]) => {
-            ctx.body = await Team.insertTeams(teams, league);
-        });
-        ctx.status = 201;
+        const teams = parseCsv(raw, ['fullName', 'sponsor', 'name', 'city', 'abbreviation']);
+        await Team.deleteMany({ league: ctx.request.header.league});
+        ctx.body = await Team.insertTeams(teams, league);
     } catch (error) {
         console.log(error);
-
         ctx.throw(400, error.message);
     }
 });
@@ -75,6 +73,7 @@ teamRouter.patch('/teams/:id', async (ctx: Router.IRouterContext, next: Koa.Next
 teamRouter.delete('/teams/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const team = await Team.findOneAndDelete({ _id: ctx.params.id, league: ctx.request.header.league }) as ITeam;
+        console.log(team);
         if (team == null) {
             ctx.status = 404;
         }

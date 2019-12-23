@@ -49,6 +49,8 @@ const schema = new Schema<IFixture>({
         required: true,
         ref: 'League',
     },
+}, {
+    timestamps: true,
 });
 
 export const Fixture = model<IFixture, IFixtureModel>('Fixture', schema);

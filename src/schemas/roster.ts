@@ -65,6 +65,8 @@ const schema = new Schema<IRoster>({
         required: true,
         ref: 'League',
     },
+}, {
+    timestamps: true,
 });
 
 export const FantasyRoster = model<IRoster, IFantasyRosterModel>('FantasyRoster', schema);

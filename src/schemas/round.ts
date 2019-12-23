@@ -57,6 +57,8 @@ const schema = new Schema<IRound>({
         required: true,
         ref: 'League',
     },
+}, {
+    timestamps: true,
 });
 
 export const Round = model<IRound, IRoundModel>('Round', schema);

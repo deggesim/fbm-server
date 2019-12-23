@@ -43,6 +43,8 @@ const schema = new Schema<ICompetition>({
         required: true,
         ref: 'League',
     },
+}, {
+    timestamps: true,
 });
 
 export const Competition = model<ICompetition, ICompetitionModel>('Competition', schema);

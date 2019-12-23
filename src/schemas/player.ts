@@ -1,5 +1,5 @@
 import { model, Model, Schema } from 'mongoose';
-import { ITenant } from './league';
+import { ILeague, ITenant } from './league';
 
 interface IPlayerDocument extends ITenant {
     name: string;
@@ -8,11 +8,7 @@ interface IPlayerDocument extends ITenant {
     yearBirth: number;
     height: number;
     weight: number;
-    role: {
-        name: string;
-        shortName: string;
-        spot: number[];
-    };
+    role: string;
 }
 
 /**
@@ -28,6 +24,7 @@ export interface IPlayer extends IPlayerDocument {
  */
 export interface IPlayerModel extends Model<IPlayer> {
     // metodi statici
+    insertPlayers: (players: IPlayer[], league: ILeague) => Promise<IPlayer[]>;
 }
 
 const schema = new Schema<IPlayer>({
@@ -63,40 +60,18 @@ const schema = new Schema<IPlayer>({
         max: 199,
     },
     role: {
-        name: {
-            type: String,
-            required: true,
-            trim: true,
-            enum: [
-                'Playmaker',
-                'Play/Guardia',
-                'Guardia',
-                'Guardia/Ala',
-                'Ala',
-                'Ala/Centro',
-                'Centro',
-            ],
-        },
-        shortName: {
-            type: String,
-            required: true,
-            trim: true,
-            enum: [
-                'P',
-                'P/G',
-                'G',
-                'G/A',
-                'A',
-                'A/C',
-                'C',
-            ],
-        },
-        spot: [{
-            type: Number,
-            required: true,
-            min: 1,
-            max: 12,
-        }],
+        type: String,
+        required: true,
+        trim: true,
+        enum: [
+            'P',
+            'P/G',
+            'G',
+            'G/A',
+            'A',
+            'A/C',
+            'C',
+        ],
     },
     league: {
         type: Schema.Types.ObjectId,
@@ -106,5 +81,14 @@ const schema = new Schema<IPlayer>({
 }, {
     timestamps: true,
 });
+
+schema.statics.insertPlayers = (players: IPlayer[], league: ILeague) => {
+    const playersToInsert: IPlayer[] = players.map((player: IPlayer) => {
+        player.league = league._id;
+
+        return player;
+    });
+    return Player.insertMany(playersToInsert);
+};
 
 export const Player = model<IPlayer, IPlayerModel>('Player', schema);

@@ -58,6 +58,8 @@ const schema = new Schema<ITeam>({
         required: true,
         ref: 'League',
     },
+}, {
+    timestamps: true,
 });
 
 schema.statics.insertTeams = (teams: ITeam[], league: ILeague) => {
@@ -66,8 +68,6 @@ schema.statics.insertTeams = (teams: ITeam[], league: ILeague) => {
         team.real = true;
         return team;
     });
-    console.log(teamsToInsert);
-
     return Team.insertMany(teamsToInsert);
 };
 

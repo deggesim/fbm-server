@@ -2,6 +2,8 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { IPlayer, Player } from '../schemas/player';
+import { decodeData } from '../util/decode';
+import { parseCsv } from '../util/parse';
 
 const playerRouter: Router = new Router<IPlayer>();
 
@@ -25,6 +27,25 @@ playerRouter.post('/players', async (ctx: Router.IRouterContext, next: Koa.Next)
         ctx.throw(400, error.message);
     }
 });
+
+// tslint:disable-next-line: no-var-requires
+const multer = require('@koa/multer');
+const upload = multer({
+    storage: multer.memoryStorage(),
+});
+playerRouter.post('/players/upload', upload.single('players'), async (ctx: Router.IRouterContext) => {
+    try {
+        const raw = decodeData(ctx.request.body.players.toString());
+        const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
+        const players = parseCsv(raw, ['name', 'nationality', 'number', 'yearBirth', 'height', 'weight', 'role']);
+        await Player.deleteMany({ league: ctx.request.header.league});
+        ctx.body = await Player.insertPlayers(players, league);
+    } catch (error) {
+        console.log(error);
+        ctx.throw(400, error.message);
+    }
+});
+
 
 playerRouter.patch('/players/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {

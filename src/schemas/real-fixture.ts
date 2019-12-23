@@ -56,6 +56,8 @@ const schema = new Schema<IRealFixture>({
         required: true,
         ref: 'League',
     },
+}, {
+    timestamps: true,
 });
 
 export const RealFixture = model<IRealFixture, IRealFixtureModel>('RealFixture', schema);

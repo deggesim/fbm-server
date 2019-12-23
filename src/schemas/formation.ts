@@ -71,6 +71,8 @@ const schema = new Schema<IFormation>({
         required: true,
         ref: 'League',
     },
+}, {
+    timestamps: true,
 });
 
 export const Formation = model<IFormation, IFormationModel>('Formation', schema);

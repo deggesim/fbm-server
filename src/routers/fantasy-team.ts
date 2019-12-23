@@ -48,7 +48,7 @@ fantasyTeamRouter.patch('/fantasy-teams/:id', async (ctx: Router.IRouterContext,
     }
 });
 
-fantasyTeamRouter.delete('/teams/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+fantasyTeamRouter.delete('/fantasy-teams/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const fantasyTeam = await FantasyTeam.findOneAndDelete({ _id: ctx.params.id, league: ctx.request.header.league }) as IFantasyTeam;
         if (fantasyTeam == null) {

@@ -52,6 +52,8 @@ const schema = new Schema<IPerformance>({
         required: true,
         ref: 'League',
     },
+}, {
+    timestamps: true,
 });
 
 export const Performance = model<IPerformance, IPerformanceModel>('Performance', schema);

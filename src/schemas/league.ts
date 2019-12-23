@@ -97,6 +97,8 @@ const schema = new Schema<ILeague>({
         },
     }],
 
+}, {
+    timestamps: true,
 });
 
 schema.methods.populateLeague = async function () {
