@@ -51,12 +51,12 @@ const schema = new Schema<IPlayer>({
     },
     height: {
         type: Number,
-        min: 150,
+        min: 0,
         max: 299,
     },
     weight: {
         type: Number,
-        min: 50,
+        min: 0,
         max: 199,
     },
     role: {
@@ -64,13 +64,13 @@ const schema = new Schema<IPlayer>({
         required: true,
         trim: true,
         enum: [
-            'P',
-            'P/G',
-            'G',
-            'G/A',
-            'A',
-            'A/C',
-            'C',
+            'Playmaker',
+            'Play/Guardia',
+            'Guardia',
+            'Guardia/Ala',
+            'Ala',
+            'Ala/Centro',
+            'Centro',
         ],
     },
     league: {
@@ -85,7 +85,6 @@ const schema = new Schema<IPlayer>({
 schema.statics.insertPlayers = (players: IPlayer[], league: ILeague) => {
     const playersToInsert: IPlayer[] = players.map((player: IPlayer) => {
         player.league = league._id;
-
         return player;
     });
     return Player.insertMany(playersToInsert);

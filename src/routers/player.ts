@@ -2,25 +2,24 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { IPlayer, Player } from '../schemas/player';
-import { decodeData } from '../util/decode';
 import { parseCsv } from '../util/parse';
+import { tenant } from '../util/tenant';
 
 const playerRouter: Router = new Router<IPlayer>();
 
-playerRouter.get('/players', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+playerRouter.get('/players', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
-        ctx.body = await Player.find({ league: league._id }).populate('role');
+        ctx.body = await Player.find({ league: ctx.get('league') });
     } catch (error) {
         ctx.throw(500, error.message);
     }
 });
 
-playerRouter.post('/players', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+playerRouter.post('/players', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
+        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const newPlayer: IPlayer = ctx.request.body;
-        newPlayer.league = league;
+        newPlayer.league = league._id;
         ctx.body = await Player.create(newPlayer);
         ctx.status = 201;
     } catch (error) {
@@ -33,12 +32,11 @@ const multer = require('@koa/multer');
 const upload = multer({
     storage: multer.memoryStorage(),
 });
-playerRouter.post('/players/upload', upload.single('players'), async (ctx: Router.IRouterContext) => {
+playerRouter.post('/players/upload', tenant(), upload.single('players'), async (ctx: Router.IRouterContext) => {
     try {
-        const raw = decodeData(ctx.request.body.players.toString());
-        const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
-        const players = parseCsv(raw, ['name', 'nationality', 'number', 'yearBirth', 'height', 'weight', 'role']);
-        await Player.deleteMany({ league: ctx.request.header.league});
+        const players = parseCsv(ctx.request.body.players.toString(), ['name', 'role', 'nationality', 'team', 'number', 'yearBirth', 'height', 'weight']);
+        await Player.deleteMany({ league: ctx.get('league') });
+        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         ctx.body = await Player.insertPlayers(players, league);
     } catch (error) {
         console.log(error);
@@ -46,10 +44,9 @@ playerRouter.post('/players/upload', upload.single('players'), async (ctx: Route
     }
 });
 
-
-playerRouter.patch('/players/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+playerRouter.patch('/players/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
+        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const fields = Object.keys(ctx.request.body);
         const playerToUpdate: any = await Player.findOne({ _id: ctx.params.id, league: league._id });
         if (playerToUpdate == null) {
@@ -63,9 +60,9 @@ playerRouter.patch('/players/:id', async (ctx: Router.IRouterContext, next: Koa.
     }
 });
 
-playerRouter.delete('/players/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+playerRouter.delete('/players/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
+        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const player = await Player.findOneAndDelete({ _id: ctx.params.id, league: league._id }) as IPlayer;
         if (player == null) {
             ctx.status = 404;

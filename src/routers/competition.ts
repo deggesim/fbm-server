@@ -2,13 +2,12 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { Competition, ICompetition } from '../schemas/competition';
 import { ILeague, League } from '../schemas/league';
+import { tenant } from '../util/tenant';
 
 const competitionRouter: Router = new Router<ICompetition>();
 
-competitionRouter.get('/competitions', async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const league: ILeague = await League.findById(ctx.request.header.league) as ILeague;
-    const competitions = await Competition.find({ league: league._id });
-    ctx.body = competitions;
+competitionRouter.get('/competitions', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    ctx.body = await Competition.find({ league: ctx.get('league') });
 });
 
 export default competitionRouter;
