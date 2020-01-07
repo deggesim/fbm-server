@@ -45,6 +45,18 @@ leagueRouter.post('/leagues/:id/populate', async (ctx: Router.IRouterContext, ne
     }
 });
 
+leagueRouter.post('/leagues/:id/parameters', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+        const league = await League.findById(ctx.params.id) as ILeague;
+        if (league == null) {
+            ctx.throw(404, 'Lega non trovata');
+        }
+        ctx.body = await league.setParameters(ctx.request.body);
+    } catch (error) {
+        ctx.throw(400, error.message);
+    }
+});
+
 leagueRouter.patch('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const updatedLeague: ILeague = ctx.request.body;

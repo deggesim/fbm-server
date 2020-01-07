@@ -34,6 +34,7 @@ export interface ITenant extends Document {
 export interface ILeague extends ILeagueDocument {
     // metodi d'istanza
     populateLeague: () => Promise<ILeague>;
+    setParameters: (parameters: Array<{parameter: string, value: number}>) => Promise<ILeague>;
 }
 
 /**
@@ -111,6 +112,14 @@ schema.methods.populateLeague = async function () {
     await createPlayout(league, realFixtures);
     await createCup(league, realFixtures);
     return Promise.resolve(league);
+};
+
+schema.methods.setParameters = async function (parameters: Array<{parameter: string, value: number}>) {
+    const league = this;
+    for (const param of parameters) {
+        league.parameters.push(param);
+    }
+    return league.save();
 };
 
 export const League = model<ILeague, ILeagueModel>('League', schema);
