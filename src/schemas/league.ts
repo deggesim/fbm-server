@@ -21,6 +21,10 @@ interface ILeagueDocument extends Document {
         parameter: string;
         value: number;
     }];
+    roles: [{
+        role: string;
+        spots: number[];
+    }];
 }
 
 export interface ITenant extends Document {
@@ -34,7 +38,8 @@ export interface ITenant extends Document {
 export interface ILeague extends ILeagueDocument {
     // metodi d'istanza
     populateLeague: () => Promise<ILeague>;
-    setParameters: (parameters: Array<{parameter: string, value: number}>) => Promise<ILeague>;
+    setParameters: (parameters: Array<{ parameter: string, value: number }>) => Promise<ILeague>;
+    setRoles: (roles: Array<{ role: string, spots: number[] }>) => Promise<ILeague>;
 }
 
 /**
@@ -97,7 +102,26 @@ const schema = new Schema<ILeague>({
             required: true,
         },
     }],
-
+    roles: [{
+        role: {
+            type: String,
+            required: true,
+            enum: [
+                'Playmaker',
+                'Play/Guardia',
+                'Guardia',
+                'Guardia/Ala',
+                'Ala',
+                'Ala/Centro',
+                'Centro',
+            ],
+        },
+        spots: [{
+            type: Number,
+            min: 1,
+            max: 12,
+        }],
+    }],
 }, {
     timestamps: true,
 });
@@ -114,10 +138,18 @@ schema.methods.populateLeague = async function () {
     return Promise.resolve(league);
 };
 
-schema.methods.setParameters = async function (parameters: Array<{parameter: string, value: number}>) {
+schema.methods.setParameters = async function (parameters: Array<{ parameter: string, value: number }>) {
     const league = this;
     for (const param of parameters) {
         league.parameters.push(param);
+    }
+    return league.save();
+};
+
+schema.methods.setRoles = async function (roles: Array<{ role: string, spots: number[] }>) {
+    const league = this;
+    for (const role of roles) {
+        league.roles.push(role);
     }
     return league.save();
 };
