@@ -121,7 +121,9 @@ games.set(20, [
     [0, 15, 18, 3, 16, 19, 5, 1, 11, 17, 12, 6, 10, 9, 8, 13, 4, 14, 2, 7],
 ]);
 
-export const roundRobinMatchList = async (idLeague: number, rounds: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]) => {
+// tslint:disable-next-line: max-line-length
+export const roundRobinMatchList = async (idLeague: number, rounds: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
+    const ret: IMatch[] = [];
     const numTeams = fantasyTeams.length;
     // get static calendar
     const teamsSlots = games.get(numTeams);
@@ -136,8 +138,9 @@ export const roundRobinMatchList = async (idLeague: number, rounds: number, fixt
             };
             const newMatch: IMatch = await Match.create(match);
             fixture.matches.push(newMatch);
+            ret.push(newMatch);
         }
-        fixture.save();
+        await fixture.save();
     }
 
     if (rounds > 1) {
@@ -152,13 +155,17 @@ export const roundRobinMatchList = async (idLeague: number, rounds: number, fixt
                 };
                 const newMatch: IMatch = await Match.create(match);
                 fixture.matches.push(newMatch);
+                ret.push(newMatch);
             }
-            fixture.save();
+            await fixture.save();
         }
     }
+
+    return ret;
 };
 
-export const playoffMatchList = async (idLeague: number, rounds: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]) => {
+export const playoffMatchList = async (idLeague: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
+    const ret: IMatch[] = [];
     const size = fantasyTeams.length;
     const upperSublist = fantasyTeams.slice(0, size / 2);
     const lowerSublist = fantasyTeams.slice(size / 2, size);
@@ -174,6 +181,7 @@ export const playoffMatchList = async (idLeague: number, rounds: number, fixture
                 };
                 const newMatch: IMatch = await Match.create(match);
                 fixture.matches.push(newMatch);
+                ret.push(newMatch);
             } else {
                 // i dispari: inverto squadra di casa con la squadra in trasferta
                 const match = {
@@ -183,8 +191,11 @@ export const playoffMatchList = async (idLeague: number, rounds: number, fixture
                 };
                 const newMatch: IMatch = await Match.create(match);
                 fixture.matches.push(newMatch);
+                ret.push(newMatch);
             }
         }
-        fixture.save();
+        await fixture.save();
     }
+
+    return ret;
 };

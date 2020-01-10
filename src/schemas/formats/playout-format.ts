@@ -61,7 +61,7 @@ export class PlayoutFormat {
         fGames: 5,
     });
     public static readonly DRR4_F5 = new PlayoutFormat('DRR4_F5', {
-        label: 'Girone unico a 4, semifinali al meglio delle 3, spareggio al meglio delle 5',
+        label: 'Girone andata e ritorno a 4, spareggio al meglio delle 5',
         games: 11,
         rounds: 2,
         roundRobinTeams: 4,

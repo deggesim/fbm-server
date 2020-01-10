@@ -1,6 +1,9 @@
 import { Model, model, Schema } from 'mongoose';
+import { playoffMatchList, roundRobinMatchList } from '../util/games';
 import { IFantasyTeam } from './fantasy-team';
+import { RegularSeasonFormat } from './formats/regular-season-format';
 import { ITenant } from './league';
+import { IRound } from './round';
 
 interface IMatchDocument extends ITenant {
     homeTeam: IFantasyTeam['_id'];
@@ -33,6 +36,8 @@ export interface IMatch extends IMatchDocument {
  */
 export interface IMatchModel extends Model<IMatch> {
     // metodi statici
+    buildRoundRobinMatchList: (round: IRound) => Promise<IMatch[]>;
+    buildPlayoffMatchList: (round: IRound) => Promise<IMatch[]>;
 }
 
 const schema = new Schema<IMatch>({
@@ -95,5 +100,17 @@ const schema = new Schema<IMatch>({
 }, {
     timestamps: true,
 });
+
+schema.statics.buildRoundRobinMatchList = async (round: IRound): Promise<IMatch[]> => {
+    const leagueId = round.league;
+    await round.populate('fixtures').execPopulate();
+    return await roundRobinMatchList(leagueId, round.rounds, round.fixtures, round.fantasyTeams);
+};
+
+schema.statics.buildPlayoffMatchList = async (round: IRound, fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
+    const leagueId = round.league;
+    await round.populate('fixtures').execPopulate();
+    return await playoffMatchList(leagueId, round.fixtures, fantasyTeams);
+};
 
 export const Match = model<IMatch, IMatchModel>('Match', schema);

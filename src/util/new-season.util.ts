@@ -1,6 +1,7 @@
 import { Competition, ICompetition } from '../schemas/competition';
 import { IFantasyTeam } from '../schemas/fantasy-team';
 import { Fixture, IFixture } from '../schemas/fixture';
+import { PlayoffFormat } from '../schemas/formats/playoff-format';
 import { ILeague } from '../schemas/league';
 import { IRealFixture, RealFixture } from '../schemas/real-fixture';
 import { Round } from '../schemas/round';
@@ -40,6 +41,9 @@ export const createRegularSeason = async (league: ILeague, realFixtures: IRealFi
     const round = {
         name: 'Stagione Regolare',
         homeFactor: 8,
+        teams: fantasyTeams.length,
+        roundRobin: true,
+        rounds: league.regularSeasonFormat.value.rounds,
         league: league._id,
     };
     const newRound = await Round.create(round);
@@ -76,8 +80,14 @@ export const createPlayoff = async (league: ILeague, realFixtures: IRealFixture[
         const round = {
             name: 'Playoff - Quarti di finale',
             homeFactor: 10,
+            teams: 8,
+            roundRobin: false,
             league: league._id,
         };
+        if (league.playoffFormat === PlayoffFormat.QF2_SQ4_SF5_F5) {
+            // i quarti di finali sono giocati da 4 squadre
+            round.teams = 4;
+        }
         const newRound = await Round.create(round);
         competition.rounds.push(newRound);
 
@@ -107,6 +117,8 @@ export const createPlayoff = async (league: ILeague, realFixtures: IRealFixture[
         const round = {
             name: 'Playoff - Semifinale',
             homeFactor: 10,
+            teams: 4,
+            roundRobin: false,
             league: league._id,
         };
         const newRound = await Round.create(round);
@@ -138,6 +150,8 @@ export const createPlayoff = async (league: ILeague, realFixtures: IRealFixture[
         const round = {
             name: 'Playoff - Finale',
             homeFactor: 10,
+            teams: 2,
+            roundRobin: false,
             league: league._id,
         };
         const newRound = await Round.create(round);
@@ -171,10 +185,13 @@ export const createPlayout = async (league: ILeague, realFixtures: IRealFixture[
     if (league.playoutFormat.value.rounds) {
         // creiamo il girone
 
-        // creazione round 'Stagione regolare'
+        // creazione round 'Playout'
         const round = {
             name: 'Playout',
             homeFactor: 10,
+            teams: 4,
+            roundRobin: true,
+            rounds: league.playoutFormat.value.rounds,
             league: league._id,
         };
         const newRound = await Round.create(round);
@@ -207,6 +224,8 @@ export const createPlayout = async (league: ILeague, realFixtures: IRealFixture[
         const round = {
             name: 'Playout - Semifinale',
             homeFactor: 10,
+            teams: 4,
+            roundRobin: false,
             league: league._id,
         };
         const newRound = await Round.create(round);
@@ -238,6 +257,8 @@ export const createPlayout = async (league: ILeague, realFixtures: IRealFixture[
         const round = {
             name: 'Spareggio Retrocessione',
             homeFactor: 10,
+            teams: 2,
+            roundRobin: false,
             league: league._id,
         };
         const newRound = await Round.create(round);
@@ -273,6 +294,8 @@ export const createCup = async (league: ILeague, realFixtures: IRealFixture[]) =
     let round = {
         name: 'Quarti di Finale',
         homeFactor: league.cupFormat.value.qfRoundTrip ? 10 : 0,
+        teams: 8,
+        roundRobin: false,
         league: league._id,
     };
     let newRound = await Round.create(round);
@@ -297,10 +320,12 @@ export const createCup = async (league: ILeague, realFixtures: IRealFixture[]) =
     firstRealFixture = lastRealFixture + 1;
     lastRealFixture = league.cupFormat.value.sfRoundTrip ? (firstRealFixture + 2) : (firstRealFixture + 1);
 
-    // creazione round 'Semiinale'
+    // creazione round 'Semifinale'
     round = {
-        name: 'Semiinale',
+        name: 'Semifinale',
         homeFactor: league.cupFormat.value.sfRoundTrip ? 10 : 0,
+        teams: 4,
+        roundRobin: false,
         league: league._id,
     };
     newRound = await Round.create(round);
@@ -313,7 +338,7 @@ export const createCup = async (league: ILeague, realFixtures: IRealFixture[]) =
     );
     for (let i = 0; i < realFixturesSubList.length; i++) {
         const fixture = {
-            name: `Semiinale - Gara #${i + 1}`,
+            name: `Semifinale - Gara #${i + 1}`,
             league: league._id,
         };
         const newFixture = await Fixture.create(fixture);
@@ -329,6 +354,8 @@ export const createCup = async (league: ILeague, realFixtures: IRealFixture[]) =
     round = {
         name: 'Finale',
         homeFactor: league.cupFormat.value.fRoundTrip ? 10 : 0,
+        teams: 2,
+        roundRobin: false,
         league: league._id,
     };
     newRound = await Round.create(round);

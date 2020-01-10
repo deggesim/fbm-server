@@ -8,7 +8,10 @@ interface IRoundDocument extends ITenant {
     name: string;
     completed: boolean;
     homeFactor: number;
-    fantasyTeam: Array<IFantasyTeam['_id']>;
+    teams: number;
+    roundRobin: boolean;
+    rounds: number;
+    fantasyTeams: Array<IFantasyTeam['_id']>;
     fixtures: Array<IFixture['id']>;
 }
 
@@ -41,6 +44,17 @@ const schema = new Schema<IRound>({
         type: Number,
         required: true,
         default: 0,
+    },
+    teams: {
+        type: Number,
+        required: true,
+    },
+    roundRobin: {
+        type: Boolean,
+        required: true,
+    },
+    rounds: {
+        type: Number,
     },
     fantasyTeams: [{
         type: Schema.Types.ObjectId,

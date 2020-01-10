@@ -1,7 +1,6 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { Competition, ICompetition } from '../schemas/competition';
-import { ILeague, League } from '../schemas/league';
 import { tenant } from '../util/tenant';
 
 const competitionRouter: Router = new Router<ICompetition>();
