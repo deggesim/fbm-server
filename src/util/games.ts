@@ -124,33 +124,18 @@ games.set(20, [
 // tslint:disable-next-line: max-line-length
 export const roundRobinMatchList = async (idLeague: number, rounds: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
     const ret: IMatch[] = [];
-    const numTeams = fantasyTeams.length;
-    // get static calendar
-    const teamsSlots = games.get(numTeams);
-    for (let g = 0; g < teamsSlots.length; g++) {
-        // andata
-        const fixture = fixtures[g];
-        for (let i = 0; i < teamsSlots[g].length; i += 2) {
-            const match = {
-                homeTeam: fantasyTeams[teamsSlots[g][i]],
-                awayTeam: fantasyTeams[teamsSlots[g][i + 1]],
-                league: idLeague,
-            };
-            const newMatch: IMatch = await Match.create(match);
-            fixture.matches.push(newMatch);
-            ret.push(newMatch);
-        }
-        await fixture.save();
-    }
-
-    if (rounds > 1) {
-        // ritorno
-        for (let g = 0, gg = teamsSlots.length; g < teamsSlots.length; g++ , gg++) {
-            const fixture = fixtures[gg];
+    try {
+        const numTeams = fantasyTeams.length;
+        // get static calendar
+        const teamsSlots = games.get(numTeams);
+        for (let g = 0; g < teamsSlots.length; g++) {
+            // andata
+            const fixture = fixtures[g];
+            fixture.matches = [];
             for (let i = 0; i < teamsSlots[g].length; i += 2) {
                 const match = {
-                    homeTeam: fantasyTeams[teamsSlots[g][i + 1]],
-                    awayTeam: fantasyTeams[teamsSlots[g][i]],
+                    homeTeam: fantasyTeams[teamsSlots[g][i]],
+                    awayTeam: fantasyTeams[teamsSlots[g][i + 1]],
                     league: idLeague,
                 };
                 const newMatch: IMatch = await Match.create(match);
@@ -159,6 +144,27 @@ export const roundRobinMatchList = async (idLeague: number, rounds: number, fixt
             }
             await fixture.save();
         }
+
+        if (rounds > 1) {
+            // ritorno
+            for (let g = 0, gg = teamsSlots.length; g < teamsSlots.length; g++ , gg++) {
+                const fixture = fixtures[gg];
+                fixture.matches = [];
+                for (let i = 0; i < teamsSlots[g].length; i += 2) {
+                    const match = {
+                        homeTeam: fantasyTeams[teamsSlots[g][i + 1]],
+                        awayTeam: fantasyTeams[teamsSlots[g][i]],
+                        league: idLeague,
+                    };
+                    const newMatch: IMatch = await Match.create(match);
+                    fixture.matches.push(newMatch);
+                    ret.push(newMatch);
+                }
+                await fixture.save();
+            }
+        }
+    } catch (error) {
+        console.log(error);
     }
 
     return ret;
@@ -171,6 +177,7 @@ export const playoffMatchList = async (idLeague: number, fixtures: IFixture[], f
     const lowerSublist = fantasyTeams.slice(size / 2, size);
     for (let i = 0; i < fixtures.length; i++) {
         const fixture = fixtures[i];
+        fixture.matches = [];
         for (let j = 0; j < size / 2; j++) {
             if (i % 2 === 0) {
                 // i pari

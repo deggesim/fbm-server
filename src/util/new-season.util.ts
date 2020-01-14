@@ -84,7 +84,7 @@ export const createPlayoff = async (league: ILeague, realFixtures: IRealFixture[
             roundRobin: false,
             league: league._id,
         };
-        if (league.playoffFormat === PlayoffFormat.QF2_SQ4_SF5_F5) {
+        if (league.playoffFormat.toString() === PlayoffFormat.QF2_SQ4_SF5_F5.toString()) {
             // i quarti di finali sono giocati da 4 squadre
             round.teams = 4;
         }

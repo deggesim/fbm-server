@@ -12,6 +12,7 @@ import teamRouter from './routers/team';
 import userRouter from './routers/user';
 import { IUser, User } from './schemas/user';
 import { auth } from './util/auth';
+import roundRouter from './routers/round';
 
 const app: Koa = new Koa();
 const router: Router = new Router();
@@ -37,6 +38,7 @@ app.use(leagueRouter.routes());
 app.use(playerRouter.routes());
 app.use(teamRouter.routes());
 app.use(userRouter.routes());
+app.use(roundRouter.routes());
 app.use(router.allowedMethods());
 console.log(`Started listening on port ${process.env.PORT}...`);
 app.listen(process.env.PORT || 5000);

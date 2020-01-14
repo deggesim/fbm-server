@@ -1,7 +1,7 @@
 import { Model, model, Schema } from 'mongoose';
+import { playoffMatchList, roundRobinMatchList } from '../util/games';
 import { IFantasyTeam } from './fantasy-team';
 import { IFixture } from './fixture';
-import { roundFormat, RoundFormat } from './formats/round-format';
 import { ITenant } from './league';
 
 interface IRoundDocument extends ITenant {
@@ -21,6 +21,8 @@ interface IRoundDocument extends ITenant {
 // tslint:disable-next-line: no-empty-interface
 export interface IRound extends IRoundDocument {
     // metodi d'istanza
+    buildRoundRobinMatchList: () => Promise<void>;
+    buildPlayoffMatchList: () => Promise<void>;
 }
 
 /**
@@ -74,5 +76,19 @@ const schema = new Schema<IRound>({
 }, {
     timestamps: true,
 });
+
+schema.methods.buildRoundRobinMatchList = async function (): Promise<void> {
+    const round: IRound = this;
+    const leagueId = round.league;
+    await round.populate('fixtures').execPopulate();
+    await roundRobinMatchList(leagueId, round.rounds, round.fixtures, round.fantasyTeams);
+};
+
+schema.methods.buildPlayoffMatchList = async function (): Promise<void> {
+    const round: IRound = this;
+    const leagueId = round.league;
+    await round.populate('fixtures').execPopulate();
+    await playoffMatchList(leagueId, round.fixtures, round.fantasyTeams);
+};
 
 export const Round = model<IRound, IRoundModel>('Round', schema);

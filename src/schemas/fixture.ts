@@ -40,9 +40,57 @@ const schema = new Schema<IFixture>({
         default: false,
     },
     matches: [{
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'Match',
+        homeTeam: {
+            type: Schema.Types.ObjectId,
+            required: true,
+            ref: 'FantasyTeam',
+        },
+        awayTeam: {
+            type: Schema.Types.ObjectId,
+            required: true,
+            ref: 'FantasyTeam',
+        },
+        homeRanking: {
+            type: Number,
+        },
+        homeRanking40Min: {
+            type: Number,
+        },
+        awayRanking: {
+            type: Number,
+        },
+        awayRanking40Min: {
+            type: Number,
+        },
+        homeFactor: {
+            type: Number,
+        },
+        homeOer: {
+            type: Number,
+        },
+        awayOer: {
+            type: Number,
+        },
+        homePlusMinus: {
+            type: Number,
+        },
+        awayPlusMinus: {
+            type: Number,
+        },
+        homeGrade: {
+            type: Number,
+        },
+        awayGrade: {
+            type: Number,
+        },
+        overtime: {
+            type: Number,
+        },
+        completed: {
+            type: Boolean,
+            required: true,
+            default: false,
+        },
     }],
     league: {
         type: Schema.Types.ObjectId,

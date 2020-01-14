@@ -1,13 +1,16 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
-import { IMatch, Match } from '../schemas/match';
 import { IRound, Round } from '../schemas/round';
 import { tenant } from '../util/tenant';
 
 const roundRouter: Router = new Router<IRound>();
 
 roundRouter.get('/rounds', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    ctx.body = await Round.find({ league: ctx.get('league') });
+    const rounds: IRound[] = await Round.find({ league: ctx.get('league') });
+    for (const round of rounds) {
+        await populateAll(round);
+    }
+    ctx.body = rounds;
 });
 
 roundRouter.post('/rounds/:id/matches', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
@@ -20,16 +23,29 @@ roundRouter.post('/rounds/:id/matches', tenant(), async (ctx: Router.IRouterCont
         roundToUpdate.set(updatedRound);
         const round = await roundToUpdate.save();
         // popolamnto match
-        let matches: IMatch[];
         if (round.roundRobin) {
-            matches = await Match.buildRoundRobinMatchList(round);
+            await round.buildRoundRobinMatchList();
         } else {
-            matches = await Match.buildPlayoffMatchList(round);
+            await round.buildPlayoffMatchList();
         }
-        ctx.body = { round, matches };
+        await populateAll(round);
+        ctx.body = round;
     } catch (error) {
+        console.log(error);
+
         ctx.throw(400, error.message);
     }
 });
+
+async function populateAll(round: IRound) {
+    await round.populate('fantasyTeams').execPopulate();
+    await round.populate('fixtures').execPopulate();
+    for (const fixture of round.fixtures) {
+        for (let i = 0; i < fixture.matches.length; i++) {
+            await fixture.populate(`matches.${i}.homeTeam`).execPopulate();
+            await fixture.populate(`matches.${i}.awayTeam`).execPopulate();
+        }
+    }
+}
 
 export default roundRouter;
