@@ -57,6 +57,7 @@ const schema = new Schema<IUser>({
             'Admin',
             'SuperAdmin',
         ],
+        defautl: 'User',
     },
     tokens: [{
         type: String,

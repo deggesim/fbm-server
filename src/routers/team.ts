@@ -18,7 +18,11 @@ teamRouter.get('/teams', tenant(), async (ctx: Router.IRouterContext, next: Koa.
 
 teamRouter.get('/teams/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        ctx.body = await Team.findOne({ _id: ctx.params.id, league: ctx.get('league') });
+        const team = await Team.findOne({ _id: ctx.params.id, league: ctx.get('league') });
+        if (team == null) {
+            ctx.throw(404, 'Squadra non trovata');
+        }
+        ctx.body = team;
     } catch (error) {
         ctx.throw(500, error.message);
     }
@@ -58,7 +62,7 @@ teamRouter.patch('/teams/:id', tenant(), async (ctx: Router.IRouterContext, next
         const updatedTeam: ITeam = ctx.request.body;
         const teamToUpdate: any = await Team.findOne({ _id: ctx.params.id, league: ctx.get('league') });
         if (teamToUpdate == null) {
-            ctx.throw(400, 'Squadra non trovata');
+            ctx.throw(404, 'Squadra non trovata');
         }
         teamToUpdate.set(updatedTeam);
         ctx.body = await teamToUpdate.save();

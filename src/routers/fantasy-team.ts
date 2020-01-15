@@ -19,7 +19,11 @@ fantasyTeamRouter.post('/fantasy-teams', async (ctx: Router.IRouterContext, next
 
 fantasyTeamRouter.get('/fantasy-teams', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        ctx.body = await FantasyTeam.find({ league: ctx.get('league') });
+        const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find({ league: ctx.get('league') });
+        for (const fantasyTeam of fantasyTeams) {
+            await fantasyTeam.populate('owners').execPopulate();
+        }
+        ctx.body = fantasyTeams;
     } catch (error) {
         ctx.throw(500, error.message);
     }
@@ -27,7 +31,12 @@ fantasyTeamRouter.get('/fantasy-teams', tenant(), async (ctx: Router.IRouterCont
 
 fantasyTeamRouter.get('/fantasy-teams/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        ctx.body = await FantasyTeam.findOne({ _id: ctx.params.id, league: ctx.get('league') });
+        const fantasyTeam: IFantasyTeam = await FantasyTeam.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IFantasyTeam;
+        if (fantasyTeam == null) {
+            ctx.throw(404, 'Fantasquadra non trovata');
+        }
+        await fantasyTeam.populate('owners').execPopulate();
+        ctx.body = fantasyTeam;
     } catch (error) {
         ctx.throw(500, error.message);
     }
@@ -37,11 +46,13 @@ fantasyTeamRouter.patch('/fantasy-teams/:id', tenant(), async (ctx: Router.IRout
     try {
         const updatedFantasyTeam: IFantasyTeam = ctx.request.body;
         const fantasyTeamToUpdate = await FantasyTeam.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IFantasyTeam;
-        if (!fantasyTeamToUpdate) {
+        if (fantasyTeamToUpdate == null) {
             ctx.throw(404, 'Fantasquadra non trovata');
         }
         fantasyTeamToUpdate.set(updatedFantasyTeam);
-        ctx.body = await fantasyTeamToUpdate.save();
+        const fantasyTeam = await fantasyTeamToUpdate.save();
+        await fantasyTeam.populate('owners').execPopulate();
+        ctx.body = fantasyTeam;
     } catch (error) {
         ctx.throw(400, error.message);
     }

@@ -1,5 +1,6 @@
 import * as Router from 'koa-router';
 import { IUser, User } from '../schemas/user';
+import { parseCsv } from '../util/parse';
 
 const userRouter: Router = new Router<IUser>();
 
@@ -58,6 +59,21 @@ userRouter.patch('/users/me', async (ctx: Router.IRouterContext) => {
         await userToUpdate.populate('fantasyTeams').execPopulate();
         ctx.body = userToUpdate;
     } catch (error) {
+        ctx.throw(400, error.message);
+    }
+});
+
+// tslint:disable-next-line: no-var-requires
+const multer = require('@koa/multer');
+const upload = multer({
+    storage: multer.memoryStorage(),
+});
+userRouter.post('/users/upload', upload.single('users'), async (ctx: Router.IRouterContext) => {
+    try {
+        const users = parseCsv(ctx.request.body.users.toString(), ['name', 'email', 'password']);
+        await User.insertMany(users);
+    } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
