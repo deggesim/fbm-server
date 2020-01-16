@@ -46,10 +46,31 @@ userRouter.post('/users/logout', async (ctx: Router.IRouterContext) => {
 
 });
 
+// tslint:disable-next-line: no-var-requires
+const multer = require('@koa/multer');
+const upload = multer({
+    storage: multer.memoryStorage(),
+});
+userRouter.post('/users/upload', upload.single('users'), async (ctx: Router.IRouterContext) => {
+    try {
+        const users = parseCsv(ctx.request.body.users.toString(), ['name', 'email', 'password', 'role']);
+        const ret: IUser[] = [];
+        for (const user of users) {
+            const userSaved: IUser = await User.create(user);
+            ret.push(userSaved);
+        }
+        ctx.body = ret;
+    } catch (error) {
+        console.log(error);
+        ctx.throw(400, error.message);
+    }
+});
+
 userRouter.patch('/users/me', async (ctx: Router.IRouterContext) => {
     try {
         const updatedUser = ctx.request.body;
-        const userToUpdate = await User.findById(ctx.params.id) as IUser;
+        console.log('updatedUser', updatedUser);
+        const userToUpdate = await User.findById(updatedUser._id) as IUser;
         if (!userToUpdate) {
             ctx.throw(404, 'Utente non trovato');
         }
@@ -59,22 +80,44 @@ userRouter.patch('/users/me', async (ctx: Router.IRouterContext) => {
         await userToUpdate.populate('fantasyTeams').execPopulate();
         ctx.body = userToUpdate;
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
 
-// tslint:disable-next-line: no-var-requires
-const multer = require('@koa/multer');
-const upload = multer({
-    storage: multer.memoryStorage(),
-});
-userRouter.post('/users/upload', upload.single('users'), async (ctx: Router.IRouterContext) => {
+userRouter.patch('/users/:id', async (ctx: Router.IRouterContext) => {
     try {
-        const users = parseCsv(ctx.request.body.users.toString(), ['name', 'email', 'password']);
-        await User.insertMany(users);
+        const updatedUser = ctx.request.body;
+        console.log('updatedUser', updatedUser);
+        const userToUpdate = await User.findById(ctx.params.id) as IUser;
+        if (!userToUpdate) {
+            ctx.throw(404, 'Utente non trovato');
+        }
+        if (updatedUser.password == null) {
+            delete updatedUser.password;
+        }
+        userToUpdate.set(updatedUser);
+        console.log('userToUpdate', userToUpdate);
+        await userToUpdate.save();
+        await userToUpdate.populate('leagues').execPopulate();
+        await userToUpdate.populate('fantasyTeams').execPopulate();
+        ctx.body = userToUpdate;
     } catch (error) {
         console.log(error);
         ctx.throw(400, error.message);
+    }
+});
+
+userRouter.delete('/users/:id', async (ctx: Router.IRouterContext) => {
+    try {
+        const user = await User.findOneAndDelete({ _id: ctx.params.id }) as IUser;
+        console.log(user);
+        if (user == null) {
+            ctx.status = 404;
+        }
+        ctx.body = user;
+    } catch (error) {
+        ctx.throw(500, error.message);
     }
 });
 
