@@ -35,7 +35,6 @@ const upload = multer({
 playerRouter.post('/players/upload', tenant(), upload.single('players'), async (ctx: Router.IRouterContext) => {
     try {
         const players = parseCsv(ctx.request.body.players.toString(), ['name', 'role', 'nationality', 'team', 'number', 'yearBirth', 'height', 'weight']);
-        await Player.deleteMany({ league: ctx.get('league') });
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         ctx.body = await Player.insertPlayers(players, league);
     } catch (error) {

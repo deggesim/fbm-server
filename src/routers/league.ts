@@ -24,6 +24,30 @@ leagueRouter.get('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Ne
     }
 });
 
+leagueRouter.get('/leagues/:id/is-preseason', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+        const league = await League.findById(ctx.params.id);
+        if (league == null) {
+            ctx.throw(400, 'Lega non trovata');
+        }
+        ctx.body = await league.isPreseason();
+    } catch (error) {
+        ctx.throw(500, error.message);
+    }
+});
+
+leagueRouter.get('/leagues/:id/is-offseason', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+        const league = await League.findById(ctx.params.id);
+        if (league == null) {
+            ctx.throw(400, 'Lega non trovata');
+        }
+        ctx.body = await league.isOffseason();
+    } catch (error) {
+        ctx.throw(500, error.message);
+    }
+});
+
 leagueRouter.post('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const newLeague: ILeague = ctx.request.body;
@@ -64,6 +88,18 @@ leagueRouter.post('/leagues/:id/roles', async (ctx: Router.IRouterContext, next:
             ctx.throw(404, 'Lega non trovata');
         }
         ctx.body = await league.setRoles(ctx.request.body);
+    } catch (error) {
+        ctx.throw(400, error.message);
+    }
+});
+
+leagueRouter.post('/leagues/:id/complete-preseason', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+        const league = await League.findById(ctx.params.id) as ILeague;
+        if (league == null) {
+            ctx.throw(404, 'Lega non trovata');
+        }
+        ctx.body = await league.completePreseason();
     } catch (error) {
         ctx.throw(400, error.message);
     }

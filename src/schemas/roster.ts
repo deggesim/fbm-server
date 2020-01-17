@@ -25,7 +25,7 @@ export interface IRoster extends IRosterDocument {
 /**
  * Estensione del Model per l'aggiunta di metodi statici
  */
-export interface IFantasyRosterModel extends Model<IRoster> {
+export interface IRosterModel extends Model<IRoster> {
     // metodi statici
 }
 
@@ -69,4 +69,4 @@ const schema = new Schema<IRoster>({
     timestamps: true,
 });
 
-export const FantasyRoster = model<IRoster, IFantasyRosterModel>('FantasyRoster', schema);
+export const Roster = model<IRoster, IRosterModel>('Roster', schema);

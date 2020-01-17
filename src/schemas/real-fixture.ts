@@ -49,7 +49,7 @@ const schema = new Schema<IRealFixture>({
     rosters: [{
         type: Schema.Types.ObjectId,
         required: true,
-        ref: 'FantasyRoster',
+        ref: 'Roster',
     }],
     league: {
         type: Schema.Types.ObjectId,

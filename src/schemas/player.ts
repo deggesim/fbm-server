@@ -1,5 +1,9 @@
 import { model, Model, Schema } from 'mongoose';
-import { ILeague, ITenant } from './league';
+import { ILeague, ITenant, League } from './league';
+import { Performance, IPerformance } from './performance';
+import { Roster, IRoster } from './roster';
+import { Team, ITeam } from './team';
+import { IRealFixture, RealFixture } from './real-fixture';
 
 interface IPlayerDocument extends ITenant {
     name: string;
@@ -24,7 +28,7 @@ export interface IPlayer extends IPlayerDocument {
  */
 export interface IPlayerModel extends Model<IPlayer> {
     // metodi statici
-    insertPlayers: (players: IPlayer[], league: ILeague) => Promise<IPlayer[]>;
+    insertPlayers: (players: any[], league: ILeague) => Promise<IPlayer[]>;
 }
 
 const schema = new Schema<IPlayer>({
@@ -82,12 +86,38 @@ const schema = new Schema<IPlayer>({
     timestamps: true,
 });
 
-schema.statics.insertPlayers = (players: IPlayer[], league: ILeague) => {
-    const playersToInsert: IPlayer[] = players.map((player: IPlayer) => {
-        player.league = league._id;
-        return player;
-    });
-    return Player.insertMany(playersToInsert);
+schema.statics.insertPlayers = async (uploadedPlayers: any[], league: ILeague) => {
+    await Roster.deleteMany({ league: league._id });
+    await Player.deleteMany({ league: league._id });
+    const teams: ITeam[] = await Team.find();
+    // const playersToInsert: IPlayer[] = players.map((player: IPlayer) => {
+    //     player.league = league._id;
+    //     return player;
+    // });
+    // const playersSaved: IPlayer[] = await Player.insertMany(playersToInsert);
+
+    const realFixture: IRealFixture = await league.nextRealFixture();
+    for (const uploadedPlayer of uploadedPlayers) {
+        // tslint:disable-next-line: variable-name
+        const { name, role, nationality, number, yearBirth, height, weight } = uploadedPlayer;
+        const playerTeam = uploadedPlayer.team;
+        const player = { name, role, nationality, number, yearBirth, height, weight, league: league._id };
+        const playerSaved = await Player.create(player);
+
+        const teamFound: ITeam = teams.find((team: ITeam) => {
+            return team.fullName === String(playerTeam);
+        }) as ITeam;
+        const roster = {
+            team: teamFound._id,
+            player: playerSaved._id,
+            league: league._id,
+        };
+        const rosterSaved: IRoster = await Roster.create(roster);
+        realFixture.rosters.push(rosterSaved);
+    }
+
+    await realFixture.save();
+
 };
 
 export const Player = model<IPlayer, IPlayerModel>('Player', schema);

@@ -1,10 +1,12 @@
 import { Document, model, Model, Schema } from 'mongoose';
 import { createCup, createPlayoff, createPlayout, createRegularSeason, populateCompetition, populateRealFixture } from '../util/new-season.util';
 import { FantasyTeam } from './fantasy-team';
+import { Fixture, IFixture } from './fixture';
 import { cupFormat, CupFormat } from './formats/cup-format';
 import { playoffFormat, PlayoffFormat } from './formats/playoff-format';
 import { playoutFormat, PlayoutFormat } from './formats/playout-format';
 import { regularSeasonFormat, RegularSeasonFormat } from './formats/regular-season-format';
+import { IRealFixture, RealFixture } from './real-fixture';
 
 interface ILeagueDocument extends Document {
     name: string;
@@ -40,6 +42,11 @@ export interface ILeague extends ILeagueDocument {
     populateLeague: () => Promise<ILeague>;
     setParameters: (parameters: Array<{ parameter: string, value: number }>) => Promise<ILeague>;
     setRoles: (roles: Array<{ role: string, spots: number[] }>) => Promise<ILeague>;
+    completePreseason: () => Promise<ILeague>;
+    isPreseason: () => Promise<boolean>;
+    isOffseason: () => Promise<boolean>;
+    nextFixture: () => Promise<IFixture>;
+    nextRealFixture: () => Promise<IRealFixture>;
 }
 
 /**
@@ -152,6 +159,44 @@ schema.methods.setRoles = async function (roles: Array<{ role: string, spots: nu
         league.roles.push(role);
     }
     return league.save();
+};
+
+schema.methods.completePreseason = async function () {
+    const league = this;
+    const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id }).sort({ id: 1 }) as IRealFixture;
+    realFixture.prepared = true;
+    await realFixture.save();
+    return Promise.resolve(league);
+};
+
+schema.methods.isPreseason = async function () {
+    const league = this;
+    return !RealFixture.exists({ league: league._id, prepared: true });
+};
+
+schema.methods.isOffseason = async function () {
+    const league = this;
+    return !Fixture.exists({ league: league._id, completed: false });
+};
+
+schema.methods.nextFixture = async function () {
+    const league = this;
+    const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id }).populate({
+        path: 'fixtures',
+        match: { completed: false },
+        options: { sort: { _id: 1 } },
+    }).sort({ id: 1 }) as IRealFixture;
+    return realFixture.fixtures[0];
+};
+
+schema.methods.nextRealFixture = async function () {
+    const league = this;
+    const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id }).populate({
+        path: 'fixtures',
+        match: { completed: false },
+        options: { sort: { _id: 1 } },
+    }).sort({ id: 1 }) as IRealFixture;
+    return realFixture;
 };
 
 export const League = model<ILeague, ILeagueModel>('League', schema);
