@@ -69,16 +69,15 @@ userRouter.post('/users/upload', upload.single('users'), async (ctx: Router.IRou
 userRouter.patch('/users/me', async (ctx: Router.IRouterContext) => {
     try {
         const updatedUser = ctx.request.body;
-        console.log('updatedUser', updatedUser);
-        const userToUpdate = await User.findById(updatedUser._id) as IUser;
-        if (!userToUpdate) {
+        const user = await User.findById(updatedUser._id) as IUser;
+        if (!user) {
             ctx.throw(404, 'Utente non trovato');
         }
-        userToUpdate.set(updatedUser);
-        await userToUpdate.save();
-        await userToUpdate.populate('leagues').execPopulate();
-        await userToUpdate.populate('fantasyTeams').execPopulate();
-        ctx.body = userToUpdate;
+        user.set(updatedUser);
+        await user.save();
+        await user.populate('leagues').execPopulate();
+        await user.populate('fantasyTeams').execPopulate();
+        ctx.body = user;
     } catch (error) {
         console.log(error);
         ctx.throw(400, error.message);
@@ -88,20 +87,18 @@ userRouter.patch('/users/me', async (ctx: Router.IRouterContext) => {
 userRouter.patch('/users/:id', async (ctx: Router.IRouterContext) => {
     try {
         const updatedUser = ctx.request.body;
-        console.log('updatedUser', updatedUser);
-        const userToUpdate = await User.findById(ctx.params.id) as IUser;
-        if (!userToUpdate) {
+        const user = await User.findById(ctx.params.id) as IUser;
+        if (!user) {
             ctx.throw(404, 'Utente non trovato');
         }
         if (updatedUser.password == null) {
             delete updatedUser.password;
         }
-        userToUpdate.set(updatedUser);
-        console.log('userToUpdate', userToUpdate);
-        await userToUpdate.save();
-        await userToUpdate.populate('leagues').execPopulate();
-        await userToUpdate.populate('fantasyTeams').execPopulate();
-        ctx.body = userToUpdate;
+        user.set(updatedUser);
+        await user.save();
+        await user.populate('leagues').execPopulate();
+        await user.populate('fantasyTeams').execPopulate();
+        ctx.body = user;
     } catch (error) {
         console.log(error);
         ctx.throw(400, error.message);
@@ -111,7 +108,6 @@ userRouter.patch('/users/:id', async (ctx: Router.IRouterContext) => {
 userRouter.delete('/users/:id', async (ctx: Router.IRouterContext) => {
     try {
         const user = await User.findOneAndDelete({ _id: ctx.params.id }) as IUser;
-        console.log(user);
         if (user == null) {
             ctx.status = 404;
         }

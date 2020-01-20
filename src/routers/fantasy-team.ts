@@ -10,9 +10,10 @@ fantasyTeamRouter.post('/fantasy-teams', async (ctx: Router.IRouterContext, next
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const fantasyTeams: IFantasyTeam[] = ctx.request.body;
-        ctx.body = FantasyTeam.insertFantasyTeams(fantasyTeams, league);
+        ctx.body = await FantasyTeam.insertFantasyTeams(fantasyTeams, league);
         ctx.status = 201;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -25,6 +26,7 @@ fantasyTeamRouter.get('/fantasy-teams', tenant(), async (ctx: Router.IRouterCont
         }
         ctx.body = fantasyTeams;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -38,6 +40,7 @@ fantasyTeamRouter.get('/fantasy-teams/:id', tenant(), async (ctx: Router.IRouter
         await fantasyTeam.populate('owners').execPopulate();
         ctx.body = fantasyTeam;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -54,6 +57,7 @@ fantasyTeamRouter.patch('/fantasy-teams/:id', tenant(), async (ctx: Router.IRout
         await fantasyTeam.populate('owners').execPopulate();
         ctx.body = fantasyTeam;
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -66,6 +70,7 @@ fantasyTeamRouter.delete('/fantasy-teams/:id', tenant(), async (ctx: Router.IRou
         }
         ctx.body = fantasyTeam;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });

@@ -12,7 +12,6 @@ interface IFantasyTeamDocument extends ITenant {
     extraPlayers: number;
     pointsPenalty: number;
     balancePenalty: number;
-    formations: Array<IFormation['_id']>;
     owners: Array<IUser['_id']>;
 }
 
@@ -73,11 +72,6 @@ const schema = new Schema<IFantasyTeam>({
         required: true,
         default: 0,
     },
-    formations: [{
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'Formation',
-    }],
     owners: [{
         type: Schema.Types.ObjectId,
         required: true,
@@ -92,12 +86,31 @@ const schema = new Schema<IFantasyTeam>({
     timestamps: true,
 });
 
+schema.virtual('fantasyRosters', {
+    ref: 'FantasyRoster',
+    localField: '_id',
+    foreignField: 'fantasyTeam',
+});
+
+schema.virtual('formations', {
+    ref: 'Formation',
+    localField: '_id',
+    foreignField: 'fantasyTeam',
+});
+
 schema.statics.insertFantasyTeams = async (fantasyTeams: IFantasyTeam[], league: ILeague) => {
     try {
-        for await (const fantasyTeam of fantasyTeams) {
-            fantasyTeam.league = league._id;
-            const newFantasyTeam = await FantasyTeam.create(fantasyTeam);
-            for await (const owner of newFantasyTeam.owners) {
+        const ret: IFantasyTeam[] = [];
+        // aggiunta della lega ai superAdmin
+        const superAdmins: IUser[] = await User.allSuperAdmins();
+        for (const superAdmin of superAdmins) {
+            superAdmin.leagues.push(league);
+            await superAdmin.save();
+        }
+        for await (const newFantasyTeam of fantasyTeams) {
+            newFantasyTeam.league = league._id;
+            const fantasyTeam = await FantasyTeam.create(newFantasyTeam);
+            for await (const owner of fantasyTeam.owners) {
                 const user: IUser = await User.findById(owner) as IUser;
                 // aggiunta lega all'utente
                 const leagueFound = user.leagues.find((managedLeague) => {
@@ -107,11 +120,13 @@ schema.statics.insertFantasyTeams = async (fantasyTeams: IFantasyTeam[], league:
                     user.leagues.push(league._id);
                 }
                 // aggiunta squadra all'utente
-                user.fantasyTeams.push(newFantasyTeam._id);
+                user.fantasyTeams.push(fantasyTeam._id);
                 // salvataggio
                 await user.save();
             }
+            ret.push(fantasyTeam);
         }
+        return Promise.resolve(ret);
     } catch (error) {
         return Promise.reject(error.message);
     }

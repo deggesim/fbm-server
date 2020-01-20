@@ -20,6 +20,8 @@ interface IUserDocument extends Document {
  */
 export interface IUser extends IUserDocument {
     generateAuthToken: () => Promise<string>;
+    isAdmin: () => boolean;
+    isSuperAdmin: () => boolean;
 }
 
 /**
@@ -27,6 +29,7 @@ export interface IUser extends IUserDocument {
  */
 export interface IUserModel extends Model<IUser> {
     findByCredentials: (email: string, password: string) => Promise<IUser>;
+    allSuperAdmins: () => Promise<IUser[]>;
 }
 
 const schema = new Schema<IUser>({
@@ -95,6 +98,16 @@ schema.methods.generateAuthToken = async function () {
     return Promise.resolve(token);
 };
 
+schema.methods.isAdmin = function () {
+    const user = this;
+    return user.role === 'Admin';
+};
+
+schema.methods.isSuperAdmin = function () {
+    const user = this;
+    return user.role === 'SuperAdmin';
+};
+
 schema.statics.findByCredentials = async (email: string, password: string) => {
     const user = await User.findOne({ email });
     if (!user) {
@@ -107,6 +120,10 @@ schema.statics.findByCredentials = async (email: string, password: string) => {
 
     return user;
 };
+
+schema.statics.allSuperAdmins = async () => {
+    return await User.find({ role: 'SuperAdmin' });
+}
 
 // Hash the plain text password before saving
 schema.pre<IUser>('save', async function (next: HookNextFunction) {

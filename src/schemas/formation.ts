@@ -1,12 +1,14 @@
 import { Model, model, Schema } from 'mongoose';
+import { IFantasyTeam } from './fantasy-team';
 import { IFixture } from './fixture';
 import { ITenant } from './league';
 import { IPlayer } from './player';
 
 interface IFormationDocument extends ITenant {
+    fantasyTeam: IFantasyTeam['id'];
+    player: IPlayer;
     spot: number;
     benchOrder: number;
-    player: IPlayer;
     fixture: IFixture;
     matchReport: {
         realRanking: number;
@@ -31,6 +33,16 @@ export interface IFormationModel extends Model<IFormationDocument> {
 }
 
 const schema = new Schema<IFormation>({
+    fantasyTeam: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'FantasyTeam',
+    },
+    player: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'Player',
+    },
     spot: {
         type: Number,
         required: true,
@@ -41,11 +53,6 @@ const schema = new Schema<IFormation>({
         type: Number,
         min: 1,
         max: 5,
-    },
-    player: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'Player',
     },
     fixture: {
         type: Schema.Types.ObjectId,

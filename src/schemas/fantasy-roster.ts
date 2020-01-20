@@ -2,11 +2,13 @@ import { Model, model, Schema } from 'mongoose';
 import { ITenant } from './league';
 import { IPlayer } from './player';
 import { IRealFixture } from './real-fixture';
-import { ITeam } from './team';
 
-interface IRosterDocument extends ITenant {
-    player: IPlayer;
-    team: ITeam;
+interface IFantasyRosterDocument extends ITenant {
+    player: IPlayer['id'];
+    status: string;
+    draft: boolean;
+    contract: number;
+    yearContract: number;
     realFixture: IRealFixture['_id'];
 }
 
@@ -14,27 +16,45 @@ interface IRosterDocument extends ITenant {
  * Estensione del Document per l'aggiunta di metodi d'istanza
  */
 // tslint:disable-next-line: no-empty-interface
-export interface IRoster extends IRosterDocument {
+export interface IFantasyRoster extends IFantasyRosterDocument {
     // metodi d'istanza
 }
 
 /**
  * Estensione del Model per l'aggiunta di metodi statici
  */
-export interface IRosterModel extends Model<IRoster> {
+export interface IFantasyRosterModel extends Model<IFantasyRoster> {
     // metodi statici
 }
 
-const schema = new Schema<IRoster>({
+const schema = new Schema<IFantasyRoster>({
     player: {
         type: Schema.Types.ObjectId,
         required: true,
         ref: 'Player',
     },
-    team: {
+    fantasyTeam: {
         type: Schema.Types.ObjectId,
         required: true,
-        ref: 'Team',
+        ref: 'FantasyTeam',
+    },
+    status: {
+        type: String,
+        required: true,
+        enum: ['EXT', 'COM', 'NAT'],
+    },
+    draft: {
+        type: Boolean,
+        required: true,
+        default: false,
+    },
+    contract: {
+        type: Number,
+        required: true,
+    },
+    yearContract: {
+        type: Number,
+        required: true,
     },
     realFixture: {
         type: Schema.Types.ObjectId,
@@ -50,4 +70,4 @@ const schema = new Schema<IRoster>({
     timestamps: true,
 });
 
-export const Roster = model<IRoster, IRosterModel>('Roster', schema);
+export const FantasyRoster = model<IFantasyRoster, IFantasyRosterModel>('FantasyRoster', schema);

@@ -62,6 +62,12 @@ const schema = new Schema<ITeam>({
     timestamps: true,
 });
 
+schema.virtual('rosters', {
+    ref: 'Roster',
+    localField: '_id',
+    foreignField: 'team',
+});
+
 schema.statics.insertTeams = (teams: ITeam[], league: ILeague) => {
     const teamsToInsert: ITeam[] = teams.map((team: ITeam) => {
         team.league = league._id;

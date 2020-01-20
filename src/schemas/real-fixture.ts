@@ -7,9 +7,7 @@ import { IRoster } from './roster';
 interface IRealFixtureDocument extends ITenant {
     name: string;
     prepared: boolean;
-    performances: Array<IPerformance['_id']>;
     fixtures: Array<IFixture['_id']>;
-    rosters: Array<IRoster['_id']>;
 }
 
 /**
@@ -36,20 +34,10 @@ const schema = new Schema<IRealFixture>({
         type: Boolean,
         deafault: false,
     },
-    performances: [{
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'Performance',
-    }],
     fixtures: [{
         type: Schema.Types.ObjectId,
         required: true,
         ref: 'Fixture',
-    }],
-    rosters: [{
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'Roster',
     }],
     league: {
         type: Schema.Types.ObjectId,
@@ -58,6 +46,18 @@ const schema = new Schema<IRealFixture>({
     },
 }, {
     timestamps: true,
+});
+
+schema.virtual('rosters', {
+    ref: 'Roster',
+    localField: '_id',
+    foreignField: 'realFixture',
+});
+
+schema.virtual('performances', {
+    ref: 'Performance',
+    localField: '_id',
+    foreignField: 'realFixture',
 });
 
 export const RealFixture = model<IRealFixture, IRealFixtureModel>('RealFixture', schema);

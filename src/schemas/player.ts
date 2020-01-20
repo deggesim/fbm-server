@@ -1,9 +1,10 @@
 import { model, Model, Schema } from 'mongoose';
-import { ILeague, ITenant, League } from './league';
-import { Performance, IPerformance } from './performance';
-import { Roster, IRoster } from './roster';
-import { Team, ITeam } from './team';
+import { FantasyRoster } from './fantasy-roster';
+import { ILeague, ITenant } from './league';
+import { Performance } from './performance';
 import { IRealFixture, RealFixture } from './real-fixture';
+import { IRoster, Roster } from './roster';
+import { ITeam, Team } from './team';
 
 interface IPlayerDocument extends ITenant {
     name: string;
@@ -86,37 +87,47 @@ const schema = new Schema<IPlayer>({
     timestamps: true,
 });
 
+schema.virtual('performances', {
+    ref: 'Performance',
+    localField: '_id',
+    foreignField: 'player',
+});
+
 schema.statics.insertPlayers = async (uploadedPlayers: any[], league: ILeague) => {
     await Roster.deleteMany({ league: league._id });
+    await FantasyRoster.deleteMany({ league: league._id });
     await Player.deleteMany({ league: league._id });
     const teams: ITeam[] = await Team.find();
-    // const playersToInsert: IPlayer[] = players.map((player: IPlayer) => {
-    //     player.league = league._id;
-    //     return player;
-    // });
-    // const playersSaved: IPlayer[] = await Player.insertMany(playersToInsert);
 
-    const realFixture: IRealFixture = await league.nextRealFixture();
+    const nextRealFixture: IRealFixture = await league.nextRealFixture();
+    const allRealFixtures: IRealFixture[] = await RealFixture.find({ league: league._id });
     for (const uploadedPlayer of uploadedPlayers) {
         // tslint:disable-next-line: variable-name
         const { name, role, nationality, number, yearBirth, height, weight } = uploadedPlayer;
         const playerTeam = uploadedPlayer.team;
-        const player = { name, role, nationality, number, yearBirth, height, weight, league: league._id };
-        const playerSaved = await Player.create(player);
+        const newPlayer = { name, role, nationality, number, yearBirth, height, weight, league: league._id };
+        const player = await Player.create(newPlayer);
 
-        const teamFound: ITeam = teams.find((team: ITeam) => {
-            return team.fullName === String(playerTeam);
+        const team: ITeam = teams.find((t: ITeam) => {
+            return t.fullName === String(playerTeam);
         }) as ITeam;
         const roster = {
-            team: teamFound._id,
-            player: playerSaved._id,
+            player: player._id,
+            team: team._id,
+            realFixture: nextRealFixture._id,
             league: league._id,
         };
-        const rosterSaved: IRoster = await Roster.create(roster);
-        realFixture.rosters.push(rosterSaved);
+        await Roster.create(roster);
+        for (const realFixture of allRealFixtures) {
+            Performance.create({
+                player: player._id,
+                realFixture: realFixture._id,
+                league: league._id,
+            });
+        }
     }
 
-    await realFixture.save();
+    await nextRealFixture.save();
 
 };
 

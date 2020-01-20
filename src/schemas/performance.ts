@@ -1,9 +1,11 @@
 import { Model, model, Schema } from 'mongoose';
 import { ITenant } from './league';
 import { IPlayer } from './player';
+import { IRealFixture } from './real-fixture';
 
 interface IPerformanceDocument extends ITenant {
     player: IPlayer;
+    realFixture: IRealFixture;
     ranking: number;
     minutes: number;
     oer: number;
@@ -31,6 +33,11 @@ const schema = new Schema<IPerformance>({
         type: Schema.Types.ObjectId,
         required: true,
         ref: 'Player',
+    },
+    realFixture: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'RealFixture',
     },
     ranking: {
         type: Number,
