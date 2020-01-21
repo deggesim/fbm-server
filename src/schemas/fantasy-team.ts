@@ -84,6 +84,7 @@ const schema = new Schema<IFantasyTeam>({
     },
 }, {
     timestamps: true,
+    toJSON: { virtuals: true },
 });
 
 schema.virtual('fantasyRosters', {

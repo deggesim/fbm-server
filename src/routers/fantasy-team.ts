@@ -2,6 +2,7 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { FantasyTeam, IFantasyTeam } from '../schemas/fantasy-team';
 import { ILeague, League } from '../schemas/league';
+import { IRealFixture } from '../schemas/real-fixture';
 import { tenant } from '../util/tenant';
 
 const fantasyTeamRouter: Router = new Router<IFantasyTeam>();
@@ -10,7 +11,7 @@ fantasyTeamRouter.post('/fantasy-teams', async (ctx: Router.IRouterContext, next
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const fantasyTeams: IFantasyTeam[] = ctx.request.body;
-        ctx.body = await FantasyTeam.insertFantasyTeams(fantasyTeams, league);
+        ctx.body = FantasyTeam.insertFantasyTeams(fantasyTeams, league);
         ctx.status = 201;
     } catch (error) {
         console.log(error);
@@ -20,9 +21,17 @@ fantasyTeamRouter.post('/fantasy-teams', async (ctx: Router.IRouterContext, next
 
 fantasyTeamRouter.get('/fantasy-teams', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find({ league: ctx.get('league') });
+        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+        const nextRealFixture: IRealFixture = await league.nextRealFixture();
+        const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find({ league: league._id });
         for (const fantasyTeam of fantasyTeams) {
             await fantasyTeam.populate('owners').execPopulate();
+            await fantasyTeam.populate({
+                path: 'fantasyRosters',
+                match: {
+                    realFixture: nextRealFixture._id,
+                },
+            }).execPopulate();
         }
         ctx.body = fantasyTeams;
     } catch (error) {
@@ -33,11 +42,19 @@ fantasyTeamRouter.get('/fantasy-teams', tenant(), async (ctx: Router.IRouterCont
 
 fantasyTeamRouter.get('/fantasy-teams/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const fantasyTeam: IFantasyTeam = await FantasyTeam.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IFantasyTeam;
+        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+        const nextRealFixture: IRealFixture = await league.nextRealFixture();
+        const fantasyTeam: IFantasyTeam = await FantasyTeam.findOne({ _id: ctx.params.id, league: league._id }) as IFantasyTeam;
         if (fantasyTeam == null) {
             ctx.throw(404, 'Fantasquadra non trovata');
         }
         await fantasyTeam.populate('owners').execPopulate();
+        await fantasyTeam.populate({
+            path: 'fantasyRosters',
+            match: {
+                realFixture: nextRealFixture._id,
+            },
+        }).execPopulate();
         ctx.body = fantasyTeam;
     } catch (error) {
         console.log(error);
@@ -47,14 +64,22 @@ fantasyTeamRouter.get('/fantasy-teams/:id', tenant(), async (ctx: Router.IRouter
 
 fantasyTeamRouter.patch('/fantasy-teams/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
+        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+        const nextRealFixture: IRealFixture = await league.nextRealFixture();
         const updatedFantasyTeam: IFantasyTeam = ctx.request.body;
-        const fantasyTeamToUpdate = await FantasyTeam.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IFantasyTeam;
+        const fantasyTeamToUpdate = await FantasyTeam.findOne({ _id: ctx.params.id, league: league._id }) as IFantasyTeam;
         if (fantasyTeamToUpdate == null) {
             ctx.throw(404, 'Fantasquadra non trovata');
         }
         fantasyTeamToUpdate.set(updatedFantasyTeam);
         const fantasyTeam = await fantasyTeamToUpdate.save();
         await fantasyTeam.populate('owners').execPopulate();
+        await fantasyTeam.populate({
+            path: 'fantasyRosters',
+            match: {
+                realFixture: nextRealFixture._id,
+            },
+        }).execPopulate();
         ctx.body = fantasyTeam;
     } catch (error) {
         console.log(error);

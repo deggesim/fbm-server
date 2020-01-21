@@ -1,8 +1,6 @@
 import { Model, model, Schema } from 'mongoose';
 import { IFixture } from './fixture';
 import { ITenant } from './league';
-import { IPerformance } from './performance';
-import { IRoster } from './roster';
 
 interface IRealFixtureDocument extends ITenant {
     name: string;

@@ -1,10 +1,12 @@
 import { Model, model, Schema } from 'mongoose';
+import { IFantasyTeam } from './fantasy-team';
 import { ITenant } from './league';
-import { IPlayer } from './player';
 import { IRealFixture } from './real-fixture';
+import { IRoster } from './roster';
 
 interface IFantasyRosterDocument extends ITenant {
-    player: IPlayer['id'];
+    roster: IRoster['id'];
+    fantasyTeam: IFantasyTeam['id'];
     status: string;
     draft: boolean;
     contract: number;
@@ -28,10 +30,10 @@ export interface IFantasyRosterModel extends Model<IFantasyRoster> {
 }
 
 const schema = new Schema<IFantasyRoster>({
-    player: {
+    roster: {
         type: Schema.Types.ObjectId,
         required: true,
-        ref: 'Player',
+        ref: 'Roster',
     },
     fantasyTeam: {
         type: Schema.Types.ObjectId,
