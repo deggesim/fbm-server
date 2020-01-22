@@ -11,6 +11,7 @@ playerRouter.get('/players', tenant(), async (ctx: Router.IRouterContext, next: 
     try {
         ctx.body = await Player.find({ league: ctx.get('league') });
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -22,7 +23,9 @@ playerRouter.post('/players', tenant(), async (ctx: Router.IRouterContext, next:
         newPlayer.league = league._id;
         ctx.body = await Player.create(newPlayer);
         ctx.status = 201;
+        console.log(ctx.body);
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -55,6 +58,7 @@ playerRouter.patch('/players/:id', tenant(), async (ctx: Router.IRouterContext, 
         playerToUpdate.league = league;
         ctx.body = await playerToUpdate.save();
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -68,6 +72,7 @@ playerRouter.delete('/players/:id', tenant(), async (ctx: Router.IRouterContext,
         }
         ctx.body = player;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 

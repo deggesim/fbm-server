@@ -12,12 +12,31 @@ rosterRouter.get('/rosters', tenant(), async (ctx: Router.IRouterContext, next: 
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const nextRealFixture: IRealFixture = await league.nextRealFixture();
         const rosters: IRoster[] = await Roster.find({ league: ctx.get('league'), realFixture: nextRealFixture._id });
-        rosters.forEach((roster: IRoster) => {
-            roster.populate('player').execPopulate();
-            roster.populate('team').execPopulate();
-        });
+        for (const roster of rosters) {
+            await roster.populate('player').execPopulate();
+            await roster.populate('team').execPopulate();
+            await roster.populate('realFixture').execPopulate();
+        }
         ctx.body = rosters;
     } catch (error) {
+        console.log(error);
+        ctx.throw(500, error.message);
+    }
+});
+
+rosterRouter.get('/rosters/free', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+        const nextRealFixture: IRealFixture = await league.nextRealFixture();
+        const rosters: IRoster[] = await Roster.find({ league: ctx.get('league'), realFixture: nextRealFixture._id, fantasyRoster: null });
+        for (const roster of rosters) {
+            await roster.populate('player').execPopulate();
+            await roster.populate('team').execPopulate();
+            await roster.populate('realFixture').execPopulate();
+        }
+        ctx.body = rosters;
+    } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -25,11 +44,18 @@ rosterRouter.get('/rosters', tenant(), async (ctx: Router.IRouterContext, next: 
 rosterRouter.post('/rosters', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+        const nextRealFixture: IRealFixture = await league.nextRealFixture();
         const newRoster: IRoster = ctx.request.body;
+        newRoster.realFixture = nextRealFixture._id;
         newRoster.league = league._id;
-        ctx.body = await Roster.create(newRoster);
+        const roster: IRoster = await Roster.create(newRoster);
+        await roster.populate('player').execPopulate();
+        await roster.populate('team').execPopulate();
+        await roster.populate('realFixture').execPopulate();
+        ctx.body = roster;
         ctx.status = 201;
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -44,8 +70,13 @@ rosterRouter.patch('/rosters/:id', tenant(), async (ctx: Router.IRouterContext, 
         }
         fields.forEach((field) => rosterToUpdate[field] = ctx.request.body[field]);
         rosterToUpdate.league = league;
-        ctx.body = await rosterToUpdate.save();
+        const roster: IRoster = await rosterToUpdate.save();
+        await roster.populate('player').execPopulate();
+        await roster.populate('team').execPopulate();
+        await roster.populate('realFixture').execPopulate();
+        ctx.body = roster;
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -59,6 +90,7 @@ rosterRouter.delete('/rosters/:id', tenant(), async (ctx: Router.IRouterContext,
         }
         ctx.body = roster;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 

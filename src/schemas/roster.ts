@@ -50,4 +50,11 @@ const schema = new Schema<IRoster>({
     timestamps: true,
 });
 
+schema.virtual('fantasyRoster', {
+    ref: 'FantasyRoster',
+    localField: '_id',
+    foreignField: 'roster',
+    justOne: true,
+});
+
 export const Roster = model<IRoster, IRosterModel>('Roster', schema);

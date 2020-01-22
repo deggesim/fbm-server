@@ -94,6 +94,7 @@ schema.virtual('performances', {
 });
 
 schema.statics.insertPlayers = async (uploadedPlayers: any[], league: ILeague) => {
+    await Performance.deleteMany({ league: league._id });
     await Roster.deleteMany({ league: league._id });
     await FantasyRoster.deleteMany({ league: league._id });
     await Player.deleteMany({ league: league._id });
