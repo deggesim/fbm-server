@@ -5,6 +5,7 @@ import { Performance } from './performance';
 import { IRealFixture, RealFixture } from './real-fixture';
 import { IRoster, Roster } from './roster';
 import { ITeam, Team } from './team';
+import { IFantasyTeam, FantasyTeam } from './fantasy-team';
 
 interface IPlayerDocument extends ITenant {
     name: string;
@@ -94,12 +95,21 @@ schema.virtual('performances', {
 });
 
 schema.statics.insertPlayers = async (uploadedPlayers: any[], league: ILeague) => {
+    // pulizia tabelle correlate
     await Performance.deleteMany({ league: league._id });
     await Roster.deleteMany({ league: league._id });
     await FantasyRoster.deleteMany({ league: league._id });
     await Player.deleteMany({ league: league._id });
-    const teams: ITeam[] = await Team.find();
+    const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find({ league: league._id });
+    for (const fantasyTeam of fantasyTeams) {
+        fantasyTeam.outgo = 0;
+        fantasyTeam.extraPlayers = 0;
+        fantasyTeam.playersInRoster = 0;
+        fantasyTeam.totalContracts = 0;
+        await fantasyTeam.save();
+    }
 
+    const teams: ITeam[] = await Team.find();
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
     const allRealFixtures: IRealFixture[] = await RealFixture.find({ league: league._id });
     for (const uploadedPlayer of uploadedPlayers) {

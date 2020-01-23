@@ -1,8 +1,11 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { FantasyRoster, IFantasyRoster } from '../schemas/fantasy-roster';
+import { IFantasyTeam } from '../schemas/fantasy-team';
 import { ILeague, League } from '../schemas/league';
 import { IRealFixture } from '../schemas/real-fixture';
+import { Roster } from '../schemas/roster';
+import { halfDownRound } from '../util/functions';
 import { tenant } from '../util/tenant';
 
 const fantasyRosterRouter: Router = new Router<IFantasyRoster>();
@@ -15,8 +18,11 @@ fantasyRosterRouter.post('/fantasy-rosters', async (ctx: Router.IRouterContext, 
         const nextRealFixture: IRealFixture = await league.nextRealFixture();
         newFantasyRoster.realFixture = nextRealFixture._id;
         const fantasyRoster = await FantasyRoster.create(newFantasyRoster);
+
+        // gestione fantasyTeam
+        await buy(fantasyRoster);
+
         await fantasyRoster.populate('roster').execPopulate();
-        await fantasyRoster.populate('fantasyTeam').execPopulate();
         await fantasyRoster.populate('realFixture').execPopulate();
         ctx.body = fantasyRoster;
         ctx.status = 201;
@@ -67,6 +73,11 @@ fantasyRosterRouter.patch('/fantasy-rosters/:id', tenant(), async (ctx: Router.I
         }
         fantasyRosterToUpdate.set(updatedFantasyRoster);
         const fantasyRoster = await fantasyRosterToUpdate.save();
+
+        // gestione fantasyTeam
+        remove(fantasyRoster);
+        buy(fantasyRoster);
+
         await fantasyRoster.populate('roster').execPopulate();
         await fantasyRoster.populate('fantasyTeam').execPopulate();
         await fantasyRoster.populate('realFixture').execPopulate();
@@ -96,7 +107,10 @@ fantasyRosterRouter.delete('/fantasy-rosters/:id/release', tenant(), async (ctx:
         if (fantasyRoster == null) {
             ctx.status = 404;
         }
-        // TODO release
+
+        // gestione fantasyTeam
+        await release(fantasyRoster);
+
         ctx.body = fantasyRoster;
     } catch (error) {
         console.log(error);
@@ -110,12 +124,62 @@ fantasyRosterRouter.delete('/fantasy-rosters/:id/remove', tenant(), async (ctx: 
         if (fantasyRoster == null) {
             ctx.status = 404;
         }
-        // TODO remove
+
+        // gestione fantasyTeam
+        await remove(fantasyRoster);
+
         ctx.body = fantasyRoster;
     } catch (error) {
         console.log(error);
         ctx.throw(500, error.message);
     }
 });
+
+async function remove(fantasyRoster: IFantasyRoster) {
+    // legame bidirezionale tra roster e fantasyRoster
+    await Roster.findByIdAndUpdate(fantasyRoster.roster, { $unset: { fantasyRoster: '' } });
+    // agiornamento dati fantasyTeam
+    await fantasyRoster.populate('fantasyTeam').execPopulate();
+    const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam;
+    if (!fantasyRoster.draft) {
+        fantasyTeam.outgo -= fantasyRoster.contract;
+    }
+    if (fantasyRoster.status === 'EXT') {
+        fantasyTeam.extraPlayers--;
+    }
+    fantasyTeam.playersInRoster--;
+    fantasyTeam.totalContracts--;
+    await fantasyTeam.save();
+}
+
+async function buy(fantasyRoster: IFantasyRoster) {
+    // legame bidirezionale tra roster e fantasyRoster
+    await Roster.findByIdAndUpdate(fantasyRoster.roster, { fantasyRoster: fantasyRoster._id });
+    // agiornamento dati fantasyTeam
+    await fantasyRoster.populate('fantasyTeam').execPopulate();
+    const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam;
+    if (!fantasyRoster.draft) {
+        fantasyTeam.outgo += fantasyRoster.contract;
+    }
+    if (fantasyRoster.status === 'EXT') {
+        fantasyTeam.extraPlayers++;
+    }
+    fantasyTeam.playersInRoster++;
+    fantasyTeam.totalContracts++;
+    await fantasyTeam.save();
+}
+
+async function release(fantasyRoster: IFantasyRoster) {
+    // legame bidirezionale tra roster e fantasyRoster
+    await Roster.findByIdAndUpdate(fantasyRoster.roster, { $unset: { fantasyRoster: '' } });
+    // agiornamento dati fantasyTeam
+    await fantasyRoster.populate('fantasyTeam').execPopulate();
+    const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam;
+    if (!fantasyRoster.draft) {
+        fantasyTeam.outgo -= halfDownRound(fantasyRoster.contract);
+    }
+    fantasyTeam.playersInRoster--;
+    await fantasyTeam.save();
+}
 
 export default fantasyRosterRouter;

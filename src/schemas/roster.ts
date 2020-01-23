@@ -1,13 +1,15 @@
 import { Model, model, Schema } from 'mongoose';
+import { IFantasyRoster } from './fantasy-roster';
 import { ITenant } from './league';
 import { IPlayer } from './player';
 import { IRealFixture } from './real-fixture';
 import { ITeam } from './team';
 
 interface IRosterDocument extends ITenant {
-    player: IPlayer;
-    team: ITeam;
+    player: IPlayer['_id'];
+    team: ITeam['_id'];
     realFixture: IRealFixture['_id'];
+    fantasyRoster: IFantasyRoster['id'];
 }
 
 /**
@@ -41,6 +43,10 @@ const schema = new Schema<IRoster>({
         required: true,
         ref: 'RealFixture',
     },
+    fantasyRoster: {
+        type: Schema.Types.ObjectId,
+        ref: 'FantasyRoster',
+    },
     league: {
         type: Schema.Types.ObjectId,
         required: true,
@@ -48,13 +54,6 @@ const schema = new Schema<IRoster>({
     },
 }, {
     timestamps: true,
-});
-
-schema.virtual('fantasyRoster', {
-    ref: 'FantasyRoster',
-    localField: '_id',
-    foreignField: 'roster',
-    justOne: true,
 });
 
 export const Roster = model<IRoster, IRosterModel>('Roster', schema);
