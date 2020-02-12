@@ -135,23 +135,6 @@ fantasyRosterRouter.delete('/fantasy-rosters/:id/remove', tenant(), async (ctx: 
     }
 });
 
-async function remove(fantasyRoster: IFantasyRoster) {
-    // legame bidirezionale tra roster e fantasyRoster
-    await Roster.findByIdAndUpdate(fantasyRoster.roster, { $unset: { fantasyRoster: '' } });
-    // agiornamento dati fantasyTeam
-    await fantasyRoster.populate('fantasyTeam').execPopulate();
-    const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam;
-    if (!fantasyRoster.draft) {
-        fantasyTeam.outgo -= fantasyRoster.contract;
-    }
-    if (fantasyRoster.status === 'EXT') {
-        fantasyTeam.extraPlayers--;
-    }
-    fantasyTeam.playersInRoster--;
-    fantasyTeam.totalContracts--;
-    await fantasyTeam.save();
-}
-
 async function buy(fantasyRoster: IFantasyRoster) {
     // legame bidirezionale tra roster e fantasyRoster
     await Roster.findByIdAndUpdate(fantasyRoster.roster, { fantasyRoster: fantasyRoster._id });
@@ -179,6 +162,23 @@ async function release(fantasyRoster: IFantasyRoster) {
         fantasyTeam.outgo -= halfDownRound(fantasyRoster.contract);
     }
     fantasyTeam.playersInRoster--;
+    await fantasyTeam.save();
+}
+
+async function remove(fantasyRoster: IFantasyRoster) {
+    // legame bidirezionale tra roster e fantasyRoster
+    await Roster.findByIdAndUpdate(fantasyRoster.roster, { $unset: { fantasyRoster: '' } });
+    // agiornamento dati fantasyTeam
+    await fantasyRoster.populate('fantasyTeam').execPopulate();
+    const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam;
+    if (!fantasyRoster.draft) {
+        fantasyTeam.outgo -= fantasyRoster.contract;
+    }
+    if (fantasyRoster.status === 'EXT') {
+        fantasyTeam.extraPlayers--;
+    }
+    fantasyTeam.playersInRoster--;
+    fantasyTeam.totalContracts--;
     await fantasyTeam.save();
 }
 

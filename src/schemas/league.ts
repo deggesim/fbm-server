@@ -171,12 +171,12 @@ schema.methods.completePreseason = async function () {
 
 schema.methods.isPreseason = async function () {
     const league = this;
-    return !RealFixture.exists({ league: league._id, prepared: true });
+    return !await RealFixture.exists({ league: league._id, prepared: true });
 };
 
 schema.methods.isOffseason = async function () {
     const league = this;
-    return !Fixture.exists({ league: league._id, completed: false });
+    return !await Fixture.exists({ league: league._id, completed: false });
 };
 
 schema.methods.nextFixture = async function () {

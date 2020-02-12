@@ -1,11 +1,10 @@
 export const halfDownRound = (value: number) => {
-    let ret = value / 2;
-    const decimalPart = value % 1;
+    let half = value / 2;
+    const decimalPart = half % 1;
     if (decimalPart === 0.5) {
-        ret = value - decimalPart;
+        half -= decimalPart;
     } else {
-        ret = Math.round(value);
+        half = Math.round(half);
     }
-    console.log('ret', ret);
-    return ret;
+    return half;
 };

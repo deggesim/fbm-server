@@ -1,11 +1,12 @@
-import { MongoError } from 'mongodb';
-import { connect } from 'mongoose';
+import * as mongoose from 'mongoose';
 
 const PORT = String(process.env.MONGODB_URI);
 
-connect(PORT, {
+mongoose.connect(PORT, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
     useUnifiedTopology: true,
 });
+
+mongoose.set('debug', process.env.DEBUG_MODE || false);

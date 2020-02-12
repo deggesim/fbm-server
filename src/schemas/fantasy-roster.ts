@@ -52,7 +52,6 @@ const schema = new Schema<IFantasyRoster>({
     },
     contract: {
         type: Number,
-        required: true,
     },
     yearContract: {
         type: Number,
