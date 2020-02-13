@@ -22,6 +22,7 @@ freeRouter.post('/users/login', async (ctx: Router.IRouterContext) => {
         user.tokens = user.tokens.concat(token);
         ctx.body = { user, token };
     } catch (error) {
+        console.log(error);
         ctx.throw(401, error.message);
     }
 });
