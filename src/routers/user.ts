@@ -8,6 +8,7 @@ userRouter.get('/users', async (ctx: Router.IRouterContext) => {
     try {
         ctx.body = await User.find();
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -25,6 +26,7 @@ userRouter.get('/users/me', async (ctx: Router.IRouterContext) => {
         user.tokens = user.tokens.concat(token);
         ctx.body = { user, token };
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -41,6 +43,7 @@ userRouter.post('/users/logout', async (ctx: Router.IRouterContext) => {
         await user.save();
         ctx.body = null;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 
@@ -113,6 +116,7 @@ userRouter.delete('/users/:id', async (ctx: Router.IRouterContext) => {
         }
         ctx.body = user;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });

@@ -6,7 +6,12 @@ import { tenant } from '../util/tenant';
 const competitionRouter: Router = new Router<ICompetition>();
 
 competitionRouter.get('/competitions', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    ctx.body = await Competition.find({ league: ctx.get('league') });
+    try {
+        ctx.body = await Competition.find({ league: ctx.get('league') });
+    } catch (error) {
+        console.log(error);
+        ctx.throw(500, error.message);
+    }
 });
 
 export default competitionRouter;

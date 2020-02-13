@@ -12,6 +12,7 @@ teamRouter.get('/teams', tenant(), async (ctx: Router.IRouterContext, next: Koa.
     try {
         ctx.body = await Team.find({ league: ctx.get('league') });
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -24,6 +25,7 @@ teamRouter.get('/teams/:id', tenant(), async (ctx: Router.IRouterContext, next: 
         }
         ctx.body = team;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -36,6 +38,7 @@ teamRouter.post('/teams', tenant(), async (ctx: Router.IRouterContext, next: Koa
         ctx.body = await Team.create(newTeam);
         ctx.status = 201;
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -67,6 +70,7 @@ teamRouter.patch('/teams/:id', tenant(), async (ctx: Router.IRouterContext, next
         teamToUpdate.set(updatedTeam);
         ctx.body = await teamToUpdate.save();
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -80,6 +84,7 @@ teamRouter.delete('/teams/:id', tenant(), async (ctx: Router.IRouterContext, nex
         }
         ctx.body = team;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });

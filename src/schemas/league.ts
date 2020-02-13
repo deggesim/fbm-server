@@ -7,6 +7,7 @@ import { playoffFormat, PlayoffFormat } from './formats/playoff-format';
 import { playoutFormat, PlayoutFormat } from './formats/playout-format';
 import { regularSeasonFormat, RegularSeasonFormat } from './formats/regular-season-format';
 import { IRealFixture, RealFixture } from './real-fixture';
+import { IRound, Round } from './round';
 
 interface ILeagueDocument extends Document {
     name: string;
@@ -45,6 +46,7 @@ export interface ILeague extends ILeagueDocument {
     completePreseason: () => Promise<ILeague>;
     isPreseason: () => Promise<boolean>;
     isOffseason: () => Promise<boolean>;
+    isPostseason: () => Promise<boolean>;
     nextFixture: () => Promise<IFixture>;
     nextRealFixture: () => Promise<IRealFixture>;
 }
@@ -177,6 +179,12 @@ schema.methods.isPreseason = async function () {
 schema.methods.isOffseason = async function () {
     const league = this;
     return !await Fixture.exists({ league: league._id, completed: false });
+};
+
+schema.methods.isPostseason = async function () {
+    const league = this;
+    const round: IRound = await Round.findOne({ league: league._id, name: 'Stagione Regolare' }) as IRound;
+    return round.completed;
 };
 
 schema.methods.nextFixture = async function () {

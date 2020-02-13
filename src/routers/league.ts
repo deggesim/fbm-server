@@ -8,6 +8,7 @@ leagueRouter.get('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next) 
     try {
         ctx.body = await League.find();
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -20,6 +21,7 @@ leagueRouter.get('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Ne
         }
         ctx.body = league;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -32,6 +34,7 @@ leagueRouter.get('/leagues/:id/is-preseason', async (ctx: Router.IRouterContext,
         }
         ctx.body = await league.isPreseason();
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -44,6 +47,20 @@ leagueRouter.get('/leagues/:id/is-offseason', async (ctx: Router.IRouterContext,
         }
         ctx.body = await league.isOffseason();
     } catch (error) {
+        console.log(error);
+        ctx.throw(500, error.message);
+    }
+});
+
+leagueRouter.get('/leagues/:id/is-postseason', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+        const league = await League.findById(ctx.params.id);
+        if (league == null) {
+            ctx.throw(400, 'Lega non trovata');
+        }
+        ctx.body = await league.isPostseason();
+    } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });
@@ -53,6 +70,7 @@ leagueRouter.post('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next)
         const newLeague: ILeague = ctx.request.body;
         ctx.body = await League.create(newLeague);
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -65,6 +83,7 @@ leagueRouter.post('/leagues/:id/populate', async (ctx: Router.IRouterContext, ne
         }
         ctx.body = await league.populateLeague();
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -77,6 +96,7 @@ leagueRouter.post('/leagues/:id/parameters', async (ctx: Router.IRouterContext, 
         }
         ctx.body = await league.setParameters(ctx.request.body);
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -89,6 +109,7 @@ leagueRouter.post('/leagues/:id/roles', async (ctx: Router.IRouterContext, next:
         }
         ctx.body = await league.setRoles(ctx.request.body);
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -101,6 +122,7 @@ leagueRouter.post('/leagues/:id/complete-preseason', async (ctx: Router.IRouterC
         }
         ctx.body = await league.completePreseason();
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -115,6 +137,7 @@ leagueRouter.patch('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.
         leagueToUpdate.set(updatedLeague);
         ctx.body = await leagueToUpdate.save();
     } catch (error) {
+        console.log(error);
         ctx.throw(400, error.message);
     }
 });
@@ -127,6 +150,7 @@ leagueRouter.delete('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa
         }
         ctx.body = league;
     } catch (error) {
+        console.log(error);
         ctx.throw(500, error.message);
     }
 });

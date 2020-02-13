@@ -6,11 +6,16 @@ import { tenant } from '../util/tenant';
 const roundRouter: Router = new Router<IRound>();
 
 roundRouter.get('/rounds', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const rounds: IRound[] = await Round.find({ league: ctx.get('league') });
-    for (const round of rounds) {
-        await populateAll(round);
+    try {
+        const rounds: IRound[] = await Round.find({ league: ctx.get('league') });
+        for (const round of rounds) {
+            await populateAll(round);
+        }
+        ctx.body = rounds;
+    } catch (error) {
+        console.log(error);
+        ctx.throw(500, error.message);
     }
-    ctx.body = rounds;
 });
 
 roundRouter.post('/rounds/:id/matches', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
@@ -32,7 +37,6 @@ roundRouter.post('/rounds/:id/matches', tenant(), async (ctx: Router.IRouterCont
         ctx.body = round;
     } catch (error) {
         console.log(error);
-
         ctx.throw(400, error.message);
     }
 });
