@@ -84,6 +84,7 @@ const schema = new Schema<IFantasyTeam>({
     },
 }, {
     timestamps: true,
+    toObject: { virtuals: true },
     toJSON: { virtuals: true },
 });
 
