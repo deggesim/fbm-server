@@ -19,6 +19,8 @@ interface IMatchDocument extends ITenant {
     awayPlusMinus: number;
     homeGrade: number;
     awayGrade: number;
+    homeScore: number;
+    awayScore: number;
     overtime: number;
     completed: boolean;
 }
@@ -82,6 +84,12 @@ const schema = new Schema<IMatch>({
         type: Number,
     },
     awayGrade: {
+        type: Number,
+    },
+    homeScore: {
+        type: Number,
+    },
+    awayScore: {
         type: Number,
     },
     overtime: {
