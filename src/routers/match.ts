@@ -2,7 +2,6 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { IMatch, Match } from '../schemas/match';
-import { parseCsv } from '../util/parse';
 import { tenant } from '../util/tenant';
 
 const matchRouter: Router = new Router<IMatch>();
