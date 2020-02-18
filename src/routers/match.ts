@@ -29,6 +29,29 @@ matchRouter.post('/matches', tenant(), async (ctx: Router.IRouterContext, next: 
     }
 });
 
+matchRouter.patch('/matches/multiple', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+        const matches: IMatch[] = ctx.request.body;
+        const returnedMatches: IMatch[] = [];
+        for (const updatedMatch of matches) {
+            const matchToUpdate = await Match.findOne({ _id: updatedMatch._id, league: league._id });
+            if (matchToUpdate == null) {
+                ctx.throw(404, 'Match non trovato');
+            }
+            matchToUpdate.set(updatedMatch);
+            const match = await matchToUpdate.save();
+            await match.populate('homeTeam').execPopulate();
+            await match.populate('awayTeam').execPopulate();
+            returnedMatches.push(match);
+        }
+        ctx.body = returnedMatches;
+    } catch (error) {
+        console.log(error);
+        ctx.throw(400, error.message);
+    }
+});
+
 matchRouter.patch('/matches/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
@@ -40,18 +63,6 @@ matchRouter.patch('/matches/:id', tenant(), async (ctx: Router.IRouterContext, n
         fields.forEach((field) => matchToUpdate[field] = ctx.request.body[field]);
         matchToUpdate.league = league;
         ctx.body = await matchToUpdate.save();
-    } catch (error) {
-        console.log(error);
-        ctx.throw(400, error.message);
-    }
-});
-
-matchRouter.put('/matches/', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
-        const matches: IMatch[] = ctx.request.body;
-        await Match.updateMany({ league: league._id }, matches);
-        ctx.body = matches;
     } catch (error) {
         console.log(error);
         ctx.throw(400, error.message);
