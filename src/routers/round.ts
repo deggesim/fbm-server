@@ -46,6 +46,7 @@ async function populateAll(round: IRound) {
     await round.populate('fixtures').execPopulate();
     for (const fixture of round.fixtures) {
         for (let i = 0; i < fixture.matches.length; i++) {
+            await fixture.populate(`matches.${i}`).execPopulate();
             await fixture.populate(`matches.${i}.homeTeam`).execPopulate();
             await fixture.populate(`matches.${i}.awayTeam`).execPopulate();
         }
