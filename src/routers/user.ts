@@ -1,10 +1,11 @@
 import * as Router from 'koa-router';
 import { IUser, User } from '../schemas/user';
+import { auth, parseToken } from '../util/auth';
 import { parseCsv } from '../util/parse';
 
 const userRouter: Router = new Router<IUser>();
 
-userRouter.get('/users', async (ctx: Router.IRouterContext) => {
+userRouter.get('/users', auth(), parseToken(), async (ctx: Router.IRouterContext) => {
     try {
         ctx.body = await User.find();
     } catch (error) {
@@ -13,7 +14,7 @@ userRouter.get('/users', async (ctx: Router.IRouterContext) => {
     }
 });
 
-userRouter.get('/users/me', async (ctx: Router.IRouterContext) => {
+userRouter.get('/users/me', auth(), parseToken(), async (ctx: Router.IRouterContext) => {
     try {
         const id = ctx.state.user._id;
         const user: IUser = await User.findById(id) as IUser;
@@ -31,7 +32,32 @@ userRouter.get('/users/me', async (ctx: Router.IRouterContext) => {
     }
 });
 
-userRouter.post('/users/logout', async (ctx: Router.IRouterContext) => {
+userRouter.post('/users', async (ctx: Router.IRouterContext) => {
+    try {
+        const newUser: IUser = ctx.request.body;
+        ctx.body = await User.create(newUser);
+        ctx.status = 201;
+    } catch (error) {
+        console.log(error);
+        ctx.throw(400, 'Impossibile creare un nuovo utente');
+    }
+});
+
+userRouter.post('/users/login', async (ctx: Router.IRouterContext) => {
+    try {
+        const user: IUser = await User.findByCredentials(ctx.request.body.email, ctx.request.body.password);
+        await user.populate('leagues').execPopulate();
+        await user.populate('fantasyTeams').execPopulate();
+        const token = await user.generateAuthToken();
+        user.tokens = user.tokens.concat(token);
+        ctx.body = { user, token };
+    } catch (error) {
+        console.log(error);
+        ctx.throw(401, error.message);
+    }
+});
+
+userRouter.post('/users/logout', auth(), parseToken(), async (ctx: Router.IRouterContext) => {
     try {
         const id = ctx.state.user._id;
         const token = ctx.state.token;
@@ -54,7 +80,7 @@ const multer = require('@koa/multer');
 const upload = multer({
     storage: multer.memoryStorage(),
 });
-userRouter.post('/users/upload', upload.single('users'), async (ctx: Router.IRouterContext) => {
+userRouter.post('/users/upload', auth(), parseToken(), upload.single('users'), async (ctx: Router.IRouterContext) => {
     try {
         const users = parseCsv(ctx.request.body.users.toString(), ['name', 'email', 'password', 'role']);
         const ret: IUser[] = [];
@@ -69,7 +95,7 @@ userRouter.post('/users/upload', upload.single('users'), async (ctx: Router.IRou
     }
 });
 
-userRouter.patch('/users/me', async (ctx: Router.IRouterContext) => {
+userRouter.patch('/users/me', auth(), parseToken(), async (ctx: Router.IRouterContext) => {
     try {
         const updatedUser = ctx.request.body;
         const user = await User.findById(updatedUser._id) as IUser;
@@ -87,7 +113,7 @@ userRouter.patch('/users/me', async (ctx: Router.IRouterContext) => {
     }
 });
 
-userRouter.patch('/users/:id', async (ctx: Router.IRouterContext) => {
+userRouter.patch('/users/:id', auth(), parseToken(), async (ctx: Router.IRouterContext) => {
     try {
         const updatedUser = ctx.request.body;
         const user = await User.findById(ctx.params.id) as IUser;
@@ -108,7 +134,7 @@ userRouter.patch('/users/:id', async (ctx: Router.IRouterContext) => {
     }
 });
 
-userRouter.delete('/users/:id', async (ctx: Router.IRouterContext) => {
+userRouter.delete('/users/:id', auth(), parseToken(), async (ctx: Router.IRouterContext) => {
     try {
         const user = await User.findOneAndDelete({ _id: ctx.params.id }) as IUser;
         if (user == null) {

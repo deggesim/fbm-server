@@ -3,12 +3,13 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { ITeam, Team } from '../schemas/team';
+import { auth, parseToken } from '../util/auth';
 import { parseCsv } from '../util/parse';
 import { tenant } from '../util/tenant';
 
 const teamRouter: Router = new Router<ITeam>();
 
-teamRouter.get('/teams', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+teamRouter.get('/teams', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         ctx.body = await Team.find({ league: ctx.get('league') });
     } catch (error) {
@@ -17,7 +18,7 @@ teamRouter.get('/teams', tenant(), async (ctx: Router.IRouterContext, next: Koa.
     }
 });
 
-teamRouter.get('/teams/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+teamRouter.get('/teams/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const team = await Team.findOne({ _id: ctx.params.id, league: ctx.get('league') });
         if (team == null) {
@@ -30,7 +31,7 @@ teamRouter.get('/teams/:id', tenant(), async (ctx: Router.IRouterContext, next: 
     }
 });
 
-teamRouter.post('/teams', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+teamRouter.post('/teams', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const newTeam: ITeam = ctx.request.body;
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
@@ -48,7 +49,7 @@ const multer = require('@koa/multer');
 const upload = multer({
     storage: multer.memoryStorage(),
 });
-teamRouter.post('/teams/upload', tenant(), upload.single('teams'), async (ctx: Router.IRouterContext) => {
+teamRouter.post('/teams/upload', auth(), parseToken(), tenant(), upload.single('teams'), async (ctx: Router.IRouterContext) => {
     try {
         const teams = parseCsv(ctx.request.body.teams.toString(), ['fullName', 'sponsor', 'name', 'city', 'abbreviation']);
         await Team.deleteMany({ league: ctx.get('league') });
@@ -60,7 +61,7 @@ teamRouter.post('/teams/upload', tenant(), upload.single('teams'), async (ctx: R
     }
 });
 
-teamRouter.patch('/teams/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+teamRouter.patch('/teams/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const updatedTeam: ITeam = ctx.request.body;
         const teamToUpdate: any = await Team.findOne({ _id: ctx.params.id, league: ctx.get('league') });
@@ -75,7 +76,7 @@ teamRouter.patch('/teams/:id', tenant(), async (ctx: Router.IRouterContext, next
     }
 });
 
-teamRouter.delete('/teams/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+teamRouter.delete('/teams/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const team = await Team.findOneAndDelete({ _id: ctx.params.id, league: ctx.get('league') }) as ITeam;
         console.log(team);

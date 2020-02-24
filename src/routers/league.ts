@@ -1,10 +1,11 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
+import { auth, parseToken } from '../util/auth';
 
 const leagueRouter: Router = new Router<ILeague>();
 
-leagueRouter.get('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.get('/leagues', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         ctx.body = await League.find();
     } catch (error) {
@@ -13,7 +14,7 @@ leagueRouter.get('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next) 
     }
 });
 
-leagueRouter.get('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.get('/leagues/:id', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league = await League.findById(ctx.params.id);
         if (league == null) {
@@ -26,7 +27,7 @@ leagueRouter.get('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Ne
     }
 });
 
-leagueRouter.get('/leagues/:id/is-preseason', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.get('/leagues/:id/is-preseason', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league = await League.findById(ctx.params.id);
         if (league == null) {
@@ -39,7 +40,7 @@ leagueRouter.get('/leagues/:id/is-preseason', async (ctx: Router.IRouterContext,
     }
 });
 
-leagueRouter.get('/leagues/:id/is-offseason', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.get('/leagues/:id/is-offseason', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league = await League.findById(ctx.params.id);
         if (league == null) {
@@ -52,7 +53,7 @@ leagueRouter.get('/leagues/:id/is-offseason', async (ctx: Router.IRouterContext,
     }
 });
 
-leagueRouter.get('/leagues/:id/is-postseason', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.get('/leagues/:id/is-postseason', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league = await League.findById(ctx.params.id);
         if (league == null) {
@@ -65,7 +66,7 @@ leagueRouter.get('/leagues/:id/is-postseason', async (ctx: Router.IRouterContext
     }
 });
 
-leagueRouter.post('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.post('/leagues', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const newLeague: ILeague = ctx.request.body;
         ctx.body = await League.create(newLeague);
@@ -75,7 +76,7 @@ leagueRouter.post('/leagues', async (ctx: Router.IRouterContext, next: Koa.Next)
     }
 });
 
-leagueRouter.post('/leagues/:id/populate', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.post('/leagues/:id/populate', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league = await League.findById(ctx.params.id) as ILeague;
         if (league == null) {
@@ -88,7 +89,7 @@ leagueRouter.post('/leagues/:id/populate', async (ctx: Router.IRouterContext, ne
     }
 });
 
-leagueRouter.post('/leagues/:id/parameters', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.post('/leagues/:id/parameters', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league = await League.findById(ctx.params.id) as ILeague;
         if (league == null) {
@@ -101,7 +102,7 @@ leagueRouter.post('/leagues/:id/parameters', async (ctx: Router.IRouterContext, 
     }
 });
 
-leagueRouter.post('/leagues/:id/roles', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.post('/leagues/:id/roles', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league = await League.findById(ctx.params.id) as ILeague;
         if (league == null) {
@@ -114,7 +115,7 @@ leagueRouter.post('/leagues/:id/roles', async (ctx: Router.IRouterContext, next:
     }
 });
 
-leagueRouter.post('/leagues/:id/complete-preseason', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.post('/leagues/:id/complete-preseason', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league = await League.findById(ctx.params.id) as ILeague;
         if (league == null) {
@@ -127,7 +128,7 @@ leagueRouter.post('/leagues/:id/complete-preseason', async (ctx: Router.IRouterC
     }
 });
 
-leagueRouter.patch('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.patch('/leagues/:id', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const updatedLeague: ILeague = ctx.request.body;
         const leagueToUpdate = await League.findById(ctx.params.id) as ILeague;
@@ -142,9 +143,9 @@ leagueRouter.patch('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.
     }
 });
 
-leagueRouter.delete('/leagues/:id', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+leagueRouter.delete('/leagues/:id', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const league = await League.findOneAndDelete({ _id: ctx.params.id}) as ILeague;
+        const league = await League.findOneAndDelete({ _id: ctx.params.id }) as ILeague;
         if (league == null) {
             ctx.throw(404, 'Lega non trovata');
         }

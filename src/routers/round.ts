@@ -1,11 +1,12 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { IRound, Round } from '../schemas/round';
+import { auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
 
 const roundRouter: Router = new Router<IRound>();
 
-roundRouter.get('/rounds', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+roundRouter.get('/rounds', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const rounds: IRound[] = await Round.find({ league: ctx.get('league') });
         for (const round of rounds) {
@@ -18,7 +19,7 @@ roundRouter.get('/rounds', tenant(), async (ctx: Router.IRouterContext, next: Ko
     }
 });
 
-roundRouter.post('/rounds/:id/matches', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+roundRouter.post('/rounds/:id/matches', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const updatedRound: IRound = ctx.request.body;
         const roundToUpdate = await Round.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IRound;

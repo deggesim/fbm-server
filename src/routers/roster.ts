@@ -3,11 +3,12 @@ import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { IRealFixture } from '../schemas/real-fixture';
 import { IRoster, Roster } from '../schemas/roster';
+import { auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
 
 const rosterRouter: Router = new Router<IRoster>();
 
-rosterRouter.get('/rosters', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+rosterRouter.get('/rosters', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const nextRealFixture: IRealFixture = await league.nextRealFixture();
@@ -25,7 +26,7 @@ rosterRouter.get('/rosters', tenant(), async (ctx: Router.IRouterContext, next: 
     }
 });
 
-rosterRouter.get('/rosters/free', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+rosterRouter.get('/rosters/free', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const nextRealFixture: IRealFixture = await league.nextRealFixture();
@@ -43,7 +44,7 @@ rosterRouter.get('/rosters/free', tenant(), async (ctx: Router.IRouterContext, n
     }
 });
 
-rosterRouter.post('/rosters', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+rosterRouter.post('/rosters', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const nextRealFixture: IRealFixture = await league.nextRealFixture();
@@ -63,7 +64,7 @@ rosterRouter.post('/rosters', tenant(), async (ctx: Router.IRouterContext, next:
     }
 });
 
-rosterRouter.patch('/rosters/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+rosterRouter.patch('/rosters/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const fields = Object.keys(ctx.request.body);
@@ -85,7 +86,7 @@ rosterRouter.patch('/rosters/:id', tenant(), async (ctx: Router.IRouterContext, 
     }
 });
 
-rosterRouter.delete('/rosters/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+rosterRouter.delete('/rosters/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const roster = await Roster.findOneAndDelete({ _id: ctx.params.id, league: league._id }) as IRoster;

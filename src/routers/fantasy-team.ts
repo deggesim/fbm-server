@@ -3,11 +3,12 @@ import * as Router from 'koa-router';
 import { FantasyTeam, IFantasyTeam } from '../schemas/fantasy-team';
 import { ILeague, League } from '../schemas/league';
 import { IRealFixture } from '../schemas/real-fixture';
+import { auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
 
 const fantasyTeamRouter: Router = new Router<IFantasyTeam>();
 
-fantasyTeamRouter.post('/fantasy-teams', async (ctx: Router.IRouterContext, next: Koa.Next) => {
+fantasyTeamRouter.post('/fantasy-teams', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const fantasyTeams: IFantasyTeam[] = ctx.request.body;
@@ -19,7 +20,7 @@ fantasyTeamRouter.post('/fantasy-teams', async (ctx: Router.IRouterContext, next
     }
 });
 
-fantasyTeamRouter.get('/fantasy-teams', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+fantasyTeamRouter.get('/fantasy-teams', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const nextRealFixture: IRealFixture = await league.nextRealFixture();
@@ -40,7 +41,7 @@ fantasyTeamRouter.get('/fantasy-teams', tenant(), async (ctx: Router.IRouterCont
     }
 });
 
-fantasyTeamRouter.get('/fantasy-teams/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+fantasyTeamRouter.get('/fantasy-teams/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const nextRealFixture: IRealFixture = await league.nextRealFixture();
@@ -62,7 +63,7 @@ fantasyTeamRouter.get('/fantasy-teams/:id', tenant(), async (ctx: Router.IRouter
     }
 });
 
-fantasyTeamRouter.patch('/fantasy-teams/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+fantasyTeamRouter.patch('/fantasy-teams/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const nextRealFixture: IRealFixture = await league.nextRealFixture();
@@ -87,7 +88,7 @@ fantasyTeamRouter.patch('/fantasy-teams/:id', tenant(), async (ctx: Router.IRout
     }
 });
 
-fantasyTeamRouter.delete('/fantasy-teams/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+fantasyTeamRouter.delete('/fantasy-teams/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const fantasyTeam = await FantasyTeam.findOneAndDelete({ _id: ctx.params.id, league: ctx.get('league') }) as IFantasyTeam;
         if (fantasyTeam == null) {

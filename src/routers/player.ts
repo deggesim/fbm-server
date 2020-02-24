@@ -2,12 +2,13 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { IPlayer, Player } from '../schemas/player';
+import { auth, parseToken } from '../util/auth';
 import { parseCsv } from '../util/parse';
 import { tenant } from '../util/tenant';
 
 const playerRouter: Router = new Router<IPlayer>();
 
-playerRouter.get('/players', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+playerRouter.get('/players', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         ctx.body = await Player.find({ league: ctx.get('league') });
     } catch (error) {
@@ -16,7 +17,7 @@ playerRouter.get('/players', tenant(), async (ctx: Router.IRouterContext, next: 
     }
 });
 
-playerRouter.post('/players', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+playerRouter.post('/players', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const newPlayer: IPlayer = ctx.request.body;
@@ -35,7 +36,7 @@ const multer = require('@koa/multer');
 const upload = multer({
     storage: multer.memoryStorage(),
 });
-playerRouter.post('/players/upload', tenant(), upload.single('players'), async (ctx: Router.IRouterContext) => {
+playerRouter.post('/players/upload', auth(), parseToken(), tenant(), upload.single('players'), async (ctx: Router.IRouterContext) => {
     try {
         const players = parseCsv(ctx.request.body.players.toString(), ['name', 'role', 'nationality', 'team', 'number', 'yearBirth', 'height', 'weight']);
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
@@ -46,7 +47,7 @@ playerRouter.post('/players/upload', tenant(), upload.single('players'), async (
     }
 });
 
-playerRouter.patch('/players/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+playerRouter.patch('/players/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const fields = Object.keys(ctx.request.body);
@@ -63,7 +64,7 @@ playerRouter.patch('/players/:id', tenant(), async (ctx: Router.IRouterContext, 
     }
 });
 
-playerRouter.delete('/players/:id', tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+playerRouter.delete('/players/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const player = await Player.findOneAndDelete({ _id: ctx.params.id, league: league._id }) as IPlayer;
