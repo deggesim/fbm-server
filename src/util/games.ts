@@ -1,5 +1,6 @@
 import { IFantasyTeam } from '../schemas/fantasy-team';
 import { IFixture } from '../schemas/fixture';
+import { ILeague } from '../schemas/league';
 import { IMatch, Match } from '../schemas/match';
 
 export const games = new Map();
@@ -122,7 +123,7 @@ games.set(20, [
 ]);
 
 // tslint:disable-next-line: max-line-length
-export const roundRobinMatchList = async (idLeague: number, rounds: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
+export const roundRobinMatchList = async (idLeague: ILeague['_id'], rounds: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
     const ret: IMatch[] = [];
     try {
         const numTeams = fantasyTeams.length;
@@ -170,7 +171,7 @@ export const roundRobinMatchList = async (idLeague: number, rounds: number, fixt
     return ret;
 };
 
-export const playoffMatchList = async (idLeague: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
+export const playoffMatchList = async (idLeague: ILeague['_id'], fixtures: IFixture[], fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
     const ret: IMatch[] = [];
     const size = fantasyTeams.length;
     const upperSublist = fantasyTeams.slice(0, size / 2);
