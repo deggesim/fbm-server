@@ -67,13 +67,12 @@ rosterRouter.post('/rosters', auth(), parseToken(), tenant(), async (ctx: Router
 rosterRouter.patch('/rosters/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
-        const fields = Object.keys(ctx.request.body);
-        const rosterToUpdate: any = await Roster.findOne({ _id: ctx.params.id, league: league._id });
+        const updatedRoster: IRoster = ctx.request.body;
+        const rosterToUpdate: IRoster = await Roster.findOne({ _id: ctx.params.id, league: league._id }) as IRoster;
         if (rosterToUpdate == null) {
             ctx.throw(400, 'Giocatore non trovato');
         }
-        fields.forEach((field) => rosterToUpdate[field] = ctx.request.body[field]);
-        rosterToUpdate.league = league;
+        rosterToUpdate.set(updatedRoster);
         const roster: IRoster = await rosterToUpdate.save();
         await roster.populate('player').execPopulate();
         await roster.populate('team').execPopulate();

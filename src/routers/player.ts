@@ -50,13 +50,12 @@ playerRouter.post('/players/upload', auth(), parseToken(), tenant(), upload.sing
 playerRouter.patch('/players/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
-        const fields = Object.keys(ctx.request.body);
-        const playerToUpdate: any = await Player.findOne({ _id: ctx.params.id, league: league._id });
+        const updatedPlayer: IPlayer = ctx.request.body;
+        const playerToUpdate: IPlayer = await Player.findOne({ _id: ctx.params.id, league: league._id }) as IPlayer;
         if (playerToUpdate == null) {
             ctx.throw(400, 'Giocatore non trovato');
         }
-        fields.forEach((field) => playerToUpdate[field] = ctx.request.body[field]);
-        playerToUpdate.league = league;
+        playerToUpdate.set(updatedPlayer);
         ctx.body = await playerToUpdate.save();
     } catch (error) {
         console.log(error);

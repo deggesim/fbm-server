@@ -1,5 +1,6 @@
 import { Document, model, Model, Schema } from 'mongoose';
 import { createCup, createPlayoff, createPlayout, createRegularSeason, populateCompetition, populateRealFixture } from '../util/new-season.util';
+import { Competition } from './competition';
 import { FantasyTeam } from './fantasy-team';
 import { Fixture, IFixture } from './fixture';
 import { cupFormat, CupFormat } from './formats/cup-format';
@@ -49,6 +50,7 @@ export interface ILeague extends ILeagueDocument {
     isPostseason: () => Promise<boolean>;
     nextFixture: () => Promise<IFixture>;
     nextRealFixture: () => Promise<IRealFixture>;
+    progress: () => Promise<void>;
 }
 
 /**
@@ -205,6 +207,43 @@ schema.methods.nextRealFixture = async function () {
         options: { sort: { _id: 1 } },
     }).sort({ id: 1 }) as IRealFixture;
     return realFixture;
+};
+
+schema.methods.progress = async function () {
+    const league = this;
+    const rounds = await Round.find({ league: league._id });
+    // check all rounds
+    for (const round of rounds) {
+        await round.populate('fixtures').execPopulate();
+        let compltedRoundFixtures = 0;
+        for (const fixture of round.fixtures) {
+            if (fixture.completed) {
+                compltedRoundFixtures++;
+            }
+        }
+        if (compltedRoundFixtures === round.fixtures.length) {
+            // round completed
+            round.completed = true;
+            await round.save();
+        }
+    }
+
+    const competitions = await Competition.find({ league: league._id });
+    // check all competitions
+    for (const competition of competitions) {
+        await competition.populate('rounds').execPopulate();
+        let completedRounds = 0;
+        for (const round of competition.rounds) {
+            if (round.completed) {
+                completedRounds++;
+            }
+        }
+        if (completedRounds === competition.rounds.length) {
+            // competition completed
+            competition.completed = true;
+            await competition.save();
+        }
+    }
 };
 
 export const League = model<ILeague, ILeagueModel>('League', schema);

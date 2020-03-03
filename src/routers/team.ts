@@ -64,7 +64,7 @@ teamRouter.post('/teams/upload', auth(), parseToken(), tenant(), upload.single('
 teamRouter.patch('/teams/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const updatedTeam: ITeam = ctx.request.body;
-        const teamToUpdate: any = await Team.findOne({ _id: ctx.params.id, league: ctx.get('league') });
+        const teamToUpdate: ITeam = await Team.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as ITeam;
         if (teamToUpdate == null) {
             ctx.throw(404, 'Squadra non trovata');
         }
