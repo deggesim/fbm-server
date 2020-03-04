@@ -66,6 +66,32 @@ leagueRouter.get('/leagues/:id/is-postseason', auth(), parseToken(), async (ctx:
     }
 });
 
+leagueRouter.get('/leagues/:id/next-fixture', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+        const league = await League.findById(ctx.params.id);
+        if (league == null) {
+            ctx.throw(400, 'Lega non trovata');
+        }
+        ctx.body = await league.nextFixture();
+    } catch (error) {
+        console.log(error);
+        ctx.throw(500, error.message);
+    }
+});
+
+leagueRouter.get('/leagues/:id/next-realfixture', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+        const league = await League.findById(ctx.params.id);
+        if (league == null) {
+            ctx.throw(400, 'Lega non trovata');
+        }
+        ctx.body = await league.nextRealFixture();
+    } catch (error) {
+        console.log(error);
+        ctx.throw(500, error.message);
+    }
+});
+
 leagueRouter.post('/leagues', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const newLeague: ILeague = ctx.request.body;
