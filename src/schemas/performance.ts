@@ -4,8 +4,8 @@ import { IPlayer } from './player';
 import { IRealFixture } from './real-fixture';
 
 interface IPerformanceDocument extends ITenant {
-    player: IPlayer;
-    realFixture: IRealFixture;
+    player: IPlayer['_id'];
+    realFixture: IRealFixture['_id'];
     ranking: number;
     minutes: number;
     oer: number;

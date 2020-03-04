@@ -4,7 +4,6 @@ import * as Router from 'koa-router';
 import { Fixture, IFixture } from '../schemas/fixture';
 import { ILeague, League } from '../schemas/league';
 import { auth, parseToken } from '../util/auth';
-import { parseCsv } from '../util/parse';
 import { tenant } from '../util/tenant';
 
 const fixtureRouter: Router = new Router<IFixture>();
