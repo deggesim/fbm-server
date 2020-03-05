@@ -3,9 +3,10 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { IPerformance, Performance } from '../schemas/performance';
+import { IRoster, Roster } from '../schemas/roster';
 import { auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
-import { Roster, IRoster } from '../schemas/roster';
+import { boxscore } from '../util/boxscore';
 
 const performanceRouter: Router = new Router<IPerformance>();
 
@@ -38,6 +39,9 @@ performanceRouter.get('/performances/team/:teamId/real-fixture/:realFixtureId', 
             const playersId = rosters.map((roster: IRoster) => roster.player);
             const performances =
                 await Performance.find({ league: ctx.get('league'), realFixture: ctx.params.realFixtureId, player: { $in: playersId } });
+            for (const performance of performances) {
+                await performance.populate('player').execPopulate();
+            }
             ctx.body = performances;
         } catch (error) {
             console.log(error);
@@ -57,6 +61,25 @@ performanceRouter.post('/performances', auth(), parseToken(), tenant(), async (c
         ctx.throw(400, error.message);
     }
 });
+
+performanceRouter.post('/performances/team/:teamId/real-fixture/:realFixtureId', auth(), parseToken(), tenant(),
+    async (ctx: Router.IRouterContext, next: Koa.Next) => {
+        try {
+            const url: string = ctx.request.body.url;
+            const rosters = await Roster.find({ league: ctx.get('league'), team: ctx.params.teamId });
+            const playersId = rosters.map((roster: IRoster) => roster.player);
+            const performances =
+            await Performance.find({ league: ctx.get('league'), realFixture: ctx.params.realFixtureId, player: { $in: playersId } });
+            boxscore(performances, url);
+            for (const performance of performances) {
+                await performance.populate('player').execPopulate();
+            }
+            ctx.body = performances;
+        } catch (error) {
+            console.log(error);
+            ctx.throw(400, error.message);
+        }
+    });
 
 performanceRouter.patch('/performances/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
