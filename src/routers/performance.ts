@@ -5,8 +5,8 @@ import { ILeague, League } from '../schemas/league';
 import { IPerformance, Performance } from '../schemas/performance';
 import { IRoster, Roster } from '../schemas/roster';
 import { auth, parseToken } from '../util/auth';
-import { tenant } from '../util/tenant';
 import { boxscore } from '../util/boxscore';
+import { tenant } from '../util/tenant';
 
 const performanceRouter: Router = new Router<IPerformance>();
 
@@ -69,11 +69,8 @@ performanceRouter.post('/performances/team/:teamId/real-fixture/:realFixtureId',
             const rosters = await Roster.find({ league: ctx.get('league'), team: ctx.params.teamId });
             const playersId = rosters.map((roster: IRoster) => roster.player);
             const performances =
-            await Performance.find({ league: ctx.get('league'), realFixture: ctx.params.realFixtureId, player: { $in: playersId } });
-            boxscore(performances, url);
-            for (const performance of performances) {
-                await performance.populate('player').execPopulate();
-            }
+                await Performance.find({ league: ctx.get('league'), realFixture: ctx.params.realFixtureId, player: { $in: playersId } });
+            await boxscore(performances, url);
             ctx.body = performances;
         } catch (error) {
             console.log(error);
