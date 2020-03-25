@@ -42,5 +42,6 @@ app.use(teamRouter.routes());
 app.use(userRouter.routes());
 
 app.use(router.allowedMethods());
-console.log(`Started listening on port ${process.env.PORT}...`);
-app.listen(process.env.PORT || 5000);
+const port = process.env.PORT || 5000;
+console.log(`Started listening on port ${port}...`);
+app.listen(port);
