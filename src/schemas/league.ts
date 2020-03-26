@@ -1,5 +1,5 @@
 import { Document, model, Model, Schema } from 'mongoose';
-import { createCup, createPlayoff, createPlayout, createRegularSeason, populateCompetition, populateRealFixture } from '../util/new-season.util';
+import { cleanLeague, createCup, createPlayoff, createPlayout, createRegularSeason, populateCompetition, populateRealFixture } from '../util/new-season.util';
 import { Competition } from './competition';
 import { FantasyTeam } from './fantasy-team';
 import { Fixture, IFixture } from './fixture';
@@ -139,6 +139,7 @@ const schema = new Schema<ILeague>({
 
 schema.methods.populateLeague = async function () {
     const league = this;
+    await cleanLeague(league);
     await populateCompetition(league);
     const realFixtures = await populateRealFixture(league);
     const fantasyTeams = await FantasyTeam.find({ league: league._id });

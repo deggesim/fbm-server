@@ -162,7 +162,8 @@ leagueRouter.patch('/leagues/:id', auth(), parseToken(), async (ctx: Router.IRou
             ctx.throw(404, 'Lega non trovata');
         }
         leagueToUpdate.set(updatedLeague);
-        ctx.body = await leagueToUpdate.save();
+        await leagueToUpdate.save();
+        ctx.body = await leagueToUpdate.populateLeague();
     } catch (error) {
         console.log(error);
         ctx.throw(400, error.message);

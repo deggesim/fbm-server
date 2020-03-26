@@ -3,8 +3,25 @@ import { IFantasyTeam } from '../schemas/fantasy-team';
 import { Fixture, IFixture } from '../schemas/fixture';
 import { PlayoffFormat } from '../schemas/formats/playoff-format';
 import { ILeague } from '../schemas/league';
+import { Match } from '../schemas/match';
+import { Performance } from '../schemas/performance';
+import { Player } from '../schemas/player';
 import { IRealFixture, RealFixture } from '../schemas/real-fixture';
+import { Roster } from '../schemas/roster';
 import { Round } from '../schemas/round';
+import { Team } from '../schemas/team';
+
+export const cleanLeague = async (league: ILeague) => {
+    await Competition.deleteMany({ league: league._id });
+    await Fixture.deleteMany({ league: league._id });
+    await Match.deleteMany({ league: league._id });
+    await Performance.deleteMany({ league: league._id });
+    await Player.deleteMany({ league: league._id });
+    await RealFixture.deleteMany({ league: league._id });
+    await Roster.deleteMany({ league: league._id });
+    await Round.deleteMany({ league: league._id });
+    await Team.deleteMany({ league: league._id });
+};
 
 export const populateCompetition = async (league: ILeague) => {
     const championship = {
@@ -12,7 +29,6 @@ export const populateCompetition = async (league: ILeague) => {
         league: league._id,
     };
     await Competition.create(championship);
-
     const cup = {
         name: 'Coppa',
         league: league._id,
