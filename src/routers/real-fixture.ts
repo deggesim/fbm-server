@@ -17,9 +17,18 @@ realFixtureRouter.get('/real-fixtures', auth(), parseToken(), tenant(), async (c
     }
 });
 
-realFixtureRouter.get('/real-fixtures/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+realFixtureRouter.get('/real-fixtures', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const realFixture = await RealFixture.findOne({ _id: ctx.params.id, league: ctx.get('league') });
+        ctx.body = await RealFixture.find({ league: ctx.get('league') });
+    } catch (error) {
+        console.log(error);
+        ctx.throw(500, error.message);
+    }
+});
+
+realFixtureRouter.get('/real-fixtures/fixture/:fixtureId', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+        const realFixture = await RealFixture.findOne({ league: ctx.get('league'), fixtures: ctx.params.fixtureId });
         if (realFixture == null) {
             ctx.throw(404, 'Giornata non trovata');
         }

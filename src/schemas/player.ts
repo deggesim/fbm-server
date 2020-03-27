@@ -1,11 +1,11 @@
 import { model, Model, Schema } from 'mongoose';
 import { FantasyRoster } from './fantasy-roster';
+import { FantasyTeam, IFantasyTeam } from './fantasy-team';
 import { ILeague, ITenant } from './league';
 import { Performance } from './performance';
 import { IRealFixture, RealFixture } from './real-fixture';
-import { IRoster, Roster } from './roster';
+import { Roster } from './roster';
 import { ITeam, Team } from './team';
-import { IFantasyTeam, FantasyTeam } from './fantasy-team';
 
 interface IPlayerDocument extends ITenant {
     name: string;

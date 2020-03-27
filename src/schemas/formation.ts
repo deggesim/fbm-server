@@ -6,10 +6,10 @@ import { IPlayer } from './player';
 
 interface IFormationDocument extends ITenant {
     fantasyTeam: IFantasyTeam['id'];
-    player: IPlayer;
+    player: IPlayer['id'];
     spot: number;
     benchOrder: number;
-    fixture: IFixture;
+    fixture: IFixture['id'];
     matchReport: {
         realRanking: number;
         realRanking40Min: number;

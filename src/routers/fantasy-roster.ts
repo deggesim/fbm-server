@@ -33,21 +33,24 @@ fantasyRosterRouter.post('/fantasy-rosters', auth(), parseToken(), async (ctx: R
     }
 });
 
-fantasyRosterRouter.get('/fantasy-rosters/fantasy-team/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-        const fantasyRosters: IFantasyRoster[] = await FantasyRoster.find({ fantasyTeam: ctx.params.id, league: ctx.get('league') });
-        for (const fantasyRoster of fantasyRosters) {
-            await fantasyRoster.populate('roster').execPopulate();
-            await fantasyRoster.populate('roster.player').execPopulate();
-            await fantasyRoster.populate('fantasyTeam').execPopulate();
-            await fantasyRoster.populate('realFixture').execPopulate();
+fantasyRosterRouter.get('/fantasy-rosters/fantasy-team/:id/real-fixture/:realFixtureId', auth(), parseToken(), tenant(),
+    async (ctx: Router.IRouterContext, next: Koa.Next) => {
+        try {
+            const fantasyRosters: IFantasyRoster[] =
+                await FantasyRoster.find({ league: ctx.get('league'), fantasyTeam: ctx.params.id, realFixture: ctx.params.realFixtureId });
+            for (const fantasyRoster of fantasyRosters) {
+                await fantasyRoster.populate('roster').execPopulate();
+                await fantasyRoster.populate('roster.player').execPopulate();
+                await fantasyRoster.populate('roster.team').execPopulate();
+                await fantasyRoster.populate('fantasyTeam').execPopulate();
+                await fantasyRoster.populate('realFixture').execPopulate();
+            }
+            ctx.body = fantasyRosters;
+        } catch (error) {
+            console.log(error);
+            ctx.throw(500, error.message);
         }
-        ctx.body = fantasyRosters;
-    } catch (error) {
-        console.log(error);
-        ctx.throw(500, error.message);
-    }
-});
+    });
 
 fantasyRosterRouter.get('/fantasy-rosters/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
