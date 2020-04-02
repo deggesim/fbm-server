@@ -123,7 +123,7 @@ schema.statics.findByCredentials = async (email: string, password: string) => {
 
 schema.statics.allSuperAdmins = async () => {
     return await User.find({ role: 'SuperAdmin' });
-}
+};
 
 // Hash the plain text password before saving
 schema.pre<IUser>('save', async function (next: HookNextFunction) {

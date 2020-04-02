@@ -1,5 +1,4 @@
 import { Model, model, Schema } from 'mongoose';
-import { IFormation } from './formation';
 import { ILeague, ITenant } from './league';
 import { IUser, User } from './user';
 
@@ -94,8 +93,8 @@ schema.virtual('fantasyRosters', {
     foreignField: 'fantasyTeam',
 });
 
-schema.virtual('formations', {
-    ref: 'Formation',
+schema.virtual('lineups', {
+    ref: 'Lineup',
     localField: '_id',
     foreignField: 'fantasyTeam',
 });

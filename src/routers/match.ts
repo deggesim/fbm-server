@@ -1,10 +1,10 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
+import { Fixture, IFixture } from '../schemas/fixture';
 import { ILeague, League } from '../schemas/league';
 import { IMatch, Match } from '../schemas/match';
 import { auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
-import { IFixture, Fixture } from '../schemas/fixture';
 
 const matchRouter: Router = new Router<IMatch>();
 

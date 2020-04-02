@@ -1,12 +1,10 @@
 import { Model, model, Schema } from 'mongoose';
-import { IFantasyTeam } from './fantasy-team';
+import { IFantasyRoster } from './fantasy-roster';
 import { IFixture } from './fixture';
 import { ITenant } from './league';
-import { IPlayer } from './player';
 
-interface IFormationDocument extends ITenant {
-    fantasyTeam: IFantasyTeam['id'];
-    player: IPlayer['id'];
+interface ILineupDocument extends ITenant {
+    fantasyRoster: IFantasyRoster['id'];
     spot: number;
     benchOrder: number;
     fixture: IFixture['id'];
@@ -21,27 +19,22 @@ interface IFormationDocument extends ITenant {
  * Estensione del Document per l'aggiunta di metodi d'istanza
  */
 // tslint:disable-next-line: no-empty-interface
-export interface IFormation extends IFormationDocument {
+export interface ILineup extends ILineupDocument {
     // metodi d'istanza
 }
 
 /**
  * Estensione del Model per l'aggiunta di metodi statici
  */
-export interface IFormationModel extends Model<IFormationDocument> {
+export interface ILineupModel extends Model<ILineupDocument> {
     // metodi statici
 }
 
-const schema = new Schema<IFormation>({
-    fantasyTeam: {
+const schema = new Schema<ILineup>({
+    fantasyRoster: {
         type: Schema.Types.ObjectId,
         required: true,
-        ref: 'FantasyTeam',
-    },
-    player: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'Player',
+        ref: 'FantasyRoster',
     },
     spot: {
         type: Number,
@@ -62,15 +55,12 @@ const schema = new Schema<IFormation>({
     matchReport: {
         realRanking: {
             type: Number,
-            required: true,
         },
         realRanking40Min: {
             type: Number,
-            required: true,
         },
         minutesUsed: {
             type: Number,
-            required: true,
         },
     },
     league: {
@@ -82,4 +72,4 @@ const schema = new Schema<IFormation>({
     timestamps: true,
 });
 
-export const Formation = model<IFormation, IFormationModel>('Formation', schema);
+export const Lineup = model<ILineup, ILineupModel>('Lineup', schema);
