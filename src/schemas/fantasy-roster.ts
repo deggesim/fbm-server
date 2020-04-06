@@ -43,7 +43,7 @@ const schema = new Schema<IFantasyRoster>({
     status: {
         type: String,
         required: true,
-        enum: ['EXT', 'COM', 'ITA'],
+        enum: ['EXT', 'COM', 'STR', 'ITA'],
     },
     draft: {
         type: Boolean,
