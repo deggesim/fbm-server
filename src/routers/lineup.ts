@@ -29,6 +29,26 @@ lineupRouter.get('/lineups/:id', auth(), parseToken(), tenant(), async (ctx: Rou
     }
 });
 
+lineupRouter.get('/lineups/fantasy-team/:fantastTeamId/fixture/:fixtureId', auth(), parseToken(), tenant(),
+    async (ctx: Router.IRouterContext, next: Koa.Next) => {
+        try {
+            const lineup: ILineup[] = await Lineup.find({ league: ctx.get('league'), fixture: ctx.params.fixtureId });
+            for (const player of lineup) {
+                await player.populate({
+                    path: 'fantasyRoster',
+                    match: { fantasyTeam: ctx.params.fantastTeamId },
+                }).execPopulate();
+                await player.populate('fantasyRoster.roster').execPopulate();
+                await player.populate('fantasyRoster.roster.player').execPopulate();
+            }
+            console.log(lineup);
+            ctx.body = lineup;
+        } catch (error) {
+            console.log(error);
+            ctx.throw(500, error.message);
+        }
+    });
+
 lineupRouter.post('/lineups', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;

@@ -152,6 +152,7 @@ schema.methods.populateLeague = async function () {
 
 schema.methods.setParameters = async function (parameters: Array<{ parameter: string, value: number }>) {
     const league = this;
+    await League.findByIdAndUpdate(league._id, { parameters: [] });
     for (const param of parameters) {
         league.parameters.push(param);
     }
@@ -160,6 +161,7 @@ schema.methods.setParameters = async function (parameters: Array<{ parameter: st
 
 schema.methods.setRoles = async function (roles: Array<{ role: string, spots: number[] }>) {
     const league = this;
+    await League.findByIdAndUpdate(league._id, { roles: [] });
     for (const role of roles) {
         league.roles.push(role);
     }
