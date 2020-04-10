@@ -1,7 +1,8 @@
 import { Model, model, Schema } from 'mongoose';
-import { IFantasyRoster } from './fantasy-roster';
+import { FantasyRoster, IFantasyRoster } from './fantasy-roster';
 import { IFixture } from './fixture';
 import { ITenant } from './league';
+import { IRealFixture, RealFixture } from './real-fixture';
 
 interface ILineupDocument extends ITenant {
     fantasyRoster: IFantasyRoster['id'];
@@ -28,6 +29,7 @@ export interface ILineup extends ILineupDocument {
  */
 export interface ILineupModel extends Model<ILineupDocument> {
     // metodi statici
+    getLineupByFantasyTeamAndFixture: (leagueId: string, fantasyTeamId: string, fixtureId: string) => Promise<ILineup[]>;
 }
 
 const schema = new Schema<ILineup>({
@@ -71,5 +73,17 @@ const schema = new Schema<ILineup>({
 }, {
     timestamps: true,
 });
+
+schema.statics.getLineupByFantasyTeamAndFixture = async (leagueId: string, fantasyTeamId: string, fixtureId: string) => {
+    const realFixture: IRealFixture =
+        await RealFixture.findOne({ league: leagueId, fixtures: fixtureId }) as IRealFixture;
+    const fantasyRosters: IFantasyRoster[] =
+        await FantasyRoster.find({ league: leagueId, fantasyTeam: fantasyTeamId, realFixture: realFixture._id });
+    const fantasyRostersId: string[] = fantasyRosters.map((fr) => fr._id);
+    const lineup: ILineup[] =
+        await Lineup.find({ league: leagueId, fixture: fixtureId, fantasyRoster: { $in: fantasyRostersId } })
+            .sort({ spot: 1 });
+    return lineup;
+};
 
 export const Lineup = model<ILineup, ILineupModel>('Lineup', schema);

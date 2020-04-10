@@ -34,14 +34,8 @@ lineupRouter.get('/lineups/:id', auth(), parseToken(), tenant(), async (ctx: Rou
 lineupRouter.get('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', auth(), parseToken(), tenant(),
     async (ctx: Router.IRouterContext, next: Koa.Next) => {
         try {
-            const realFixture: IRealFixture =
-                await RealFixture.findOne({ league: ctx.get('league'), fixtures: ctx.params.fixtureId }) as IRealFixture;
-            const fantasyRosters: IFantasyRoster[] =
-                await FantasyRoster.find({ league: ctx.get('league'), fantasyTeam: ctx.params.fantasyTeamId, realFixture: realFixture._id });
-            const fantasyRostersId: string[] = fantasyRosters.map((fr) => fr._id);
             const lineup: ILineup[] =
-                await Lineup.find({ league: ctx.get('league'), fixture: ctx.params.fixtureId, fantasyRoster: { $in: fantasyRostersId } })
-                    .sort({ spot: 1 });
+                await Lineup.getLineupByFantasyTeamAndFixture(ctx.get('league'), ctx.params.fantasyTeamId, ctx.params.fixtureId);
             for (const player of lineup) {
                 await player.populate('fantasyRoster').execPopulate();
                 await player.populate('fantasyRoster.roster').execPopulate();
@@ -59,21 +53,18 @@ lineupRouter.get('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', auth
 lineupRouter.post('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', auth(), parseToken(), tenant(),
     async (ctx: Router.IRouterContext, next: Koa.Next) => {
         try {
-            const leagueId = ctx.get('league');
             // delete old items
-            const realFixture: IRealFixture =
-                await RealFixture.findOne({ league: leagueId, fixtures: ctx.params.fixtureId }) as IRealFixture;
-            const fantasyRosters: IFantasyRoster[] =
-                await FantasyRoster.find({ league: leagueId, fantasyTeam: ctx.params.fantasyTeamId, realFixture: realFixture._id });
-            const fantasyRostersId: string[] = fantasyRosters.map((fr) => fr._id);
-            await Lineup.deleteMany({ league: leagueId, fixture: ctx.params.fixtureId, fantasyRoster: { $in: fantasyRostersId } });
-
-            const league: ILeague = await League.findById(leagueId) as ILeague;
-            const lineups: ILineup[] = ctx.request.body;
-            for (const lineup of lineups) {
+            const oldLineup: ILineup[] =
+                await Lineup.getLineupByFantasyTeamAndFixture(ctx.get('league'), ctx.params.fantasyTeamId, ctx.params.fixtureId);
+            for (const lineup of oldLineup) {
+                lineup.remove();
+            }
+            const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+            const newLineup: ILineup[] = ctx.request.body;
+            for (const lineup of newLineup) {
                 lineup.league = league._id;
             }
-            ctx.body = await Lineup.insertMany(lineups);
+            ctx.body = await Lineup.insertMany(newLineup);
             ctx.status = 201;
         } catch (error) {
             console.log(error);
