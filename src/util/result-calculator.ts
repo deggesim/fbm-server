@@ -1,7 +1,8 @@
 import { ILineup } from '../schemas/lineup';
 import { IMatch } from '../schemas/match';
 import { IPerformance } from '../schemas/performance';
-import { AppConfig } from './globals';
+import { halfDownRound } from './functions';
+import { AppConfig, isEmpty } from './globals';
 
 export const computeResult = (
   selectedMatch: IMatch,
@@ -21,8 +22,8 @@ export const computeResult = (
   // HOME
   homeMatchReport.sort((a: ILineup, b: ILineup) => a.spot - b.spot);
   startersMinutes(homeMatchReport, currentPerformances, minutesNeeded);
-  benchMinutes(homeMatchReport);
-  let homeRanking = ranking(homeMatchReport);
+  benchMinutes(homeMatchReport, currentPerformances, minutesNeeded);
+  let homeRanking = ranking(homeMatchReport, currentPerformances);
 
   let homePartialResult = 0;
   let homeOer = 0;
@@ -30,13 +31,13 @@ export const computeResult = (
   let homeGrade = 0;
 
   if (resultWithOer) {
-    homeOer = oer(homeMatchReport);
+    homeOer = oer(homeMatchReport, currentPerformances);
   }
   if (resultWithPlusMinus) {
-    homePlusMinus = plusMinus(homeMatchReport);
+    homePlusMinus = plusMinus(homeMatchReport, currentPerformances);
   }
   if (resultWithGrade) {
-    homeGrade = grade(homeMatchReport, previousPerformances);
+    homeGrade = grade(homeMatchReport, currentPerformances, previousPerformances);
   }
 
   homePartialResult = homeRanking + homeFactor + homeOer + homePlusMinus + homeGrade;
@@ -45,22 +46,22 @@ export const computeResult = (
   // AWAY
   awayMatchReport.sort((a: ILineup, b: ILineup) => a.spot - b.spot);
   startersMinutes(awayMatchReport, currentPerformances, minutesNeeded);
-  benchMinutes(awayMatchReport);
+  benchMinutes(awayMatchReport, currentPerformances, minutesNeeded);
 
-  let awayRanking = ranking(awayMatchReport);
+  let awayRanking = ranking(awayMatchReport, currentPerformances);
   let awayPartialResult = 0;
   let awayOer = 0;
   let awayPlusMinus = 0;
   let awayGrade = 0;
 
   if (resultWithOer) {
-    awayOer = oer(awayMatchReport);
+    awayOer = oer(awayMatchReport, currentPerformances);
   }
   if (resultWithPlusMinus) {
-    awayPlusMinus = plusMinus(awayMatchReport);
+    awayPlusMinus = plusMinus(awayMatchReport, currentPerformances);
   }
   if (resultWithGrade) {
-    awayGrade = grade(awayMatchReport, previousPerformances);
+    awayGrade = grade(awayMatchReport, currentPerformances, previousPerformances);
   }
 
   awayPartialResult = awayRanking + awayOer + awayPlusMinus + awayGrade;
@@ -90,9 +91,9 @@ export const computeResult = (
     const prevHomeFinalResult = homeFinalResult;
     const prevAwayFinalResult = awayFinalResult;
 
-    otStartersMinutes(homeMatchReport);
-    otBenchMinutes(homeMatchReport);
-    homeRanking = ranking(homeMatchReport);
+    otStartersMinutes(homeMatchReport, currentPerformances, minutesNeeded);
+    otBenchMinutes(homeMatchReport, currentPerformances, minutesNeeded);
+    homeRanking = ranking(homeMatchReport, currentPerformances);
     if (resultWithGrade) {
       homePartialResult = homeRanking + homeFactor + homeGrade;
     } else {
@@ -100,9 +101,9 @@ export const computeResult = (
     }
     homeFinalResult = getFinalResult(homePartialResult, resultDivisor);
 
-    otStartersMinutes(awayMatchReport);
-    otBenchMinutes(awayMatchReport);
-    awayRanking = ranking(awayMatchReport);
+    otStartersMinutes(awayMatchReport, currentPerformances, minutesNeeded);
+    otBenchMinutes(awayMatchReport, currentPerformances, minutesNeeded);
+    awayRanking = ranking(awayMatchReport, currentPerformances);
     if (resultWithGrade) {
       awayPartialResult = awayRanking + awayGrade;
     } else {
@@ -112,7 +113,7 @@ export const computeResult = (
 
     if (prevHomeFinalResult === homeFinalResult && prevAwayFinalResult === awayFinalResult) {
       // usiamo il tie-breaker
-      const homeWinner = otTieBreak(homeMatchReport, awayMatchReport);
+      const homeWinner = otTieBreak(homeMatchReport, awayMatchReport, currentPerformances);
       if (homeWinner) {
         homeFinalResult += 1;
       } else {
@@ -144,8 +145,8 @@ const startersMinutes = (lineup: ILineup[], performances: IPerformance[], minute
   // itero solo i titolari
   for (const starter of starters) {
     const performance = performances.find((perf: IPerformance) => perf.player._id === starter.fantasyRoster.roster.player._id);
-    const spot = starter.spot;
     const minutes = performance?.minutes != null ? performance.minutes : 0;
+    const spot = starter.spot;
     let minutesNeededValue = 0;
     let minutesUsed = 0;
     if (minutes < 40) {
@@ -162,44 +163,529 @@ const startersMinutes = (lineup: ILineup[], performances: IPerformance[], minute
   }
 };
 
-const benchMinutes = (benchPlayers: ILineup[]) => {
-  // TODO
+const benchMinutes = (lineup: ILineup[], performances: IPerformance[], minutesNeeded: Map<number, number>) => {
+  const matchReportSize = lineup.length;
+  const benchPlayers = lineup.slice(AppConfig.Starters, matchReportSize - 1);
+  if (!completedWithStarters(minutesNeeded)) {
+    // i titolari non mi danno il risultato finale
+    // calcoliamo quanti minuti ciascun panchinaro deve contribuire al totale squadra
+    for (const benchPlayer of benchPlayers) {
+      const performance = performances.find((perf: IPerformance) => perf.player._id === benchPlayer.fantasyRoster.roster.player._id);
+      const minutes = performance?.minutes != null ? performance.minutes : 0;
+      const spot = benchPlayer.spot;
+      const starterSpot = spot - AppConfig.Starters;
+      let minutesUsed = 0;
+      benchPlayer.matchReport.minutesUsed = 0;
+      if (spot <= AppConfig.LastBenchPlayerIndex) {
+        // è un panchinaro nei 10
+        let minutesNeededValue = minutesNeeded.get(starterSpot) as number;
+        if (minutes < minutesNeededValue) {
+          // usiamo tutti i minuti del giocatore
+          minutesUsed = minutes;
+          // aggiorniamo i minuti necessari per quel ruolo
+          minutesNeededValue -= minutes;
+        } else {
+          // usiamo parte dei minuti del panchinaro in questione
+          minutesUsed = minutesNeededValue;
+          // non abbiamo bisogno di altri minuti da altri giocatori
+          minutesNeededValue = 0;
+        }
+        benchPlayer.matchReport.minutesUsed = minutesUsed;
+        minutesNeeded.set(starterSpot, minutesNeededValue);
+      }
+    }
+  }
+
+  // controllo che il tabellino sia completo
+  if (!completedWithBench(benchPlayers, performances, minutesNeeded)) {
+    // abbiamo bisogno di altri minuti dei panchinari
+    // ordino la collection secondo l'ordine dei panchinari
+    benchPlayers.sort(benchOrderComparator);
+
+    for (const benchPlayer of benchPlayers) {
+      const performance = performances.find((perf: IPerformance) => perf.player._id === benchPlayer.fantasyRoster.roster.player._id);
+      let minutes = performance?.minutes != null ? performance.minutes : 0;
+      // tronchiamo i minuti a 40 perché il panchinaro non può contribuire per un minutaggio maggiore
+      if (minutes > 40) {
+        minutes = 40;
+      }
+
+      let minutesUsed = benchPlayer.matchReport.minutesUsed;
+      // minuti rimanenti del panchinaro
+      let minutesRemaining = minutes - minutesUsed;
+      // usiamo i minuti del panchinaro per coprire i minuti rimanenti
+      if (minutesRemaining > 0) {
+        // il panchinaro ha ancora minuti
+        for (let j = 1; j <= AppConfig.PlayersInBench; j++) {
+          let minutesNeededValue = minutesNeeded.get(j) as number;
+          if (minutesNeededValue > 0) {
+            // il ruolo ha bisogno di altri minuti
+            if (minutesRemaining < minutesNeededValue) {
+              // usiamo tutti i minuti del giocatore
+              minutesUsed += minutesRemaining;
+              // aggiorniamo i minuti necessari per quel ruolo
+              minutesNeededValue -= minutesRemaining;
+            } else {
+              // il ruolo viene coperto intermanete
+              // usiamo parte dei minuti rimanenti del panchinaro in questione
+              minutesUsed += minutesNeededValue;
+              // non abbiamo bisogno di altri minuti da altri giocatori
+              minutesNeededValue = 0;
+            }
+            benchPlayer.matchReport.minutesUsed = minutesUsed;
+            minutesNeeded.set(j, minutesNeededValue);
+            minutesRemaining = minutes - minutesUsed;
+          }
+        }
+      }
+    }
+  }
 };
 
-const otStartersMinutes = (starters: ILineup[]) => {
-  // TODO
+const otStartersMinutes = (lineup: ILineup[], performances: IPerformance[], minutesNeeded: Map<number, number>) => {
+  minutesNeeded.clear();
+  const starters = lineup.slice(0, AppConfig.Starters);
+  // itero solo i titolari
+  for (const starter of starters) {
+    const performance = performances.find((perf: IPerformance) => perf.player._id === starter.fantasyRoster.roster.player._id);
+    const minutes = performance?.minutes != null ? performance.minutes : 0;
+    const spot = starter.spot;
+    let minutesUsed = starter.matchReport.minutesUsed;
+    let minutesNeededValue = 0;
+    if (minutesUsed < minutes) {
+      // il titolare ha ancora minuti a disposizione
+      if (minutes - minutesUsed <= 5) {
+        // minuti a disposizione <= 5
+        // ho ancora minuti da coprire
+        minutesNeededValue = 5 - (minutes - minutesUsed);
+        // uso tutti i minuti
+        minutesUsed = minutes;
+      } else {
+        // minuti a disposizione > 5
+        minutesNeededValue = 0;
+        // aggiungo 5 minuti a quelli usati
+        minutesUsed += 5;
+      }
+      starter.matchReport.minutesUsed = minutesUsed;
+      minutesNeeded.set(spot, minutesNeededValue);
+    } else {
+      // mi servono 5 minuti perché il titolare non contribuisce
+      minutesNeeded.set(spot, 5);
+    }
+  }
 };
 
-const otBenchMinutes = (benchPlayers: ILineup[]) => {
-  // TODO
+const otBenchMinutes = (lineup: ILineup[], performances: IPerformance[], minutesNeeded: Map<number, number>) => {
+
+  // mappa per memorizzare i "minuti OT" di ciascun panchianro
+  const otMinutesUsed: Map<number, number> = new Map<number, number>();
+  if (!completedWithStarters(minutesNeeded)) {
+    // i titolari non mi danno il risultato finale
+    const matchReportSize = lineup.length;
+    const benchPlayers = lineup.slice(AppConfig.Starters, matchReportSize - 1);
+    // calcoliamo quanti minuti ciascun panchinaro deve contribuire al totale squadra
+
+    for (const benchPlayer of benchPlayers) {
+      const performance = performances.find((perf: IPerformance) => perf.player._id === benchPlayer.fantasyRoster.roster.player._id);
+      const minutes = performance?.minutes != null ? performance.minutes : 0;
+      const spot = benchPlayer.spot;
+      const starterSpot = spot - AppConfig.Starters;
+      let minutesUsed = benchPlayer.matchReport.minutesUsed;
+      // inizializzazione "minuti OT"
+      otMinutesUsed.set(spot, 0);
+      if (spot <= AppConfig.LastBenchPlayerIndex) {
+        // è un panchinaro nei 10
+        let minutesNeededValue = minutesNeeded.get(starterSpot) as number;
+        const minutesRemaining = minutes - minutesUsed;
+        if (minutesRemaining < minutesNeededValue) {
+          // usiamo tutti i minuti del giocatore per coprire parzialmente i minuti necessari
+          minutesUsed += minutesRemaining;
+          // aggiorniamo i minuti necessari per quel ruolo
+          minutesNeededValue -= minutesRemaining;
+          // il giocatore ha usato tutti i suoi minuti, non occorro popolare la mappa per i "minuti OT"
+        } else {
+          // usiamo parte dei minuti del panchinaro in questione
+          minutesUsed += minutesNeededValue;
+          // abbiamo usato un po' di minuti del panchinaro per il suo ruolo, ne teniamo traccia per la seconda ciclata
+          otMinutesUsed.set(spot, minutesNeededValue);
+          // non abbiamo bisogno di altri minuti da altri giocatori
+          minutesNeededValue = 0;
+        }
+        benchPlayer.matchReport.minutesUsed = minutesUsed;
+        minutesNeeded.set(starterSpot, minutesNeededValue);
+      }
+    }
+
+    // controllo che il tabellino sia completo
+    if (!completedWithBench(benchPlayers, performances, minutesNeeded)) {
+      // abbiamo bisogno di altri minuti dei panchinari
+      // ordino la collection secondo l'ordine dei panchinari
+      benchPlayers.sort(benchOrderComparator);
+
+      for (const benchPlayer of benchPlayers) {
+        const performance = performances.find((perf: IPerformance) => perf.player._id === benchPlayer.fantasyRoster.roster.player._id);
+        const minutes = performance?.minutes != null ? performance.minutes : 0;
+        const spot = benchPlayer.spot;
+        let minutesUsed = benchPlayer.matchReport.minutesUsed;
+        // minuti rimanenti del panchinaro
+        let minutesRemaining = minutes - minutesUsed;
+        // usiamo i minuti del panchinaro per coprire i minuti rimanenti
+        if (minutesRemaining > 0) {
+          // minuti già usati nell'OT
+          let benchPlayerOtMinutesUsed = otMinutesUsed.get(spot) as number;
+          if (benchPlayerOtMinutesUsed < 5) {
+            // il panchinaro ha ancora minuti (sia normali che "OT")
+            for (let j = 1; j <= AppConfig.PlayersInBench; j++) {
+              let minutesNeededValue = minutesNeeded.get(j) as number;
+              if (minutesNeededValue > 0) {
+                // il ruolo ha bisogno di altri minuti
+                // "minuti OT" rimanenti
+                const benchPlayerOtMinutesRemaining = 5 - benchPlayerOtMinutesUsed;
+                if (benchPlayerOtMinutesRemaining > 0) {
+                  // il giocatore pu� ancora contribuire all'OT
+                  if (minutesRemaining <= benchPlayerOtMinutesRemaining) {
+                    // i minuti rimanenti del giocatore sono minori o ugale dei "minuti OT" rimanenti
+                    if (minutesRemaining < minutesNeededValue) {
+                      // usiamo tutti i minuti del giocatore per coprire parzialmente i minuti necessari
+                      minutesUsed += minutesRemaining;
+                      // aggiorniamo i minuti necessari per quel ruolo
+                      minutesNeededValue -= minutesRemaining;
+                      // non dobbiamo aggiornare i "minuti OT" perch� il giocatore non pu� contribuire ulteriormente
+                    } else {
+                      // il ruolo viene coperto intermanete
+                      // usiamo parte dei minuti rimanenti del panchinaro in questione
+                      minutesUsed += minutesNeededValue;
+                      // aggiorniamo i "minuti OT" usati
+                      benchPlayerOtMinutesUsed += minutesNeededValue;
+                      // non abbiamo bisogno di altri minuti da altri giocatori
+                      minutesNeededValue = 0;
+                    }
+                  } else {
+                    // i minuti rimanenti del giocatore sono maggiori dei "minuti OT" rimanenti
+                    if (benchPlayerOtMinutesRemaining < minutesNeededValue) {
+                      // usiamo tutti i "minuti OT" del giocatore per coprire parzialmente i minuti necessari
+                      minutesUsed += benchPlayerOtMinutesRemaining;
+                      // aggiorniamo i minuti necessari per quel ruolo
+                      minutesNeededValue -= benchPlayerOtMinutesRemaining;
+                      // aggiorniamo i "minuti OT" usati
+                      benchPlayerOtMinutesUsed = 5;
+                    } else {
+                      // il ruolo viene coperto intermanete
+                      // usiamo parte dei minuti OT rimanenti del panchinaro in questione
+                      minutesUsed += minutesNeededValue;
+                      // aggiorniamo i minuti OT usati
+                      benchPlayerOtMinutesUsed += minutesNeededValue;
+                      // non abbiamo bisogno di altri minuti da altri giocatori
+                      minutesNeededValue = 0;
+                    }
+                  }
+                  benchPlayer.matchReport.minutesUsed = minutesUsed;
+                  minutesNeeded.set(j, minutesNeededValue);
+                  minutesRemaining = minutes - minutesUsed;
+                  otMinutesUsed.set(spot, benchPlayerOtMinutesUsed);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 };
 
-const ranking = (starters: ILineup[]): number => {
-  const ret = 0;
+const ranking = (lineup: ILineup[], performances: IPerformance[]): number => {
+  let ret = 0;
+  // calcolo delle valutazioni
+  for (const player of lineup) {
+    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id);
+    // pondero la valutazione sui 40 minuti
+    const playerRanking = (performance?.ranking != null ? performance.ranking : 0);
+    const playerMinutes = (performance?.minutes != null ? performance.minutes : 0);
+    const playerMinutesUsed = player.matchReport.minutesUsed;
+    if (playerMinutesUsed > 0) {
+      let roundedRanking = 0;
+      if (playerMinutes === playerMinutesUsed) {
+        roundedRanking = playerRanking;
+      } else {
+        roundedRanking = computeRoundedRanking(playerMinutesUsed, playerRanking, playerMinutes);
+      }
+      player.matchReport.realRanking = roundedRanking;
+      ret += roundedRanking;
+    }
+  }
   return ret;
 };
 
-const oer = (matchReport: ILineup[]): number => {
-  const ret = 0;
+const oer = (lineup: ILineup[], performances: IPerformance[]): number => {
+  let ret = 0;
+  for (const player of lineup) {
+    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id);
+    const playerOer = (performance?.oer != null ? performance.oer : 0);
+    ret += playerOer;
+  }
   return ret;
 };
 
-const plusMinus = (matchReport: ILineup[]): number => {
-  const ret = 0;
+const plusMinus = (lineup: ILineup[], performances: IPerformance[]): number => {
+  let ret = 0;
+  for (const player of lineup) {
+    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id);
+    const playerPlusMinus = (performance?.plusMinus != null ? performance.plusMinus : 0);
+    ret += playerPlusMinus;
+  }
   return ret;
 };
 
-const grade = (matchReport: ILineup[], previousPerformances: IPerformance[]): number => {
-  const ret = 0;
+const grade = (lineup: ILineup[], currentPerformances: IPerformance[], previousPerformances: IPerformance[]): number => {
+  let ret = 0;
+  let lowestGrade = 10;
+  const upperBound = AppConfig.NecessaryGrades > lineup.length ? lineup.length : AppConfig.NecessaryGrades;
+
+  // memorizzo le performance oltre la decima per eventuali giocatori non a referto che devono prendere comunque il voto
+  const extraPlayers: ILineup[] = [];
+  if (AppConfig.NecessaryGrades < lineup.length) {
+    for (let i = AppConfig.NecessaryGrades; i < lineup.length; i++) {
+      extraPlayers.push(lineup[i]);
+    }
+  }
+
+  // prima ciclata per determinare il voto più basso
+  for (let i = 0; i < upperBound; i++) {
+    const player = lineup[i];
+    const performance =
+      player != null ? currentPerformances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) : null;
+    if (performance != null && performance.grade != null) {
+      if (lowestGrade > performance.grade) {
+        lowestGrade = performance.grade;
+      }
+    }
+  }
+
+  for (let i = 0; i < upperBound; i++) {
+    const player = lineup[i];
+    if (player != null) {
+      const performance =
+        currentPerformances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+      if (performance.grade != null) {
+        // il giocatore ha preso un voto
+        ret += performance.grade;
+      } else {
+        // il giocatore non ha un voto
+        if (performance.minutes != null) {
+          if (performance.minutes > 0) {
+            // il giocatore ha giocato almeno un minuto
+            ret += AppConfig.DefaultGrade;
+          } else {
+            // il giocatore non ha giocato neanche un minuto
+            if (lowestGrade > 1) {
+              lowestGrade -= 1;
+            } else {
+              lowestGrade = 0;
+            }
+            ret += lowestGrade;
+          }
+        } else {
+          // il giocatore non è andato a referto: controlliamo la performance precedente
+          if (previousPerformances != null && !isEmpty(previousPerformances)) {
+            // esiste una giornata precedente => cerchiamo la performance del giocatore nella giornata precedente
+            const prevPerf =
+              previousPerformances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+
+            if (prevPerf.minutes != null) {
+              // il giocatore è andato a referto la giornata precedente => voto extra
+              if (!isEmpty(extraPlayers)) {
+                // prendo il voto extra e rimuovo l'elemento
+                const extraPlayer = extraPlayers.shift() as ILineup;
+                const extraPerf =
+                  currentPerformances.find((perf: IPerformance) => perf.player._id === extraPlayer.fantasyRoster.roster.player._id) as IPerformance;
+
+                if (extraPerf.grade != null) {
+                  // il giocatore extra ha preso un voto
+                  ret += extraPerf.grade;
+                } else if (extraPerf.minutes != null) {
+                  if (extraPerf.minutes > 0) {
+                    // il giocatore extra ha giocato almeno un minuto
+                    ret += AppConfig.DefaultGrade;
+                  } else {
+                    // il giocatore extra non ha giocato neanche un minuto
+                    if (lowestGrade > 1) {
+                      lowestGrade -= 1;
+                    } else {
+                      lowestGrade = 0;
+                    }
+                    ret += lowestGrade;
+                  }
+                }
+              }
+            } // il giocatore NON è andato a referto la giornata precedente => 0
+          } else {
+            // non esiste una giornata precedente => prendiamo il voto extra
+            if (!isEmpty(extraPlayers)) {
+              // prendo il voto extra e rimuovo l'elemento
+              const extraPlayer = extraPlayers.shift() as ILineup;
+              const extraPerf =
+                currentPerformances.find((perf: IPerformance) => perf.player._id === extraPlayer.fantasyRoster.roster.player._id) as IPerformance;
+
+              if (extraPerf.grade != null) {
+                // il giocatore extra ha preso un voto
+                ret += extraPerf.grade;
+              } else if (extraPerf.minutes != null) {
+                if (extraPerf.minutes > 0) {
+                  // il giocatore extra ha giocato almeno un minuto
+                  ret += AppConfig.DefaultGrade;
+                } else {
+                  // il giocatore extra non ha giocato neanche un minuto
+                  if (lowestGrade > 1) {
+                    lowestGrade -= 1;
+                  } else {
+                    lowestGrade = 0;
+                  }
+                  ret += lowestGrade;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
   return ret;
 };
 
 const getFinalResult = (partialResult: number, resultDivisor: number): number => {
-  const ret = 0;
-  return ret;
+  // arrotondamento n,5 = n + 1
+  return Math.round(partialResult / resultDivisor);
 };
 
-const otTieBreak = (homeMatchReport: ILineup[], awayMatchReport: ILineup[]): boolean => {
+const otTieBreak = (homeMatchReport: ILineup[], awayMatchReport: ILineup[], performances: IPerformance[]): boolean => {
   const ret = false;
-  return ret;
+
+  // tie-breaker per gli OT senza risultato: ritorna true per la vittoria casalinga, false per quella in trasferta
+  // In caso di pareggio per avere un vincitore si prende in questo ordine:
+  //
+  // 1 - La somma delle valutazioni dei cinque titolari
+  // 2 - La somma delle valutazioni di tutti i dodici titolari
+  // 3 - La somma delle valutazioni dei primi dieci in formazione
+
+  // Caso 1
+  let homeStarterRanking = 0;
+  // somma delle valutazioni dei titolari della squadra di casa
+  const homeStarters = homeMatchReport.slice(0, AppConfig.Starters);
+  for (const player of homeStarters) {
+    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    homeStarterRanking += performance.ranking != null ? performance.ranking : 0;
+  }
+
+  let awayStarterRanking = 0;
+  // somma delle valutazioni dei titolari della squadra in trasferta
+  const awayStarters = awayMatchReport.slice(0, AppConfig.Starters);
+  for (const player of awayStarters) {
+    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    awayStarterRanking += performance.ranking != null ? performance.ranking : 0;
+  }
+
+  if (homeStarterRanking > awayStarterRanking) {
+    return true;
+  } else if (homeStarterRanking < awayStarterRanking) {
+    return false;
+  }
+
+  // Caso 2
+  let homeTotalRanking = 0;
+  // somma delle valutazioni di tutta la squadra di casa
+  for (const player of homeMatchReport) {
+    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    homeTotalRanking += performance.ranking != null ? performance.ranking : 0;
+  }
+
+  let awayTotalRanking = 0;
+  // somma delle valutazioni di tutta la squadra in trasferta
+  for (const player of homeMatchReport) {
+    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    awayTotalRanking += performance.ranking != null ? performance.ranking : 0;
+  }
+
+  if (homeTotalRanking > awayTotalRanking) {
+    return true;
+  } else if (homeTotalRanking < awayTotalRanking) {
+    return false;
+  }
+
+  // Caso 3
+  let homeMinPlayersInFormationRanking = 0;
+  // somma delle valutazioni dei primi dieci giocatori della squadra di casa
+  const homeMinPlayersInLineup = homeMatchReport.slice(0, AppConfig.MinPlayersInLineup);
+  for (const player of homeMinPlayersInLineup) {
+    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    homeMinPlayersInFormationRanking += performance.ranking != null ? performance.ranking : 0;
+  }
+
+  let awayMinPlayersInFormationRanking = 0;
+  // somma delle valutazioni dei primi dieci giocatori della squadra in trasferta
+  const awayMinPlayersInLineup = awayMatchReport.slice(0, AppConfig.MinPlayersInLineup);
+  for (const player of awayMinPlayersInLineup) {
+    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    awayMinPlayersInFormationRanking += performance.ranking != null ? performance.ranking : 0;
+  }
+
+  if (homeMinPlayersInFormationRanking > awayMinPlayersInFormationRanking) {
+    return true;
+  } else if (homeMinPlayersInFormationRanking < awayMinPlayersInFormationRanking) {
+    return false;
+  } else {
+    // il vincitore viene stabilito dal caso
+    return Boolean(+Date.now() % 2);
+  }
+};
+
+const completedWithStarters = (minutesNeeded: Map<number, number>): boolean => {
+  let reportCompleted = true;
+  for (let i = 1; i <= AppConfig.Starters; i++) {
+    if (minutesNeeded.get(i) as number > 0) {
+      reportCompleted = false;
+      break;
+    }
+  }
+  return reportCompleted;
+};
+
+const completedWithBench = (benchPlayers: ILineup[], performances: IPerformance[], minutesNeeded: Map<number, number>): boolean => {
+  let reportCompleted = true;
+  for (let i = 1; i <= AppConfig.PlayersInBench; i++) {
+    if (minutesNeeded.get(i) as number > 0) {
+      reportCompleted = false;
+      break;
+    }
+  }
+
+  let availableMinutes = false;
+  for (const benchPlayer of benchPlayers) {
+    const performance = performances.find((perf: IPerformance) => perf.player._id === benchPlayer.fantasyRoster.roster.player._id);
+    const minutes = performance?.minutes != null ? performance.minutes : 0;
+    if (benchPlayer.matchReport.minutesUsed < minutes) {
+      availableMinutes = true;
+      break;
+    }
+  }
+  if (reportCompleted || (!reportCompleted && !availableMinutes)) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+const computeRoundedRanking = (totalMinutes: number, rank: number, minutes: number): number => {
+  const multiply = totalMinutes * rank;
+  // arrotondamento n,5 = n
+  return halfDownRound(multiply, minutes);
+};
+
+const benchOrderComparator = (a: ILineup, b: ILineup): number => {
+  const o1BenchOrder = a.benchOrder != null ? a.benchOrder : Number.MAX_SAFE_INTEGER;
+  const o2BenchOrder = b.benchOrder != null ? b.benchOrder : Number.MAX_SAFE_INTEGER;
+  if (o1BenchOrder === o2BenchOrder) {
+    return a.spot - b.spot;
+  } else {
+    return o1BenchOrder - o2BenchOrder;
+  }
 };

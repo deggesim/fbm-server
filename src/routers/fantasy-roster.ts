@@ -163,7 +163,7 @@ async function release(fantasyRoster: IFantasyRoster) {
     await fantasyRoster.populate('fantasyTeam').execPopulate();
     const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam;
     if (!fantasyRoster.draft) {
-        fantasyTeam.outgo -= halfDownRound(fantasyRoster.contract);
+        fantasyTeam.outgo -= halfDownRound(fantasyRoster.contract, 2);
     }
     fantasyTeam.playersInRoster--;
     await fantasyTeam.save();
