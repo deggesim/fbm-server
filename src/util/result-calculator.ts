@@ -1,29 +1,28 @@
-import { ILineup } from '../schemas/lineup';
+import { ILineup, Lineup } from '../schemas/lineup';
 import { IMatch } from '../schemas/match';
 import { IPerformance } from '../schemas/performance';
 import { halfDownRound } from './functions';
 import { AppConfig, isEmpty } from './globals';
 
 export const computeResult = (
-  selectedMatch: IMatch,
-  homeMatchReport: ILineup[],
-  awayMatchReport: ILineup[],
-  homeFactor: number,
+  match: IMatch,
+  homeLineup: ILineup[],
+  awayLineup: ILineup[],
   drawAllowed: boolean,
   currentPerformances: IPerformance[],
   previousPerformances: IPerformance[],
   resultWithGrade: boolean,
   resultWithOer: boolean,
   resultWithPlusMinus: boolean,
-  resultDivisor: number): IMatch => {
+  resultDivisor: number) => {
 
   const minutesNeeded: Map<number, number> = new Map<number, number>();
 
   // HOME
-  homeMatchReport.sort((a: ILineup, b: ILineup) => a.spot - b.spot);
-  startersMinutes(homeMatchReport, currentPerformances, minutesNeeded);
-  benchMinutes(homeMatchReport, currentPerformances, minutesNeeded);
-  let homeRanking = ranking(homeMatchReport, currentPerformances);
+  homeLineup.sort((a: ILineup, b: ILineup) => a.spot - b.spot);
+  startersMinutes(homeLineup, currentPerformances, minutesNeeded);
+  benchMinutes(homeLineup, currentPerformances, minutesNeeded);
+  let homeRanking = ranking(homeLineup, currentPerformances);
 
   let homePartialResult = 0;
   let homeOer = 0;
@@ -31,37 +30,37 @@ export const computeResult = (
   let homeGrade = 0;
 
   if (resultWithOer) {
-    homeOer = oer(homeMatchReport, currentPerformances);
+    homeOer = oer(homeLineup, currentPerformances);
   }
   if (resultWithPlusMinus) {
-    homePlusMinus = plusMinus(homeMatchReport, currentPerformances);
+    homePlusMinus = plusMinus(homeLineup, currentPerformances);
   }
   if (resultWithGrade) {
-    homeGrade = grade(homeMatchReport, currentPerformances, previousPerformances);
+    homeGrade = grade(homeLineup, currentPerformances, previousPerformances);
   }
 
-  homePartialResult = homeRanking + homeFactor + homeOer + homePlusMinus + homeGrade;
+  homePartialResult = homeRanking + match.homeFactor + homeOer + homePlusMinus + homeGrade;
   let homeFinalResult = getFinalResult(homePartialResult, resultDivisor);
 
   // AWAY
-  awayMatchReport.sort((a: ILineup, b: ILineup) => a.spot - b.spot);
-  startersMinutes(awayMatchReport, currentPerformances, minutesNeeded);
-  benchMinutes(awayMatchReport, currentPerformances, minutesNeeded);
+  awayLineup.sort((a: ILineup, b: ILineup) => a.spot - b.spot);
+  startersMinutes(awayLineup, currentPerformances, minutesNeeded);
+  benchMinutes(awayLineup, currentPerformances, minutesNeeded);
 
-  let awayRanking = ranking(awayMatchReport, currentPerformances);
+  let awayRanking = ranking(awayLineup, currentPerformances);
   let awayPartialResult = 0;
   let awayOer = 0;
   let awayPlusMinus = 0;
   let awayGrade = 0;
 
   if (resultWithOer) {
-    awayOer = oer(awayMatchReport, currentPerformances);
+    awayOer = oer(awayLineup, currentPerformances);
   }
   if (resultWithPlusMinus) {
-    awayPlusMinus = plusMinus(awayMatchReport, currentPerformances);
+    awayPlusMinus = plusMinus(awayLineup, currentPerformances);
   }
   if (resultWithGrade) {
-    awayGrade = grade(awayMatchReport, currentPerformances, previousPerformances);
+    awayGrade = grade(awayLineup, currentPerformances, previousPerformances);
   }
 
   awayPartialResult = awayRanking + awayOer + awayPlusMinus + awayGrade;
@@ -71,15 +70,15 @@ export const computeResult = (
   let overtime = 0;
   if ((!drawAllowed && (homeFinalResult === awayFinalResult))) {
     // overtime needed. Store both match reports to show partial performances
-    selectedMatch.homeRanking40Min = homeRanking;
-    selectedMatch.awayRanking40Min = awayRanking;
+    match.homeRanking40Min = homeRanking;
+    match.awayRanking40Min = awayRanking;
 
-    for (const matchReportDTO of homeMatchReport) {
-      matchReportDTO.matchReport.realRanking40Min = matchReportDTO.matchReport.realRanking;
+    for (const player of homeLineup) {
+      player.matchReport.realRanking40Min = player.matchReport.realRanking;
     }
 
-    for (const matchReportDTO of awayMatchReport) {
-      matchReportDTO.matchReport.realRanking40Min = matchReportDTO.matchReport.realRanking;
+    for (const player of awayLineup) {
+      player.matchReport.realRanking40Min = player.matchReport.realRanking;
     }
 
   }
@@ -91,19 +90,19 @@ export const computeResult = (
     const prevHomeFinalResult = homeFinalResult;
     const prevAwayFinalResult = awayFinalResult;
 
-    otStartersMinutes(homeMatchReport, currentPerformances, minutesNeeded);
-    otBenchMinutes(homeMatchReport, currentPerformances, minutesNeeded);
-    homeRanking = ranking(homeMatchReport, currentPerformances);
+    otStartersMinutes(homeLineup, currentPerformances, minutesNeeded);
+    otBenchMinutes(homeLineup, currentPerformances, minutesNeeded);
+    homeRanking = ranking(homeLineup, currentPerformances);
     if (resultWithGrade) {
-      homePartialResult = homeRanking + homeFactor + homeGrade;
+      homePartialResult = homeRanking + match.homeFactor + homeGrade;
     } else {
-      homePartialResult = homeRanking + homeFactor;
+      homePartialResult = homeRanking + match.homeFactor;
     }
     homeFinalResult = getFinalResult(homePartialResult, resultDivisor);
 
-    otStartersMinutes(awayMatchReport, currentPerformances, minutesNeeded);
-    otBenchMinutes(awayMatchReport, currentPerformances, minutesNeeded);
-    awayRanking = ranking(awayMatchReport, currentPerformances);
+    otStartersMinutes(awayLineup, currentPerformances, minutesNeeded);
+    otBenchMinutes(awayLineup, currentPerformances, minutesNeeded);
+    awayRanking = ranking(awayLineup, currentPerformances);
     if (resultWithGrade) {
       awayPartialResult = awayRanking + awayGrade;
     } else {
@@ -113,7 +112,7 @@ export const computeResult = (
 
     if (prevHomeFinalResult === homeFinalResult && prevAwayFinalResult === awayFinalResult) {
       // usiamo il tie-breaker
-      const homeWinner = otTieBreak(homeMatchReport, awayMatchReport, currentPerformances);
+      const homeWinner = otTieBreak(homeLineup, awayLineup, currentPerformances);
       if (homeWinner) {
         homeFinalResult += 1;
       } else {
@@ -123,17 +122,25 @@ export const computeResult = (
     }
   }
 
-  selectedMatch.homeRanking = homeRanking;
-  selectedMatch.homeGrade = homeGrade;
-  selectedMatch.homeScore = homeFinalResult;
-  selectedMatch.awayRanking = awayRanking;
-  selectedMatch.awayGrade = awayGrade;
-  selectedMatch.awayScore = awayFinalResult;
+  match.homeRanking = homeRanking;
+  match.homeGrade = homeGrade;
+  match.homeScore = homeFinalResult;
+  match.awayRanking = awayRanking;
+  match.awayGrade = awayGrade;
+  match.awayScore = awayFinalResult;
   if (overtime > 0) {
-    selectedMatch.overtime = overtime;
+    match.overtime = overtime;
   }
 
-  return selectedMatch;
+  // Persistenza
+  for (const player of homeLineup) {
+    player.save();
+  }
+  for (const player of awayLineup) {
+    player.save();
+  }
+  match.completed = true;
+  match.save();
 };
 
 // FUNZIONI DI SUPPORTO

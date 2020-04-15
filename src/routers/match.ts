@@ -66,11 +66,11 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
       const resultWithOer = league.parameters.find((param) => param.parameter === 'RESULT_WITH_OER')?.value === 1;
       const resultWithPlusMinus = league.parameters.find((param) => param.parameter === 'RESULT_WITH_PLUS_MINUS')?.value === 1;
       const resultDivisor = league.parameters.find((param) => param.parameter === 'RESULT_DIVISOR')?.value as number;
-      ctx.body = computeResult(
+      match.homeFactor = round.homeFactor != null ? round.homeFactor : 0;
+      computeResult(
         match,
         homeLinup,
         awayLinup,
-        round.homeFactor,
         tieAllowed,
         currentPerformances,
         previousPerformances,
@@ -79,7 +79,17 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
         resultWithPlusMinus,
         resultDivisor,
       );
-      console.log(ctx.body);
+      const fixture: IFixture = await Fixture.findById(ctx.params.fixtureId) as IFixture;
+      fixture.populate('matches').execPopulate();
+      const completedMatches = fixture.matches.filter((m) => m.completed).length;
+      if (completedMatches === fixture.matches.length) {
+        // fixture completed
+        fixture.completed = true;
+        await fixture.save();
+        // progress league
+        await league.progress();
+      }
+      ctx.body = match;
     } catch (error) {
       console.log(error);
       ctx.throw(400, error.message);
