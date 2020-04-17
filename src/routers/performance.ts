@@ -51,11 +51,17 @@ performanceRouter.get('/performances/team/:teamId/real-fixture/:realFixtureId', 
 
 performanceRouter.post('/performances', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const newPerformance: IPerformance = ctx.request.body;
-        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
-        newPerformance.league = league._id;
-        ctx.body = await Performance.create(newPerformance);
-        ctx.status = 201;
+        const performances: IPerformance[] = ctx.request.body;
+        for (const updatedPerformance of performances) {
+            const performanceToUpdate: IPerformance =
+                await Performance.findOne({ _id: updatedPerformance._id, league: ctx.get('league') }) as IPerformance;
+            if (performanceToUpdate == null) {
+                ctx.throw(404, 'Valutazione non trovata');
+            }
+            performanceToUpdate.set(updatedPerformance);
+            performanceToUpdate.save();
+        }
+        ctx.body = performances;
     } catch (error) {
         console.log(error);
         ctx.throw(400, error.message);
