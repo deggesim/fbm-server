@@ -115,7 +115,7 @@ schema.statics.insertFantasyTeams = async (fantasyTeams: IFantasyTeam[], league:
                 const user: IUser = await User.findById(owner) as IUser;
                 // aggiunta lega all'utente
                 const leagueFound = user.leagues.find((managedLeague) => {
-                    return String(managedLeague) === String(league._id);
+                    managedLeague.equals(league._id);
                 });
                 if (!leagueFound) {
                     user.leagues.push(league._id);

@@ -45,14 +45,28 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
       }
 
       const homeLinup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(ctx.get('league'), match.homeTeam, ctx.params.fixtureId);
+      for (const player of homeLinup) {
+        await player.populate('fantasyRoster').execPopulate();
+        await player.populate('fantasyRoster.roster').execPopulate();
+        await player.populate('fantasyRoster.roster.player').execPopulate();
+        await player.populate('fantasyRoster.roster.team').execPopulate();
+        await player.populate('fixture').execPopulate();
+      }
       const awayLinup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(ctx.get('league'), match.awayTeam, ctx.params.fixtureId);
+      for (const player of awayLinup) {
+        await player.populate('fantasyRoster').execPopulate();
+        await player.populate('fantasyRoster.roster').execPopulate();
+        await player.populate('fantasyRoster.roster.player').execPopulate();
+        await player.populate('fantasyRoster.roster.team').execPopulate();
+        await player.populate('fixture').execPopulate();
+      }
       const round: IRound = await Round.findOne({ _id: ctx.params.roundId, league: ctx.get('league') }) as IRound;
       // tie is allowed if round is not of type round robin and has an even number of matches
       const tieAllowed = !round.roundRobin && round.fixtures.length % 2 === 0;
       let previousPerformances: IPerformance[] = [];
       const realFixture: IRealFixture = await RealFixture.findOne({ fixtures: ctx.params.fixtureId, league: ctx.get('league') }) as IRealFixture;
       const allRealFixtures: IRealFixture[] = await RealFixture.find({ league: ctx.get('league') }).sort({ id: 1 });
-      const index = allRealFixtures.findIndex((rf) => rf._id === realFixture._id);
+      const index = allRealFixtures.findIndex((rf) => rf._id.equals(realFixture._id));
       const currentRealFixture = allRealFixtures[index];
       await currentRealFixture.populate('performances').execPopulate();
       const currentPerformances = currentRealFixture.get('performances');
@@ -89,6 +103,7 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
         // progress league
         await league.progress();
       }
+      await match.populate('homeTeam').populate('awayTeam').execPopulate();
       ctx.body = match;
     } catch (error) {
       console.log(error);

@@ -1,4 +1,4 @@
-import { ILineup, Lineup } from '../schemas/lineup';
+import { ILineup } from '../schemas/lineup';
 import { IMatch } from '../schemas/match';
 import { IPerformance } from '../schemas/performance';
 import { halfDownRound } from './functions';
@@ -151,7 +151,7 @@ const startersMinutes = (lineup: ILineup[], performances: IPerformance[], minute
 
   // itero solo i titolari
   for (const starter of starters) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === starter.fantasyRoster.roster.player._id);
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(starter.fantasyRoster.roster.player._id));
     const minutes = performance?.minutes != null ? performance.minutes : 0;
     const spot = starter.spot;
     let minutesNeededValue = 0;
@@ -177,7 +177,7 @@ const benchMinutes = (lineup: ILineup[], performances: IPerformance[], minutesNe
     // i titolari non mi danno il risultato finale
     // calcoliamo quanti minuti ciascun panchinaro deve contribuire al totale squadra
     for (const benchPlayer of benchPlayers) {
-      const performance = performances.find((perf: IPerformance) => perf.player._id === benchPlayer.fantasyRoster.roster.player._id);
+      const performance = performances.find((perf: IPerformance) => perf.player._id.equals(benchPlayer.fantasyRoster.roster.player._id));
       const minutes = performance?.minutes != null ? performance.minutes : 0;
       const spot = benchPlayer.spot;
       const starterSpot = spot - AppConfig.Starters;
@@ -210,7 +210,7 @@ const benchMinutes = (lineup: ILineup[], performances: IPerformance[], minutesNe
     benchPlayers.sort(benchOrderComparator);
 
     for (const benchPlayer of benchPlayers) {
-      const performance = performances.find((perf: IPerformance) => perf.player._id === benchPlayer.fantasyRoster.roster.player._id);
+      const performance = performances.find((perf: IPerformance) => perf.player._id.equals(benchPlayer.fantasyRoster.roster.player._id));
       let minutes = performance?.minutes != null ? performance.minutes : 0;
       // tronchiamo i minuti a 40 perché il panchinaro non può contribuire per un minutaggio maggiore
       if (minutes > 40) {
@@ -254,7 +254,7 @@ const otStartersMinutes = (lineup: ILineup[], performances: IPerformance[], minu
   const starters = lineup.slice(0, AppConfig.Starters);
   // itero solo i titolari
   for (const starter of starters) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === starter.fantasyRoster.roster.player._id);
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(starter.fantasyRoster.roster.player._id));
     const minutes = performance?.minutes != null ? performance.minutes : 0;
     const spot = starter.spot;
     let minutesUsed = starter.matchReport.minutesUsed;
@@ -293,7 +293,7 @@ const otBenchMinutes = (lineup: ILineup[], performances: IPerformance[], minutes
     // calcoliamo quanti minuti ciascun panchinaro deve contribuire al totale squadra
 
     for (const benchPlayer of benchPlayers) {
-      const performance = performances.find((perf: IPerformance) => perf.player._id === benchPlayer.fantasyRoster.roster.player._id);
+      const performance = performances.find((perf: IPerformance) => perf.player._id.equals(benchPlayer.fantasyRoster.roster.player._id));
       const minutes = performance?.minutes != null ? performance.minutes : 0;
       const spot = benchPlayer.spot;
       const starterSpot = spot - AppConfig.Starters;
@@ -330,7 +330,7 @@ const otBenchMinutes = (lineup: ILineup[], performances: IPerformance[], minutes
       benchPlayers.sort(benchOrderComparator);
 
       for (const benchPlayer of benchPlayers) {
-        const performance = performances.find((perf: IPerformance) => perf.player._id === benchPlayer.fantasyRoster.roster.player._id);
+        const performance = performances.find((perf: IPerformance) => perf.player._id.equals(benchPlayer.fantasyRoster.roster.player._id));
         const minutes = performance?.minutes != null ? performance.minutes : 0;
         const spot = benchPlayer.spot;
         let minutesUsed = benchPlayer.matchReport.minutesUsed;
@@ -404,7 +404,7 @@ const ranking = (lineup: ILineup[], performances: IPerformance[]): number => {
   let ret = 0;
   // calcolo delle valutazioni
   for (const player of lineup) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id);
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id));
     // pondero la valutazione sui 40 minuti
     const playerRanking = (performance?.ranking != null ? performance.ranking : 0);
     const playerMinutes = (performance?.minutes != null ? performance.minutes : 0);
@@ -426,7 +426,7 @@ const ranking = (lineup: ILineup[], performances: IPerformance[]): number => {
 const oer = (lineup: ILineup[], performances: IPerformance[]): number => {
   let ret = 0;
   for (const player of lineup) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id);
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id));
     const playerOer = (performance?.oer != null ? performance.oer : 0);
     ret += playerOer;
   }
@@ -436,7 +436,7 @@ const oer = (lineup: ILineup[], performances: IPerformance[]): number => {
 const plusMinus = (lineup: ILineup[], performances: IPerformance[]): number => {
   let ret = 0;
   for (const player of lineup) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id);
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id));
     const playerPlusMinus = (performance?.plusMinus != null ? performance.plusMinus : 0);
     ret += playerPlusMinus;
   }
@@ -460,7 +460,7 @@ const grade = (lineup: ILineup[], currentPerformances: IPerformance[], previousP
   for (let i = 0; i < upperBound; i++) {
     const player = lineup[i];
     const performance =
-      player != null ? currentPerformances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) : null;
+      player != null ? currentPerformances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id)) : null;
     if (performance != null && performance.grade != null) {
       if (lowestGrade > performance.grade) {
         lowestGrade = performance.grade;
@@ -472,7 +472,7 @@ const grade = (lineup: ILineup[], currentPerformances: IPerformance[], previousP
     const player = lineup[i];
     if (player != null) {
       const performance =
-        currentPerformances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+        currentPerformances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id)) as IPerformance;
       if (performance.grade != null) {
         // il giocatore ha preso un voto
         ret += performance.grade;
@@ -496,7 +496,7 @@ const grade = (lineup: ILineup[], currentPerformances: IPerformance[], previousP
           if (previousPerformances != null && !isEmpty(previousPerformances)) {
             // esiste una giornata precedente => cerchiamo la performance del giocatore nella giornata precedente
             const prevPerf =
-              previousPerformances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+              previousPerformances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id)) as IPerformance;
 
             if (prevPerf.minutes != null) {
               // il giocatore è andato a referto la giornata precedente => voto extra
@@ -504,7 +504,8 @@ const grade = (lineup: ILineup[], currentPerformances: IPerformance[], previousP
                 // prendo il voto extra e rimuovo l'elemento
                 const extraPlayer = extraPlayers.shift() as ILineup;
                 const extraPerf =
-                  currentPerformances.find((perf: IPerformance) => perf.player._id === extraPlayer.fantasyRoster.roster.player._id) as IPerformance;
+                  currentPerformances.find(
+                    (perf: IPerformance) => perf.player._id.equals(extraPlayer.fantasyRoster.roster.player._id)) as IPerformance;
 
                 if (extraPerf.grade != null) {
                   // il giocatore extra ha preso un voto
@@ -531,7 +532,7 @@ const grade = (lineup: ILineup[], currentPerformances: IPerformance[], previousP
               // prendo il voto extra e rimuovo l'elemento
               const extraPlayer = extraPlayers.shift() as ILineup;
               const extraPerf =
-                currentPerformances.find((perf: IPerformance) => perf.player._id === extraPlayer.fantasyRoster.roster.player._id) as IPerformance;
+                currentPerformances.find((perf: IPerformance) => perf.player._id.equals(extraPlayer.fantasyRoster.roster.player._id)) as IPerformance;
 
               if (extraPerf.grade != null) {
                 // il giocatore extra ha preso un voto
@@ -579,7 +580,7 @@ const otTieBreak = (homeMatchReport: ILineup[], awayMatchReport: ILineup[], perf
   // somma delle valutazioni dei titolari della squadra di casa
   const homeStarters = homeMatchReport.slice(0, AppConfig.Starters);
   for (const player of homeStarters) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id)) as IPerformance;
     homeStarterRanking += performance.ranking != null ? performance.ranking : 0;
   }
 
@@ -587,7 +588,7 @@ const otTieBreak = (homeMatchReport: ILineup[], awayMatchReport: ILineup[], perf
   // somma delle valutazioni dei titolari della squadra in trasferta
   const awayStarters = awayMatchReport.slice(0, AppConfig.Starters);
   for (const player of awayStarters) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id)) as IPerformance;
     awayStarterRanking += performance.ranking != null ? performance.ranking : 0;
   }
 
@@ -601,14 +602,14 @@ const otTieBreak = (homeMatchReport: ILineup[], awayMatchReport: ILineup[], perf
   let homeTotalRanking = 0;
   // somma delle valutazioni di tutta la squadra di casa
   for (const player of homeMatchReport) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id)) as IPerformance;
     homeTotalRanking += performance.ranking != null ? performance.ranking : 0;
   }
 
   let awayTotalRanking = 0;
   // somma delle valutazioni di tutta la squadra in trasferta
   for (const player of homeMatchReport) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id)) as IPerformance;
     awayTotalRanking += performance.ranking != null ? performance.ranking : 0;
   }
 
@@ -623,7 +624,7 @@ const otTieBreak = (homeMatchReport: ILineup[], awayMatchReport: ILineup[], perf
   // somma delle valutazioni dei primi dieci giocatori della squadra di casa
   const homeMinPlayersInLineup = homeMatchReport.slice(0, AppConfig.MinPlayersInLineup);
   for (const player of homeMinPlayersInLineup) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id)) as IPerformance;
     homeMinPlayersInFormationRanking += performance.ranking != null ? performance.ranking : 0;
   }
 
@@ -631,7 +632,7 @@ const otTieBreak = (homeMatchReport: ILineup[], awayMatchReport: ILineup[], perf
   // somma delle valutazioni dei primi dieci giocatori della squadra in trasferta
   const awayMinPlayersInLineup = awayMatchReport.slice(0, AppConfig.MinPlayersInLineup);
   for (const player of awayMinPlayersInLineup) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === player.fantasyRoster.roster.player._id) as IPerformance;
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(player.fantasyRoster.roster.player._id)) as IPerformance;
     awayMinPlayersInFormationRanking += performance.ranking != null ? performance.ranking : 0;
   }
 
@@ -667,7 +668,7 @@ const completedWithBench = (benchPlayers: ILineup[], performances: IPerformance[
 
   let availableMinutes = false;
   for (const benchPlayer of benchPlayers) {
-    const performance = performances.find((perf: IPerformance) => perf.player._id === benchPlayer.fantasyRoster.roster.player._id);
+    const performance = performances.find((perf: IPerformance) => perf.player._id.equals(benchPlayer.fantasyRoster.roster.player._id));
     const minutes = performance?.minutes != null ? performance.minutes : 0;
     if (benchPlayer.matchReport.minutesUsed < minutes) {
       availableMinutes = true;

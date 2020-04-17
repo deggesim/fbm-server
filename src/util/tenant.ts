@@ -11,7 +11,7 @@ export const tenant = () => {
         }
         // verifica che la lega sia tra quelle abilitate
         const user: IUser = ctx.state.user;
-        const userLeague = user.leagues.find((leagueId) => String(league.id) === String(leagueId));
+        const userLeague = user.leagues.find((leagueId) => league._id.equals(leagueId));
         if (userLeague != null) {
             ctx.set('league', league.id);
             await next();
