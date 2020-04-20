@@ -144,7 +144,7 @@ async function buy(fantasyRoster: IFantasyRoster) {
     await Roster.findByIdAndUpdate(fantasyRoster.roster, { fantasyRoster: fantasyRoster._id });
     // agiornamento dati fantasyTeam
     await fantasyRoster.populate('fantasyTeam').execPopulate();
-    const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam;
+    const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam as IFantasyTeam;
     if (!fantasyRoster.draft) {
         fantasyTeam.outgo += fantasyRoster.contract;
     }
@@ -161,7 +161,7 @@ async function release(fantasyRoster: IFantasyRoster) {
     await Roster.findByIdAndUpdate(fantasyRoster.roster, { $unset: { fantasyRoster: '' } });
     // agiornamento dati fantasyTeam
     await fantasyRoster.populate('fantasyTeam').execPopulate();
-    const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam;
+    const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam as IFantasyTeam;
     if (!fantasyRoster.draft) {
         fantasyTeam.outgo -= halfDownRound(fantasyRoster.contract, 2);
     }
@@ -174,7 +174,7 @@ async function remove(fantasyRoster: IFantasyRoster) {
     await Roster.findByIdAndUpdate(fantasyRoster.roster, { $unset: { fantasyRoster: '' } });
     // agiornamento dati fantasyTeam
     await fantasyRoster.populate('fantasyTeam').execPopulate();
-    const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam;
+    const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam as IFantasyTeam;
     if (!fantasyRoster.draft) {
         fantasyTeam.outgo -= fantasyRoster.contract;
     }

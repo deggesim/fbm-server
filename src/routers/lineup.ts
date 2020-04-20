@@ -34,14 +34,13 @@ lineupRouter.get('/lineups/:id', auth(), parseToken(), tenant(), async (ctx: Rou
 lineupRouter.get('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', auth(), parseToken(), tenant(),
     async (ctx: Router.IRouterContext, next: Koa.Next) => {
         try {
+            const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
             const lineup: ILineup[] =
-                await Lineup.getLineupByFantasyTeamAndFixture(ctx.get('league'), ctx.params.fantasyTeamId, ctx.params.fixtureId);
+                await Lineup.getLineupByFantasyTeamAndFixture(league._id, ctx.params.fantasyTeamId, ctx.params.fixtureId);
             for (const player of lineup) {
-                await player.populate('fantasyRoster').execPopulate();
+                await player.populate('fantasyRoster').populate('fixture').execPopulate();
                 await player.populate('fantasyRoster.roster').execPopulate();
-                await player.populate('fantasyRoster.roster.player').execPopulate();
-                await player.populate('fantasyRoster.roster.team').execPopulate();
-                await player.populate('fixture').execPopulate();
+                await player.populate('fantasyRoster.roster.player').populate('fantasyRoster.roster.team').execPopulate();
             }
             ctx.body = lineup;
         } catch (error) {
@@ -53,13 +52,13 @@ lineupRouter.get('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', auth
 lineupRouter.post('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', auth(), parseToken(), tenant(),
     async (ctx: Router.IRouterContext, next: Koa.Next) => {
         try {
+            const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
             // delete old items
             const oldLineup: ILineup[] =
-                await Lineup.getLineupByFantasyTeamAndFixture(ctx.get('league'), ctx.params.fantasyTeamId, ctx.params.fixtureId);
+                await Lineup.getLineupByFantasyTeamAndFixture(league._id, ctx.params.fantasyTeamId, ctx.params.fixtureId);
             for (const lineup of oldLineup) {
                 lineup.remove();
             }
-            const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
             const newLineup: ILineup[] = ctx.request.body;
             for (const lineup of newLineup) {
                 lineup.league = league._id;

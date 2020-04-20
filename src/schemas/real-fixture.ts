@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
 import { IFixture } from './fixture';
 import { ITenant } from './league';
@@ -5,7 +6,7 @@ import { ITenant } from './league';
 interface IRealFixtureDocument extends ITenant {
     name: string;
     prepared: boolean;
-    fixtures: Array<IFixture['_id']>;
+    fixtures: Array<IFixture | ObjectId>;
 }
 
 /**

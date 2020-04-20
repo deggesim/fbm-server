@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
 import { IFantasyTeam } from './fantasy-team';
 import { ITenant } from './league';
@@ -5,13 +6,13 @@ import { IRealFixture } from './real-fixture';
 import { IRoster } from './roster';
 
 interface IFantasyRosterDocument extends ITenant {
-    roster: IRoster['id'];
-    fantasyTeam: IFantasyTeam['id'];
+    roster: IRoster | ObjectId;
+    fantasyTeam: IFantasyTeam | ObjectId;
     status: string;
     draft: boolean;
     contract: number;
     yearContract: number;
-    realFixture: IRealFixture['_id'];
+    realFixture: IRealFixture | ObjectId;
 }
 
 /**

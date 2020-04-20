@@ -1,5 +1,6 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
+import { IFixture } from '../schemas/fixture';
 import { IRound, Round } from '../schemas/round';
 import { auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
@@ -43,13 +44,11 @@ roundRouter.post('/rounds/:id/matches', auth(), parseToken(), tenant(), async (c
 });
 
 async function populateAll(round: IRound) {
-    await round.populate('fantasyTeams').execPopulate();
-    await round.populate('fixtures').execPopulate();
-    for (const fixture of round.fixtures) {
+    await round.populate('fantasyTeams').populate('fixtures').execPopulate();
+    for (const fixture of round.fixtures as IFixture[]) {
         for (let i = 0; i < fixture.matches.length; i++) {
             await fixture.populate(`matches.${i}`).execPopulate();
-            await fixture.populate(`matches.${i}.homeTeam`).execPopulate();
-            await fixture.populate(`matches.${i}.awayTeam`).execPopulate();
+            await fixture.populate(`matches.${i}.homeTeam`).populate(`matches.${i}.awayTeam`).execPopulate();
         }
     }
 }

@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
 import { FantasyRoster, IFantasyRoster } from './fantasy-roster';
 import { IFixture } from './fixture';
@@ -5,10 +6,10 @@ import { ITenant } from './league';
 import { IRealFixture, RealFixture } from './real-fixture';
 
 interface ILineupDocument extends ITenant {
-    fantasyRoster: IFantasyRoster['id'];
+    fantasyRoster: IFantasyRoster | ObjectId;
     spot: number;
     benchOrder: number;
-    fixture: IFixture['id'];
+    fixture: IFixture | ObjectId;
     matchReport: {
         realRanking: number;
         realRanking40Min: number;
@@ -29,7 +30,8 @@ export interface ILineup extends ILineupDocument {
  */
 export interface ILineupModel extends Model<ILineupDocument> {
     // metodi statici
-    getLineupByFantasyTeamAndFixture: (leagueId: string, fantasyTeamId: string, fixtureId: string) => Promise<ILineup[]>;
+    getLineupByFantasyTeamAndFixture: (leagueId: string | ObjectId, fantasyTeamId: string | ObjectId, fixtureId: string | ObjectId) =>
+        Promise<ILineup[]>;
 }
 
 const schema = new Schema<ILineup>({
@@ -74,16 +76,17 @@ const schema = new Schema<ILineup>({
     timestamps: true,
 });
 
-schema.statics.getLineupByFantasyTeamAndFixture = async (leagueId: string, fantasyTeamId: string, fixtureId: string) => {
-    const realFixture: IRealFixture =
-        await RealFixture.findOne({ league: leagueId, fixtures: fixtureId }) as IRealFixture;
-    const fantasyRosters: IFantasyRoster[] =
-        await FantasyRoster.find({ league: leagueId, fantasyTeam: fantasyTeamId, realFixture: realFixture._id });
-    const fantasyRostersId: string[] = fantasyRosters.map((fr) => fr._id);
-    const lineup: ILineup[] =
-        await Lineup.find({ league: leagueId, fixture: fixtureId, fantasyRoster: { $in: fantasyRostersId } })
-            .sort({ spot: 1 });
-    return lineup;
-};
+schema.statics.getLineupByFantasyTeamAndFixture =
+    async (leagueId: string | ObjectId, fantasyTeamId: string | ObjectId, fixtureId: string | ObjectId) => {
+        const realFixture: IRealFixture =
+            await RealFixture.findOne({ league: leagueId, fixtures: fixtureId }) as IRealFixture;
+        const fantasyRosters: IFantasyRoster[] =
+            await FantasyRoster.find({ league: leagueId, fantasyTeam: fantasyTeamId, realFixture: realFixture._id });
+        const fantasyRostersId: string[] = fantasyRosters.map((fr) => fr._id);
+        const lineup: ILineup[] =
+            await Lineup.find({ league: leagueId, fixture: fixtureId, fantasyRoster: { $in: fantasyRostersId } })
+                .sort({ spot: 1 });
+        return lineup;
+    };
 
 export const Lineup = model<ILineup, ILineupModel>('Lineup', schema);

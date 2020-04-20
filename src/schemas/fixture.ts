@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
 import { ITenant } from './league';
 import { IMatch } from './match';
@@ -6,7 +7,7 @@ interface IFixtureDocument extends ITenant {
     name: string;
     unnecessary: boolean;
     completed: boolean;
-    matches: Array<IMatch['_id']>;
+    matches: Array<IMatch | ObjectId>;
 }
 
 /**

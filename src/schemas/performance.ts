@@ -1,11 +1,12 @@
+import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
 import { ITenant } from './league';
 import { IPlayer } from './player';
 import { IRealFixture } from './real-fixture';
 
 interface IPerformanceDocument extends ITenant {
-    player: IPlayer['_id'];
-    realFixture: IRealFixture['_id'];
+    player: IPlayer | ObjectId;
+    realFixture: IRealFixture | ObjectId;
     ranking: number;
     minutes: number;
     oer: number;

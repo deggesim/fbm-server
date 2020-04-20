@@ -1,5 +1,6 @@
 import * as fetch from 'node-fetch';
 import { IPerformance } from '../schemas/performance';
+import { IPlayer } from '../schemas/player';
 
 export const boxscore = async (performances: IPerformance[], url: string) => {
    const response = await fetch.default(url);
@@ -12,7 +13,7 @@ export const boxscore = async (performances: IPerformance[], url: string) => {
 
    for (const performance of performances) {
       await performance.populate('player').execPopulate();
-      const playerName = performance.player.name.toUpperCase();
+      const playerName = (performance.player as IPlayer).name.toUpperCase();
       const indexOfPlayer = content.indexOf(playerName);
       if (indexOfPlayer !== -1) {
          // giocatore trovato, ne preleviamo valutazione e minuti

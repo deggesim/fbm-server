@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
 import { ILeague, ITenant } from './league';
 import { IUser, User } from './user';
@@ -11,7 +12,7 @@ interface IFantasyTeamDocument extends ITenant {
     extraPlayers: number;
     pointsPenalty: number;
     balancePenalty: number;
-    owners: Array<IUser['_id']>;
+    owners: Array<IUser | ObjectId>;
 }
 
 /**

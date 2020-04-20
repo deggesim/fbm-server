@@ -4,12 +4,13 @@ import { ITenant } from './league';
 import { IPlayer } from './player';
 import { IRealFixture } from './real-fixture';
 import { ITeam } from './team';
+import { ObjectId } from 'mongodb';
 
 interface IRosterDocument extends ITenant {
-    player: IPlayer['_id'];
-    team: ITeam['_id'];
-    realFixture: IRealFixture['_id'];
-    fantasyRoster: IFantasyRoster['id'];
+    player: IPlayer | ObjectId;
+    team: ITeam | ObjectId;
+    realFixture: IRealFixture | ObjectId;
+    fantasyRoster: IFantasyRoster | ObjectId;
 }
 
 /**

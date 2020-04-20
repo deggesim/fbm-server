@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import { ObjectId } from 'mongodb';
 import { Document, HookNextFunction, model, Model, Schema } from 'mongoose';
 import validator from 'validator';
 import { IFantasyTeam } from './fantasy-team';
@@ -11,8 +12,8 @@ interface IUserDocument extends Document {
     password: string;
     role: string;
     tokens: string[];
-    fantasyTeams: Array<IFantasyTeam['_id']>;
-    leagues: Array<ILeague['id']>;
+    fantasyTeams: Array<IFantasyTeam | ObjectId>;
+    leagues: Array<ILeague | ObjectId>;
 }
 
 /**

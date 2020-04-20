@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
 import { playoffMatchList, roundRobinMatchList } from '../util/games';
 import { IFantasyTeam } from './fantasy-team';
@@ -11,8 +12,8 @@ interface IRoundDocument extends ITenant {
     teams: number;
     roundRobin: boolean;
     rounds: number;
-    fantasyTeams: Array<IFantasyTeam['_id']>;
-    fixtures: Array<IFixture['id']>;
+    fantasyTeams: Array<IFantasyTeam | ObjectId>;
+    fixtures: Array<IFixture | ObjectId>;
 }
 
 /**
@@ -79,16 +80,16 @@ const schema = new Schema<IRound>({
 
 schema.methods.buildRoundRobinMatchList = async function (): Promise<void> {
     const round: IRound = this;
-    const leagueId = round.league;
+    const leagueId = round.league as ObjectId;
     await round.populate('fixtures').execPopulate();
-    await roundRobinMatchList(leagueId, round.rounds, round.fixtures, round.fantasyTeams);
+    await roundRobinMatchList(leagueId, round.rounds, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
 };
 
 schema.methods.buildPlayoffMatchList = async function (): Promise<void> {
     const round: IRound = this;
-    const leagueId = round.league;
+    const leagueId = round.league as ObjectId;
     await round.populate('fixtures').execPopulate();
-    await playoffMatchList(leagueId, round.fixtures, round.fantasyTeams);
+    await playoffMatchList(leagueId, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
 };
 
 export const Round = model<IRound, IRoundModel>('Round', schema);

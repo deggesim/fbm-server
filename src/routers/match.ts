@@ -10,6 +10,8 @@ import { IRound, Round } from '../schemas/round';
 import { auth, parseToken } from '../util/auth';
 import { computeResult } from '../util/result-calculator';
 import { tenant } from '../util/tenant';
+import { IFantasyTeam } from '../schemas/fantasy-team';
+import { ObjectId } from 'mongodb';
 
 const matchRouter: Router = new Router<IMatch>();
 
@@ -39,12 +41,13 @@ matchRouter.post('/matches', auth(), parseToken(), tenant(), async (ctx: Router.
 matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(), parseToken(), tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
+      const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
       const match: IMatch = await Match.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IMatch;
       if (match == null) {
         ctx.throw(400, 'Match non trovato');
       }
 
-      const homeLinup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(ctx.get('league'), match.homeTeam, ctx.params.fixtureId);
+      const homeLinup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(league._id, match.homeTeam as ObjectId, ctx.params.fixtureId);
       for (const player of homeLinup) {
         await player.populate('fantasyRoster').execPopulate();
         await player.populate('fantasyRoster.roster').execPopulate();
@@ -52,7 +55,7 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
         await player.populate('fantasyRoster.roster.team').execPopulate();
         await player.populate('fixture').execPopulate();
       }
-      const awayLinup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(ctx.get('league'), match.awayTeam, ctx.params.fixtureId);
+      const awayLinup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(league._id, match.awayTeam as ObjectId, ctx.params.fixtureId);
       for (const player of awayLinup) {
         await player.populate('fantasyRoster').execPopulate();
         await player.populate('fantasyRoster.roster').execPopulate();
@@ -75,7 +78,6 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
         await previousRealFixture.populate('performances').execPopulate();
         previousPerformances = previousRealFixture.get('performances');
       }
-      const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
       const resultWithGrade = league.parameters.find((param) => param.parameter === 'RESULT_WITH_GRADE')?.value === 1;
       const resultWithOer = league.parameters.find((param) => param.parameter === 'RESULT_WITH_OER')?.value === 1;
       const resultWithPlusMinus = league.parameters.find((param) => param.parameter === 'RESULT_WITH_PLUS_MINUS')?.value === 1;
@@ -95,7 +97,7 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
       );
       const fixture: IFixture = await Fixture.findById(ctx.params.fixtureId) as IFixture;
       fixture.populate('matches').execPopulate();
-      const completedMatches = fixture.matches.filter((m) => m.completed).length;
+      const completedMatches = (fixture.matches as IMatch[]).filter((m: IMatch) => m.completed).length;
       if (completedMatches === fixture.matches.length) {
         // fixture completed
         fixture.completed = true;

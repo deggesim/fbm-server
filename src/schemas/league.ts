@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { Document, model, Model, Schema } from 'mongoose';
 import { cleanLeague, createCup, createPlayoff, createPlayout, createRegularSeason, populateCompetition, populateRealFixture } from '../util/new-season.util';
 import { Competition } from './competition';
@@ -32,7 +33,7 @@ interface ILeagueDocument extends Document {
 }
 
 export interface ITenant extends Document {
-    league: ILeague['_id'];
+    league: ILeague | ObjectId;
 }
 
 /**
@@ -199,7 +200,7 @@ schema.methods.nextFixture = async function () {
         match: { completed: false },
         options: { sort: { _id: 1 } },
     }).sort({ id: 1 }) as IRealFixture;
-    return realFixture.fixtures[0];
+    return realFixture.fixtures[0] as IFixture;
 };
 
 schema.methods.nextRealFixture = async function () {
@@ -219,7 +220,7 @@ schema.methods.progress = async function () {
     for (const round of rounds) {
         await round.populate('fixtures').execPopulate();
         let compltedRoundFixtures = 0;
-        for (const fixture of round.fixtures) {
+        for (const fixture of round.fixtures as IFixture[]) {
             if (fixture.completed) {
                 compltedRoundFixtures++;
             }
@@ -236,7 +237,7 @@ schema.methods.progress = async function () {
     for (const competition of competitions) {
         await competition.populate('rounds').execPopulate();
         let completedRounds = 0;
-        for (const round of competition.rounds) {
+        for (const round of competition.rounds as IRound[]) {
             if (round.completed) {
                 completedRounds++;
             }

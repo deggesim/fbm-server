@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
 import { ITenant } from './league';
 import { IRound } from './round';
@@ -5,7 +6,7 @@ import { IRound } from './round';
 interface ICompetitionDocument extends ITenant {
     name: string;
     completed: boolean;
-    rounds: Array<IRound['_id']>;
+    rounds: Array<IRound | ObjectId>;
 }
 
 /**
