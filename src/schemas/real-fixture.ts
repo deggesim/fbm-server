@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
 import { IFixture } from './fixture';
 import { ITenant } from './league';
+import { entityNotFound } from '../util/functions';
 
 interface IRealFixtureDocument extends ITenant {
     name: string;
@@ -22,6 +23,7 @@ export interface IRealFixture extends IRealFixtureDocument {
  */
 export interface IRealFixtureModel extends Model<IRealFixture> {
     // metodi statici
+    findByFixture: (leagueId: string | ObjectId, fixtureId: string | ObjectId) => Promise<IRealFixture>;
 }
 
 const schema = new Schema<IRealFixture>({
@@ -47,16 +49,12 @@ const schema = new Schema<IRealFixture>({
     timestamps: true,
 });
 
-schema.virtual('rosters', {
-    ref: 'Roster',
-    localField: '_id',
-    foreignField: 'realFixture',
-});
-
-schema.virtual('performances', {
-    ref: 'Performance',
-    localField: '_id',
-    foreignField: 'realFixture',
-});
+schema.statics.findByFixture = async (leagueId: string | ObjectId, fixtureId: string | ObjectId): Promise<IRealFixture> => {
+    const realFixture = await RealFixture.findOne({ league: leagueId, fixtures: fixtureId }) as IRealFixture;
+    if (realFixture == null) {
+        throw new Error(entityNotFound(realFixture, leagueId, fixtureId));
+    }
+    return realFixture;
+};
 
 export const RealFixture = model<IRealFixture, IRealFixtureModel>('RealFixture', schema);

@@ -95,6 +95,7 @@ schema.virtual('performances', {
 });
 
 schema.statics.insertPlayers = async (uploadedPlayers: any[], league: ILeague) => {
+    const ret: IPlayer[] = [];
     // pulizia tabelle correlate
     await Performance.deleteMany({ league: league._id });
     await Roster.deleteMany({ league: league._id });
@@ -118,6 +119,7 @@ schema.statics.insertPlayers = async (uploadedPlayers: any[], league: ILeague) =
         const playerTeam = uploadedPlayer.team;
         const newPlayer = { name, role, nationality, number, yearBirth, height, weight, league: league._id };
         const player = await Player.create(newPlayer);
+        ret.push(player);
 
         const team: ITeam = teams.find((t: ITeam) => {
             return t.fullName === String(playerTeam);
@@ -137,9 +139,7 @@ schema.statics.insertPlayers = async (uploadedPlayers: any[], league: ILeague) =
             });
         }
     }
-
-    await nextRealFixture.save();
-
+    return ret;
 };
 
 export const Player = model<IPlayer, IPlayerModel>('Player', schema);

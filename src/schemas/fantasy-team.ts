@@ -94,12 +94,6 @@ schema.virtual('fantasyRosters', {
     foreignField: 'fantasyTeam',
 });
 
-schema.virtual('lineups', {
-    ref: 'Lineup',
-    localField: '_id',
-    foreignField: 'fantasyTeam',
-});
-
 schema.statics.insertFantasyTeams = async (fantasyTeams: IFantasyTeam[], league: ILeague) => {
     try {
         const ret: IFantasyTeam[] = [];

@@ -41,6 +41,7 @@ playerRouter.post('/players/upload', auth(), parseToken(), tenant(), upload.sing
         const players = parseCsv(ctx.request.body.players.toString(), ['name', 'role', 'nationality', 'team', 'number', 'yearBirth', 'height', 'weight']);
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         ctx.body = await Player.insertPlayers(players, league);
+        ctx.status = 201;
     } catch (error) {
         console.log(error);
         ctx.throw(400, error.message);

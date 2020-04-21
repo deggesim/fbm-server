@@ -28,7 +28,7 @@ realFixtureRouter.get('/real-fixtures', auth(), parseToken(), tenant(), async (c
 
 realFixtureRouter.get('/real-fixtures/fixture/:fixtureId', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const realFixture = await RealFixture.findOne({ league: ctx.get('league'), fixtures: ctx.params.fixtureId });
+        const realFixture = await RealFixture.findByFixture(ctx.get('league'), ctx.params.fixtureId);
         if (realFixture == null) {
             ctx.throw(404, 'Giornata non trovata');
         }

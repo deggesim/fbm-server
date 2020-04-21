@@ -1,10 +1,10 @@
+import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
 import { IFantasyRoster } from './fantasy-roster';
 import { ITenant } from './league';
 import { IPlayer } from './player';
 import { IRealFixture } from './real-fixture';
 import { ITeam } from './team';
-import { ObjectId } from 'mongodb';
 
 interface IRosterDocument extends ITenant {
     player: IPlayer | ObjectId;

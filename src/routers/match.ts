@@ -1,5 +1,6 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
+import { ObjectId } from 'mongodb';
 import { Fixture, IFixture } from '../schemas/fixture';
 import { ILeague, League } from '../schemas/league';
 import { ILineup, Lineup } from '../schemas/lineup';
@@ -10,8 +11,6 @@ import { IRound, Round } from '../schemas/round';
 import { auth, parseToken } from '../util/auth';
 import { computeResult } from '../util/result-calculator';
 import { tenant } from '../util/tenant';
-import { IFantasyTeam } from '../schemas/fantasy-team';
-import { ObjectId } from 'mongodb';
 
 const matchRouter: Router = new Router<IMatch>();
 
@@ -49,30 +48,23 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
 
       const homeLinup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(league._id, match.homeTeam as ObjectId, ctx.params.fixtureId);
       for (const player of homeLinup) {
-        await player.populate('fantasyRoster').execPopulate();
+        await player.populate('fantasyRoster').populate('fixture').populate('performance').execPopulate();
         await player.populate('fantasyRoster.roster').execPopulate();
-        await player.populate('fantasyRoster.roster.player').execPopulate();
-        await player.populate('fantasyRoster.roster.team').execPopulate();
-        await player.populate('fixture').execPopulate();
+        await player.populate('fantasyRoster.roster.player').populate('fantasyRoster.roster.team').execPopulate();
       }
       const awayLinup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(league._id, match.awayTeam as ObjectId, ctx.params.fixtureId);
       for (const player of awayLinup) {
-        await player.populate('fantasyRoster').execPopulate();
+        await player.populate('fantasyRoster').populate('fixture').populate('performance').execPopulate();
         await player.populate('fantasyRoster.roster').execPopulate();
-        await player.populate('fantasyRoster.roster.player').execPopulate();
-        await player.populate('fantasyRoster.roster.team').execPopulate();
-        await player.populate('fixture').execPopulate();
+        await player.populate('fantasyRoster.roster.player').populate('fantasyRoster.roster.team').execPopulate();
       }
       const round: IRound = await Round.findOne({ _id: ctx.params.roundId, league: ctx.get('league') }) as IRound;
       // tie is allowed if round is not of type round robin and has an even number of matches
       const tieAllowed = !round.roundRobin && round.fixtures.length % 2 === 0;
       let previousPerformances: IPerformance[] = [];
-      const realFixture: IRealFixture = await RealFixture.findOne({ fixtures: ctx.params.fixtureId, league: ctx.get('league') }) as IRealFixture;
+      const realFixture: IRealFixture = await RealFixture.findByFixture(ctx.get('league'), ctx.params.fixtureId);
       const allRealFixtures: IRealFixture[] = await RealFixture.find({ league: ctx.get('league') }).sort({ id: 1 });
       const index = allRealFixtures.findIndex((rf) => rf._id.equals(realFixture._id));
-      const currentRealFixture = allRealFixtures[index];
-      await currentRealFixture.populate('performances').execPopulate();
-      const currentPerformances = currentRealFixture.get('performances');
       if (index > 0) {
         const previousRealFixture = allRealFixtures[index - 1];
         await previousRealFixture.populate('performances').execPopulate();
@@ -88,7 +80,6 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
         homeLinup,
         awayLinup,
         tieAllowed,
-        currentPerformances,
         previousPerformances,
         resultWithGrade,
         resultWithOer,

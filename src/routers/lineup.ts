@@ -3,9 +3,13 @@ import * as Router from 'koa-router';
 import { FantasyRoster, IFantasyRoster } from '../schemas/fantasy-roster';
 import { ILeague, League } from '../schemas/league';
 import { ILineup, Lineup } from '../schemas/lineup';
+import { Performance, IPerformance } from '../schemas/performance';
 import { IRealFixture, RealFixture } from '../schemas/real-fixture';
 import { auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
+import { IRoster } from '../schemas/roster';
+import { IPlayer, Player } from '../schemas/player';
+import { entityNotFound } from '../util/functions';
 
 const lineupRouter: Router = new Router<ILineup>();
 
@@ -38,7 +42,7 @@ lineupRouter.get('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', auth
             const lineup: ILineup[] =
                 await Lineup.getLineupByFantasyTeamAndFixture(league._id, ctx.params.fantasyTeamId, ctx.params.fixtureId);
             for (const player of lineup) {
-                await player.populate('fantasyRoster').populate('fixture').execPopulate();
+                await player.populate('fantasyRoster').populate('fixture').populate('performance').execPopulate();
                 await player.populate('fantasyRoster.roster').execPopulate();
                 await player.populate('fantasyRoster.roster.player').populate('fantasyRoster.roster.team').execPopulate();
             }
@@ -51,24 +55,28 @@ lineupRouter.get('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', auth
 
 lineupRouter.post('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', auth(), parseToken(), tenant(),
     async (ctx: Router.IRouterContext, next: Koa.Next) => {
-        try {
-            const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
-            // delete old items
-            const oldLineup: ILineup[] =
-                await Lineup.getLineupByFantasyTeamAndFixture(league._id, ctx.params.fantasyTeamId, ctx.params.fixtureId);
-            for (const lineup of oldLineup) {
-                lineup.remove();
-            }
-            const newLineup: ILineup[] = ctx.request.body;
-            for (const lineup of newLineup) {
-                lineup.league = league._id;
-            }
-            ctx.body = await Lineup.insertMany(newLineup);
-            ctx.status = 201;
-        } catch (error) {
-            console.log(error);
-            ctx.throw(400, error.message);
+        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+        // delete old items
+        const oldLineup: ILineup[] =
+            await Lineup.getLineupByFantasyTeamAndFixture(league._id, ctx.params.fantasyTeamId, ctx.params.fixtureId);
+        for (const lineup of oldLineup) {
+            lineup.remove();
         }
+        const realFixture: IRealFixture =
+            await RealFixture.findByFixture(league._id, ctx.params.fixtureId);
+        const newLineup: ILineup[] = ctx.request.body;
+        for (const lineup of newLineup) {
+            const playerId = (((lineup.fantasyRoster as IFantasyRoster).roster as IRoster).player as IPlayer)._id;
+            const player = await Player.findOne({ league: league._id, _id: playerId });
+            const performance = await Performance.findOne({ player, realFixture }) as IPerformance;
+            if (performance == null) {
+                ctx.throw(404, entityNotFound('IPerformance', playerId, realFixture._id));
+            }
+            lineup.performance = performance;
+            lineup.league = league._id;
+        }
+        ctx.body = await Lineup.insertMany(newLineup);
+        ctx.status = 201;
     });
 
 lineupRouter.patch('/lineups/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
@@ -105,7 +113,7 @@ lineupRouter.delete('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', a
         try {
             const leagueId = ctx.get('league');
             const realFixture: IRealFixture =
-                await RealFixture.findOne({ league: leagueId, fixtures: ctx.params.fixtureId }) as IRealFixture;
+                await RealFixture.findByFixture(leagueId, ctx.params.fixtureId);
             const fantasyRosters: IFantasyRoster[] =
                 await FantasyRoster.find({ league: leagueId, fantasyTeam: ctx.params.fantasyTeamId, realFixture: realFixture._id });
             const fantasyRostersId: string[] = fantasyRosters.map((fr) => fr._id);
