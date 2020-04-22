@@ -185,7 +185,7 @@ const benchMinutes = (lineup: ILineup[], minutesNeeded: Map<number, number>) => 
       const starterSpot = spot - AppConfig.Starters;
       let minutesUsed = 0;
       benchPlayer.matchReport.minutesUsed = 0;
-      if (spot <= AppConfig.LastBenchPlayerIndex) {
+      if (spot <= AppConfig.LastBenchPlayerWithStarter) {
         // è un panchinaro nei 10
         let minutesNeededValue = minutesNeeded.get(starterSpot) as number;
         if (minutes < minutesNeededValue) {
@@ -302,7 +302,7 @@ const otBenchMinutes = (lineup: ILineup[], minutesNeeded: Map<number, number>) =
       let minutesUsed = benchPlayer.matchReport.minutesUsed;
       // inizializzazione "minuti OT"
       otMinutesUsed.set(spot, 0);
-      if (spot <= AppConfig.LastBenchPlayerIndex) {
+      if (spot <= AppConfig.LastBenchPlayerWithStarter) {
         // è un panchinaro nei 10
         let minutesNeededValue = minutesNeeded.get(starterSpot) as number;
         const minutesRemaining = minutes - minutesUsed;
