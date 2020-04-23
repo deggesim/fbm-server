@@ -1,13 +1,15 @@
 import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
+import { entityNotFound } from '../util/functions';
 import { IFixture } from './fixture';
 import { ITenant } from './league';
-import { entityNotFound } from '../util/functions';
+import { ITeam } from './team';
 
 interface IRealFixtureDocument extends ITenant {
     name: string;
     prepared: boolean;
     fixtures: Array<IFixture | ObjectId>;
+    teamsWithNoGame: Array<ITeam | ObjectId>;
 }
 
 /**
@@ -39,6 +41,10 @@ const schema = new Schema<IRealFixture>({
         type: Schema.Types.ObjectId,
         required: true,
         ref: 'Fixture',
+    }],
+    teamsWithNoGame: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Team',
     }],
     league: {
         type: Schema.Types.ObjectId,

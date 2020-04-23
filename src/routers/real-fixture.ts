@@ -10,16 +10,9 @@ const realFixtureRouter: Router = new Router<IRealFixture>();
 
 realFixtureRouter.get('/real-fixtures', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        ctx.body = await RealFixture.find({ league: ctx.get('league') });
-    } catch (error) {
-        console.log(error);
-        ctx.throw(500, error.message);
-    }
-});
-
-realFixtureRouter.get('/real-fixtures', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-        ctx.body = await RealFixture.find({ league: ctx.get('league') });
+        const realFixtures = await RealFixture.find({ league: ctx.get('league') });
+        await RealFixture.populate(realFixtures, [{ path: 'fixtures' }, { path: 'teamsWithNoGame' }]);
+        ctx.body = realFixtures;
     } catch (error) {
         console.log(error);
         ctx.throw(500, error.message);
