@@ -1,9 +1,12 @@
+import { ObjectId } from 'mongodb';
 import { IFantasyRoster } from '../schemas/fantasy-roster';
 import { ILineup } from '../schemas/lineup';
 import { IMatch } from '../schemas/match';
 import { IPerformance } from '../schemas/performance';
 import { IPlayer } from '../schemas/player';
+import { IRealFixture } from '../schemas/real-fixture';
 import { IRoster } from '../schemas/roster';
+import { ITeam } from '../schemas/team';
 import { halfDownRound } from './functions';
 import { AppConfig, isEmpty } from './globals';
 
@@ -476,9 +479,17 @@ const grade = (lineup: ILineup[], previousPerformances: IPerformance[]): number 
     if (player != null) {
       const playerId = (((player.fantasyRoster as IFantasyRoster).roster as IRoster).player as IPlayer)._id;
       const performance = player.performance as IPerformance;
-      if (performance.grade != null) {
-        // il giocatore ha preso un voto
-        ret += performance.grade;
+
+      const realFixture = performance.realFixture as IRealFixture;
+      const playerTeamId = (((player.fantasyRoster as IFantasyRoster).roster as IRoster).team as ITeam)._id;
+      // elenco squadre che hanno riposato
+      const teamsWithNoGame = realFixture.teamsWithNoGame as ObjectId[];
+      // controllo per vedere se il giocatore fa parte di una squadra che non ha giocato
+      const playerTeamHasNoGame = teamsWithNoGame.find((team) => team.equals(playerTeamId)) != null;
+
+      if (performance.grade != null || playerTeamHasNoGame) {
+        // il giocatore ha preso un voto oppure fa parte di una squadra che non ha giocato
+        ret += performance.grade || AppConfig.gradePlayerTeamWithNoGame;
       } else {
         // il giocatore non ha un voto
         if (performance.minutes != null) {
@@ -499,8 +510,14 @@ const grade = (lineup: ILineup[], previousPerformances: IPerformance[]): number 
           if (previousPerformances != null && !isEmpty(previousPerformances)) {
             // esiste una giornata precedente => cerchiamo la performance del giocatore nella giornata precedente
             const prevPerf = previousPerformances.find((perf: IPerformance) => (perf.player as IPlayer).equals(playerId)) as IPerformance;
-            if (prevPerf.minutes != null) {
-              // il giocatore è andato a referto la giornata precedente => voto extra
+            const realFixturePP = prevPerf.realFixture as IRealFixture;
+            // elenco squadre che hanno riposato la giornata precedente.
+            const teamsWithNoGamePP = realFixturePP.teamsWithNoGame as ObjectId[];
+            // controllo per vedere se il giocatore fa parte di una squadra che non ha giocato il turno precedente
+            const playerTeamHasNoGamePP = teamsWithNoGamePP.find((team) => team.equals(playerTeamId)) != null;
+            if (prevPerf.minutes != null || playerTeamHasNoGamePP) {
+              // il giocatore è andato a referto la giornata precedente
+              // oppure fa parte di una squadra che ha riposato il turno precedente => voto extra
               if (!isEmpty(extraPlayers)) {
                 // prendo il voto extra e rimuovo l'elemento
                 const extraPlayer = extraPlayers.shift() as ILineup;

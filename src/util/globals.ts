@@ -7,5 +7,6 @@ export enum AppConfig {
   'MaxPlayersInLineup' = 12,
   'DefaultGrade' = 5.5,
   'NecessaryGrades' = 10,
+  'gradePlayerTeamWithNoGame' = 4,
   'LastBenchPlayerWithStarter' = 10,
 }

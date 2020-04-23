@@ -5,7 +5,7 @@ import { Fixture, IFixture } from '../schemas/fixture';
 import { ILeague, League } from '../schemas/league';
 import { ILineup, Lineup } from '../schemas/lineup';
 import { IMatch, Match } from '../schemas/match';
-import { IPerformance } from '../schemas/performance';
+import { IPerformance, Performance } from '../schemas/performance';
 import { IRealFixture, RealFixture } from '../schemas/real-fixture';
 import { IRound, Round } from '../schemas/round';
 import { auth, parseToken } from '../util/auth';
@@ -49,13 +49,13 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
       const homeLinup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(league._id, match.homeTeam as ObjectId, ctx.params.fixtureId);
       for (const player of homeLinup) {
         await player.populate('fantasyRoster').populate('fixture').populate('performance').execPopulate();
-        await player.populate('fantasyRoster.roster').execPopulate();
+        await player.populate('fantasyRoster.roster').populate('performance.realFixture').execPopulate();
         await player.populate('fantasyRoster.roster.player').populate('fantasyRoster.roster.team').execPopulate();
       }
       const awayLinup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(league._id, match.awayTeam as ObjectId, ctx.params.fixtureId);
       for (const player of awayLinup) {
         await player.populate('fantasyRoster').populate('fixture').populate('performance').execPopulate();
-        await player.populate('fantasyRoster.roster').execPopulate();
+        await player.populate('fantasyRoster.roster').populate('performance.realFixture').execPopulate();
         await player.populate('fantasyRoster.roster.player').populate('fantasyRoster.roster.team').execPopulate();
       }
       const round: IRound = await Round.findOne({ _id: ctx.params.roundId, league: ctx.get('league') }) as IRound;
@@ -69,6 +69,7 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
         const previousRealFixture = allRealFixtures[index - 1];
         await previousRealFixture.populate('performances').execPopulate();
         previousPerformances = previousRealFixture.get('performances');
+        await Performance.populate(previousPerformances, { path: 'realFixture' });
       }
       const resultWithGrade = league.parameters.find((param) => param.parameter === 'RESULT_WITH_GRADE')?.value === 1;
       const resultWithOer = league.parameters.find((param) => param.parameter === 'RESULT_WITH_OER')?.value === 1;
