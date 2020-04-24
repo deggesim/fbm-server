@@ -3,6 +3,7 @@ import * as jwt from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
 import { Document, HookNextFunction, model, Model, Schema } from 'mongoose';
 import validator from 'validator';
+import { Role } from '../util/globals';
 import { IFantasyTeam } from './fantasy-team';
 import { ILeague } from './league';
 
@@ -21,6 +22,7 @@ interface IUserDocument extends Document {
  */
 export interface IUser extends IUserDocument {
     generateAuthToken: () => Promise<string>;
+    isUser: () => boolean;
     isAdmin: () => boolean;
     isSuperAdmin: () => boolean;
 }
@@ -99,14 +101,19 @@ schema.methods.generateAuthToken = async function () {
     return Promise.resolve(token);
 };
 
+schema.methods.isUser = function () {
+    const user = this;
+    return user.role === Role.User;
+};
+
 schema.methods.isAdmin = function () {
     const user = this;
-    return user.role === 'Admin';
+    return user.role === Role.Admin;
 };
 
 schema.methods.isSuperAdmin = function () {
     const user = this;
-    return user.role === 'SuperAdmin';
+    return user.role === Role.SuperAdmin;
 };
 
 schema.statics.findByCredentials = async (email: string, password: string) => {

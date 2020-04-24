@@ -17,3 +17,23 @@ export const parseToken = () => {
         await next();
     };
 };
+
+export const admin = () => {
+    return async (ctx: Router.IRouterContext, next: Koa.Next) => {
+        const user: IUser = ctx.state.user;
+        if (user.isUser()) {
+            ctx.throw(403, 'Utente non autorizzato all\'operazione richiesta');
+        }
+        await next();
+    };
+};
+
+export const superAdmin = () => {
+    return async (ctx: Router.IRouterContext, next: Koa.Next) => {
+        const user: IUser = ctx.state.user;
+        if (!user.isSuperAdmin()) {
+            ctx.throw(403, 'Utente non autorizzato all\'operazione richiesta');
+        }
+        await next();
+    };
+};

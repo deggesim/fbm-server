@@ -3,7 +3,7 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { Fixture, IFixture } from '../schemas/fixture';
 import { ILeague, League } from '../schemas/league';
-import { auth, parseToken } from '../util/auth';
+import { admin, auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
 
 const fixtureRouter: Router = new Router<IFixture>();
@@ -30,7 +30,7 @@ fixtureRouter.get('/fixtures/:id', auth(), parseToken(), tenant(), async (ctx: R
     }
 });
 
-fixtureRouter.post('/fixtures', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+fixtureRouter.post('/fixtures', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const newFixture: IFixture = ctx.request.body;
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
@@ -43,7 +43,7 @@ fixtureRouter.post('/fixtures', auth(), parseToken(), tenant(), async (ctx: Rout
     }
 });
 
-fixtureRouter.patch('/fixtures/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+fixtureRouter.patch('/fixtures/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const updatedFixture: IFixture = ctx.request.body;
         const fixtureToUpdate: IFixture = await Fixture.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IFixture;
@@ -58,7 +58,7 @@ fixtureRouter.patch('/fixtures/:id', auth(), parseToken(), tenant(), async (ctx:
     }
 });
 
-fixtureRouter.delete('/fixtures/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+fixtureRouter.delete('/fixtures/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const fixture = await Fixture.findOneAndDelete({ _id: ctx.params.id, league: ctx.get('league') }) as IFixture;
         console.log(fixture);

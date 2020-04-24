@@ -10,3 +10,9 @@ export enum AppConfig {
   'gradePlayerTeamWithNoGame' = 4,
   'LastBenchPlayerWithStarter' = 10,
 }
+
+export enum Role {
+  'User' = 'User',
+  'Admin' = 'Admin',
+  'SuperAdmin' = 'SuperAdmin',
+}

@@ -16,7 +16,7 @@ export const tenant = () => {
             ctx.set('league', league.id);
             await next();
         } else {
-            ctx.throw(401, `Utente non autorizzato ad operare sulla lega ${league.name}`);
+            ctx.throw(403, `Utente non autorizzato ad operare sulla lega ${league.name}`);
         }
     };
 };

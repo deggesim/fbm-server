@@ -2,7 +2,7 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { IPlayer, Player } from '../schemas/player';
-import { auth, parseToken } from '../util/auth';
+import { admin, auth, parseToken } from '../util/auth';
 import { parseCsv } from '../util/parse';
 import { tenant } from '../util/tenant';
 
@@ -36,7 +36,7 @@ const multer = require('@koa/multer');
 const upload = multer({
     storage: multer.memoryStorage(),
 });
-playerRouter.post('/players/upload', auth(), parseToken(), tenant(), upload.single('players'), async (ctx: Router.IRouterContext) => {
+playerRouter.post('/players/upload', auth(), parseToken(), tenant(), admin(), upload.single('players'), async (ctx: Router.IRouterContext) => {
     try {
         const players = parseCsv(ctx.request.body.players.toString(), ['name', 'role', 'nationality', 'team', 'number', 'yearBirth', 'height', 'weight']);
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
@@ -48,7 +48,7 @@ playerRouter.post('/players/upload', auth(), parseToken(), tenant(), upload.sing
     }
 });
 
-playerRouter.patch('/players/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+playerRouter.patch('/players/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const updatedPlayer: IPlayer = ctx.request.body;
@@ -64,7 +64,7 @@ playerRouter.patch('/players/:id', auth(), parseToken(), tenant(), async (ctx: R
     }
 });
 
-playerRouter.delete('/players/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+playerRouter.delete('/players/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const player = await Player.findOneAndDelete({ _id: ctx.params.id, league: league._id }) as IPlayer;
