@@ -10,7 +10,12 @@ const realFixtureRouter: Router = new Router<IRealFixture>();
 
 realFixtureRouter.get('/real-fixtures', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const realFixtures = await RealFixture.find({ league: ctx.get('league') });
+        const prepared = ctx.request.query.prepared === 'true';
+        const conditions: any = { league: ctx.get('league') };
+        if (prepared) {
+            conditions.prepared = true;
+        }
+        const realFixtures = await RealFixture.find(conditions).sort({ _id: 1 });
         await RealFixture.populate(realFixtures, [{ path: 'fixtures' }, { path: 'teamsWithNoGame' }]);
         ctx.body = realFixtures;
     } catch (error) {
