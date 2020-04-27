@@ -17,7 +17,7 @@ playerRouter.get('/players', auth(), parseToken(), tenant(), async (ctx: Router.
     }
 });
 
-playerRouter.post('/players', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+playerRouter.post('/players', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const newPlayer: IPlayer = ctx.request.body;
@@ -36,17 +36,18 @@ const multer = require('@koa/multer');
 const upload = multer({
     storage: multer.memoryStorage(),
 });
-playerRouter.post('/players/upload', auth(), parseToken(), tenant(), admin(), upload.single('players'), async (ctx: Router.IRouterContext) => {
-    try {
-        const players = parseCsv(ctx.request.body.players.toString(), ['name', 'role', 'nationality', 'team', 'number', 'yearBirth', 'height', 'weight']);
-        const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
-        ctx.body = await Player.insertPlayers(players, league);
-        ctx.status = 201;
-    } catch (error) {
-        console.log(error);
-        ctx.throw(400, error.message);
-    }
-});
+playerRouter.post('/players/upload', auth(), parseToken(), tenant(), admin(), admin(), upload.single('players'),
+    async (ctx: Router.IRouterContext) => {
+        try {
+            const players = parseCsv(ctx.request.body.players.toString(), ['name', 'role', 'nationality', 'team', 'number', 'yearBirth', 'height', 'weight']);
+            const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+            ctx.body = await Player.insertPlayers(players, league);
+            ctx.status = 201;
+        } catch (error) {
+            console.log(error);
+            ctx.throw(400, error.message);
+        }
+    });
 
 playerRouter.patch('/players/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {

@@ -9,9 +9,13 @@ export const auth = () => {
 
 export const parseToken = () => {
     return async (ctx: Router.IRouterContext, next: Koa.Next) => {
-        const id = ctx.state.user._id;
-        const user: IUser = await User.findById(id) as IUser;
-        ctx.state.user = user;
+        const user: IUser = ctx.state.user;
+        if (user == null) {
+            ctx.throw(401, 'Utente non autenticato');
+        }
+        const id = user._id;
+        const userDb: IUser = await User.findById(id) as IUser;
+        ctx.state.user = userDb;
         const token: string = ctx.request.header.authorization.replace('Bearer ', '');
         ctx.state.token = token;
         await next();
@@ -21,7 +25,7 @@ export const parseToken = () => {
 export const admin = () => {
     return async (ctx: Router.IRouterContext, next: Koa.Next) => {
         const user: IUser = ctx.state.user;
-        if (user.isUser()) {
+        if (user == null || user.isUser()) {
             ctx.throw(403, 'Utente non autorizzato all\'operazione richiesta');
         }
         await next();
@@ -31,7 +35,7 @@ export const admin = () => {
 export const superAdmin = () => {
     return async (ctx: Router.IRouterContext, next: Koa.Next) => {
         const user: IUser = ctx.state.user;
-        if (!user.isSuperAdmin()) {
+        if (user == null || !user.isSuperAdmin()) {
             ctx.throw(403, 'Utente non autorizzato all\'operazione richiesta');
         }
         await next();

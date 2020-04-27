@@ -8,7 +8,7 @@ import { IMatch, Match } from '../schemas/match';
 import { IPerformance, Performance } from '../schemas/performance';
 import { IRealFixture, RealFixture } from '../schemas/real-fixture';
 import { IRound, Round } from '../schemas/round';
-import { auth, parseToken } from '../util/auth';
+import { admin, auth, parseToken } from '../util/auth';
 import { computeResult } from '../util/result-calculator';
 import { tenant } from '../util/tenant';
 
@@ -23,7 +23,7 @@ matchRouter.get('/matches', auth(), parseToken(), tenant(), async (ctx: Router.I
   }
 });
 
-matchRouter.post('/matches', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+matchRouter.post('/matches', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
     const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
     const newMatch: IMatch = ctx.request.body;
@@ -105,7 +105,7 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
     }
   });
 
-matchRouter.patch('/matches/fixture/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+matchRouter.patch('/matches/fixture/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
     const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
     const fixture: IFixture = await Fixture.findOne({ _id: ctx.params.id, league: league._id }) as IFixture;
@@ -145,7 +145,7 @@ matchRouter.patch('/matches/fixture/:id', auth(), parseToken(), tenant(), async 
   }
 });
 
-matchRouter.patch('/matches/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+matchRouter.patch('/matches/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
     const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
     const updatedMatch: IMatch = ctx.request.body;
@@ -161,7 +161,7 @@ matchRouter.patch('/matches/:id', auth(), parseToken(), tenant(), async (ctx: Ro
   }
 });
 
-matchRouter.delete('/matches/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+matchRouter.delete('/matches/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
     const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
     const match = await Match.findOneAndDelete({ _id: ctx.params.id, league: league._id }) as IMatch;

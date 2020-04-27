@@ -2,8 +2,9 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { IFixture } from '../schemas/fixture';
 import { IRound, Round } from '../schemas/round';
-import { auth, parseToken } from '../util/auth';
+import { admin, auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
+import { FantasyTeam } from '../schemas/fantasy-team';
 
 const roundRouter: Router = new Router<IRound>();
 
@@ -20,7 +21,7 @@ roundRouter.get('/rounds', auth(), parseToken(), tenant(), async (ctx: Router.IR
     }
 });
 
-roundRouter.post('/rounds/:id/matches', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+roundRouter.post('/rounds/:id/matches', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const updatedRound: IRound = ctx.request.body;
         const roundToUpdate = await Round.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IRound;
@@ -44,11 +45,17 @@ roundRouter.post('/rounds/:id/matches', auth(), parseToken(), tenant(), async (c
 });
 
 async function populateAll(round: IRound) {
-    await round.populate('fantasyTeams').populate('fixtures').execPopulate();
+    await round.populate('fantasyTeams')
+        .populate('fixtures')
+        .execPopulate();
+    await FantasyTeam.populate(round.fantasyTeams, { path: 'owners' });
     for (const fixture of round.fixtures as IFixture[]) {
         for (let i = 0; i < fixture.matches.length; i++) {
             await fixture.populate(`matches.${i}`).execPopulate();
-            await fixture.populate(`matches.${i}.homeTeam`).populate(`matches.${i}.awayTeam`).execPopulate();
+            await fixture
+                .populate(`matches.${i}.homeTeam`)
+                .populate(`matches.${i}.awayTeam`)
+                .execPopulate();
         }
     }
 }

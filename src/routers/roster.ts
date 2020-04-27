@@ -3,7 +3,7 @@ import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { IRealFixture } from '../schemas/real-fixture';
 import { IRoster, Roster } from '../schemas/roster';
-import { auth, parseToken } from '../util/auth';
+import { admin, auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
 
 const rosterRouter: Router = new Router<IRoster>();
@@ -44,7 +44,7 @@ rosterRouter.get('/rosters/free', auth(), parseToken(), tenant(), async (ctx: Ro
     }
 });
 
-rosterRouter.post('/rosters', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+rosterRouter.post('/rosters', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const nextRealFixture: IRealFixture = await league.nextRealFixture();
@@ -64,7 +64,7 @@ rosterRouter.post('/rosters', auth(), parseToken(), tenant(), async (ctx: Router
     }
 });
 
-rosterRouter.patch('/rosters/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+rosterRouter.patch('/rosters/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const updatedRoster: IRoster = ctx.request.body;
@@ -85,7 +85,7 @@ rosterRouter.patch('/rosters/:id', auth(), parseToken(), tenant(), async (ctx: R
     }
 });
 
-rosterRouter.delete('/rosters/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+rosterRouter.delete('/rosters/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const roster = await Roster.findOneAndDelete({ _id: ctx.params.id, league: league._id }) as IRoster;

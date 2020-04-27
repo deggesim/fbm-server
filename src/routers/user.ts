@@ -1,6 +1,6 @@
 import * as Router from 'koa-router';
 import { IUser, User } from '../schemas/user';
-import { auth, parseToken } from '../util/auth';
+import { auth, parseToken, superAdmin } from '../util/auth';
 import { parseCsv } from '../util/parse';
 
 const userRouter: Router = new Router<IUser>();
@@ -32,7 +32,7 @@ userRouter.get('/users/me', auth(), parseToken(), async (ctx: Router.IRouterCont
     }
 });
 
-userRouter.post('/users', async (ctx: Router.IRouterContext) => {
+userRouter.post('/users', superAdmin(), async (ctx: Router.IRouterContext) => {
     try {
         const newUser: IUser = ctx.request.body;
         ctx.body = await User.create(newUser);
@@ -80,7 +80,7 @@ const multer = require('@koa/multer');
 const upload = multer({
     storage: multer.memoryStorage(),
 });
-userRouter.post('/users/upload', auth(), parseToken(), upload.single('users'), async (ctx: Router.IRouterContext) => {
+userRouter.post('/users/upload', auth(), parseToken(), upload.single('users'), superAdmin(), async (ctx: Router.IRouterContext) => {
     try {
         const users = parseCsv(ctx.request.body.users.toString(), ['name', 'email', 'password', 'role']);
         const ret: IUser[] = [];
@@ -113,7 +113,7 @@ userRouter.patch('/users/me', auth(), parseToken(), async (ctx: Router.IRouterCo
     }
 });
 
-userRouter.patch('/users/:id', auth(), parseToken(), async (ctx: Router.IRouterContext) => {
+userRouter.patch('/users/:id', auth(), parseToken(), superAdmin(), async (ctx: Router.IRouterContext) => {
     try {
         const updatedUser = ctx.request.body;
         const user = await User.findById(ctx.params.id) as IUser;
@@ -134,7 +134,7 @@ userRouter.patch('/users/:id', auth(), parseToken(), async (ctx: Router.IRouterC
     }
 });
 
-userRouter.delete('/users/:id', auth(), parseToken(), async (ctx: Router.IRouterContext) => {
+userRouter.delete('/users/:id', auth(), parseToken(), superAdmin(), async (ctx: Router.IRouterContext) => {
     try {
         const user = await User.findOneAndDelete({ _id: ctx.params.id }) as IUser;
         if (user == null) {

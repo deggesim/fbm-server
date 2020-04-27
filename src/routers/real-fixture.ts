@@ -3,7 +3,7 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { IRealFixture, RealFixture } from '../schemas/real-fixture';
-import { auth, parseToken } from '../util/auth';
+import { admin, auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
 
 const realFixtureRouter: Router = new Router<IRealFixture>();
@@ -37,7 +37,7 @@ realFixtureRouter.get('/real-fixtures/fixture/:fixtureId', auth(), parseToken(),
     }
 });
 
-realFixtureRouter.post('/real-fixtures', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+realFixtureRouter.post('/real-fixtures', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const newRealFixture: IRealFixture = ctx.request.body;
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
@@ -50,7 +50,7 @@ realFixtureRouter.post('/real-fixtures', auth(), parseToken(), tenant(), async (
     }
 });
 
-realFixtureRouter.patch('/real-fixtures/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+realFixtureRouter.patch('/real-fixtures/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const updatedRealFixture: IRealFixture = ctx.request.body;
         const realFixtureToUpdate: IRealFixture = await RealFixture.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IRealFixture;
@@ -65,7 +65,7 @@ realFixtureRouter.patch('/real-fixtures/:id', auth(), parseToken(), tenant(), as
     }
 });
 
-realFixtureRouter.delete('/real-fixtures/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+realFixtureRouter.delete('/real-fixtures/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
         const realFixture = await RealFixture.findOneAndDelete({ _id: ctx.params.id, league: ctx.get('league') }) as IRealFixture;
         console.log(realFixture);
