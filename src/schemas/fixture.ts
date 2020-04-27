@@ -52,6 +52,14 @@ const schema = new Schema<IFixture>({
     },
 }, {
     timestamps: true,
+    toJSON: { virtuals: true },
+});
+
+schema.virtual('round', {
+    ref: 'Round',
+    localField: '_id',
+    foreignField: 'fixtures',
+    justOne: true,
 });
 
 export const Fixture = model<IFixture, IFixtureModel>('Fixture', schema);

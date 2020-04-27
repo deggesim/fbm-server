@@ -1,6 +1,8 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
+import { Fixture } from '../schemas/fixture';
 import { ILeague, League } from '../schemas/league';
+import { IRealFixture } from '../schemas/real-fixture';
 import { auth, parseToken } from '../util/auth';
 
 const leagueRouter: Router = new Router<ILeague>();
@@ -85,7 +87,10 @@ leagueRouter.get('/leagues/:id/next-realfixture', auth(), parseToken(), async (c
         if (league == null) {
             ctx.throw(400, 'Lega non trovata');
         }
-        ctx.body = await league.nextRealFixture();
+        const realFixture: IRealFixture = await league.nextRealFixture();
+        await realFixture.populate('fixtures').populate('teamsWithNoGame').execPopulate();
+        await Fixture.populate(realFixture.fixtures, { path: 'round' });
+        ctx.body = realFixture;
     } catch (error) {
         console.log(error);
         ctx.throw(500, error.message);
