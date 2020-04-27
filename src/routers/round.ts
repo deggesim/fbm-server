@@ -1,10 +1,10 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
+import { FantasyTeam } from '../schemas/fantasy-team';
 import { IFixture } from '../schemas/fixture';
 import { IRound, Round } from '../schemas/round';
 import { admin, auth, parseToken } from '../util/auth';
 import { tenant } from '../util/tenant';
-import { FantasyTeam } from '../schemas/fantasy-team';
 
 const roundRouter: Router = new Router<IRound>();
 
