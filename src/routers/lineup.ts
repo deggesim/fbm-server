@@ -59,8 +59,9 @@ lineupRouter.post('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', aut
     async (ctx: Router.IRouterContext, next: Koa.Next) => {
         const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
         const user: IUser = ctx.state.user;
-        if (user == null || user.isUser() ||
-            (user.fantasyTeams as IFantasyTeam[]).find((ft: IFantasyTeam) => (ft._id).equals(ctx.params.fantasyTeamId)) == null) {
+        const teamManagedByLoggedUser
+            = (user.fantasyTeams as IFantasyTeam[]).find((ft: IFantasyTeam) => (ft._id).equals(ctx.params.fantasyTeamId)) != null;
+        if (user.isUser() && !teamManagedByLoggedUser) {
             ctx.throw(403, 'Utente non autorizzato all\'operazione richiesta');
         }
         // delete old items
@@ -120,8 +121,9 @@ lineupRouter.delete('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', a
         try {
             const leagueId = ctx.get('league');
             const user: IUser = ctx.state.user;
-            if (user == null || user.isUser() ||
-                (user.fantasyTeams as IFantasyTeam[]).find((ft: IFantasyTeam) => (ft._id).equals(ctx.params.fantasyTeamId)) == null) {
+            const teamManagedByLoggedUser
+                = (user.fantasyTeams as IFantasyTeam[]).find((ft: IFantasyTeam) => (ft._id).equals(ctx.params.fantasyTeamId)) != null;
+            if (user.isUser() && !teamManagedByLoggedUser) {
                 ctx.throw(403, 'Utente non autorizzato all\'operazione richiesta');
             }
             const realFixture: IRealFixture =
