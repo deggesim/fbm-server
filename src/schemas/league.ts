@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import { Document, model, Model, Schema } from 'mongoose';
 import { cleanLeague, createCup, createPlayoff, createPlayout, createRegularSeason, populateCompetition, populateRealFixture } from '../util/new-season.util';
 import { Competition } from './competition';
+import { FantasyRoster, IFantasyRoster } from './fantasy-roster';
 import { FantasyTeam } from './fantasy-team';
 import { Fixture, IFixture } from './fixture';
 import { cupFormat, CupFormat } from './formats/cup-format';
@@ -9,6 +10,7 @@ import { playoffFormat, PlayoffFormat } from './formats/playoff-format';
 import { playoutFormat, PlayoutFormat } from './formats/playout-format';
 import { regularSeasonFormat, RegularSeasonFormat } from './formats/regular-season-format';
 import { IRealFixture, RealFixture } from './real-fixture';
+import { IRoster, Roster } from './roster';
 import { IRound, Round } from './round';
 
 interface ILeagueDocument extends Document {
@@ -51,7 +53,7 @@ export interface ILeague extends ILeagueDocument {
     isPostseason: () => Promise<boolean>;
     nextFixture: () => Promise<IFixture>;
     nextRealFixture: () => Promise<IRealFixture>;
-    progress: () => Promise<void>;
+    progress: (realFixture: IRealFixture) => Promise<void>;
 }
 
 /**
@@ -195,25 +197,25 @@ schema.methods.isPostseason = async function () {
 
 schema.methods.nextFixture = async function () {
     const league = this;
-    const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id }).populate({
-        path: 'fixtures',
-        match: { completed: false },
-        options: { sort: { _id: 1 } },
-    }).sort({ id: 1 }) as IRealFixture;
-    return realFixture.fixtures[0] as IFixture;
+    const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id, prepared: true }).sort({ _id: -1 }) as IRealFixture;
+    await realFixture.populate('fixtures').execPopulate();
+    const fixtures = realFixture.fixtures as IFixture[];
+    const allCompleted = fixtures.every((fixture) => fixture.completed);
+    if (allCompleted) {
+        return fixtures.sort((a, b) => b._id - a._id)[0];
+    } else {
+        return fixtures.filter((fixture) => !fixture.completed).sort((a, b) => a._id - b._id)[0];
+    }
 };
 
 schema.methods.nextRealFixture = async function () {
     const league = this;
-    const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id }).populate({
-        path: 'fixtures',
-        match: { completed: false },
-        options: { sort: { _id: 1 } },
-    }).sort({ id: 1 }) as IRealFixture;
+    const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id, prepared: true }).sort({ _id: -1 }) as IRealFixture;
+    await realFixture.populate('fixtures').execPopulate();
     return realFixture;
 };
 
-schema.methods.progress = async function () {
+schema.methods.progress = async function (realFixture: IRealFixture) {
     const league = this;
     const rounds = await Round.find({ league: league._id });
     // check all rounds
@@ -246,6 +248,43 @@ schema.methods.progress = async function () {
             // competition completed
             competition.completed = true;
             await competition.save();
+        }
+    }
+
+    // prepare next realFixture
+    const fixtures = realFixture.fixtures as IFixture[];
+    const allFixturesComplete = fixtures.every((fixture) => fixture.completed);
+    if (allFixturesComplete) {
+        const firstUnpreparedRealFixture = await RealFixture.findOne({ league: league._id, prepared: false }, [], { sort: { _id: 1 } });
+        if (firstUnpreparedRealFixture != null) {
+            const rosters: IRoster[] = await Roster.find({ league: league._id, realFixture: realFixture._id });
+            for (const roster of rosters) {
+                const { player, team } = roster;
+                const newRoster = {
+                    player,
+                    team,
+                    realFixture: firstUnpreparedRealFixture,
+                    league,
+                };
+                const rosterCreated = await Roster.create(newRoster);
+                if (roster.fantasyRoster != null) {
+                    const { fantasyTeam, status, draft, contract, yearContract } = roster.fantasyRoster as IFantasyRoster;
+                    const newFantasyRoster = {
+                        roster,
+                        fantasyTeam,
+                        status,
+                        draft,
+                        contract,
+                        yearContract,
+                        realFixture: firstUnpreparedRealFixture,
+                    };
+                    const fantasyRosterCreated = await FantasyRoster.create(newFantasyRoster);
+                    rosterCreated.fantasyRoster = fantasyRosterCreated;
+                    await rosterCreated.save();
+                }
+            }
+            firstUnpreparedRealFixture.prepared = true;
+            firstUnpreparedRealFixture.save();
         }
     }
 };

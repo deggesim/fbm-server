@@ -10,7 +10,7 @@ interface IRosterDocument extends ITenant {
     player: IPlayer | ObjectId;
     team: ITeam | ObjectId;
     realFixture: IRealFixture | ObjectId;
-    fantasyRoster: IFantasyRoster | ObjectId;
+    fantasyRoster?: IFantasyRoster | ObjectId;
 }
 
 /**

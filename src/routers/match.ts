@@ -88,14 +88,14 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
         resultDivisor,
       );
       const fixture: IFixture = await Fixture.findById(ctx.params.fixtureId) as IFixture;
-      fixture.populate('matches').execPopulate();
+      await fixture.populate('matches').execPopulate();
       const completedMatches = (fixture.matches as IMatch[]).filter((m: IMatch) => m.completed).length;
       if (completedMatches === fixture.matches.length) {
         // fixture completed
         fixture.completed = true;
         await fixture.save();
         // progress league
-        await league.progress();
+        await league.progress(realFixture);
       }
       await match.populate('homeTeam').populate('awayTeam').execPopulate();
       ctx.body = match;
@@ -135,7 +135,8 @@ matchRouter.patch('/matches/fixture/:id', auth(), parseToken(), tenant(), admin(
       fixture.completed = true;
       await fixture.save();
       // progress league
-      await league.progress();
+      const realFixture: IRealFixture = await RealFixture.findByFixture(ctx.get('league'), fixture._id);
+      await league.progress(realFixture);
     }
 
     ctx.body = returnedMatches;
