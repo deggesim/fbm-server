@@ -251,44 +251,49 @@ schema.methods.progress = async function (realFixture: IRealFixture) {
         }
     }
 
-    // prepare next realFixture
+    // prepare next realFixture if necessary
     const fixtures = realFixture.fixtures as IFixture[];
     const allFixturesComplete = fixtures.every((fixture) => fixture.completed);
-    if (allFixturesComplete) {
-        const firstUnpreparedRealFixture = await RealFixture.findOne({ league: league._id, prepared: false }, [], { sort: { _id: 1 } });
-        if (firstUnpreparedRealFixture != null) {
-            const rosters: IRoster[] = await Roster.find({ league: league._id, realFixture: realFixture._id });
-            await Roster.populate(rosters, { path: 'fantasyRoster' });
-            for (const roster of rosters) {
-                const { player, team, fantasyRoster } = roster;
-                const newRoster = {
-                    player,
-                    team,
-                    realFixture: firstUnpreparedRealFixture,
-                    fantasyRoster,
+    const allRealFixtures: IRealFixture[] = await RealFixture.find({ league: league._id }).sort({ _id: 1 });
+    const indexOfRealFixture = allRealFixtures.findIndex((rf) => rf._id.equals(realFixture._id));
+    let indexOfNextRealFixture;
+    if (indexOfRealFixture != null && indexOfRealFixture !== -1 && indexOfRealFixture !== allRealFixtures.length) {
+        indexOfNextRealFixture = indexOfRealFixture + 1;
+    }
+    const nextRealFixture = indexOfNextRealFixture != null ? allRealFixtures[indexOfNextRealFixture] : null;
+    if (allFixturesComplete && nextRealFixture != null && realFixture.prepared && !nextRealFixture.prepared) {
+        // popoliamo i roster solo se la giornata successiva esiste e non è prepared, e quella attuale sì
+        const rosters: IRoster[] = await Roster.find({ league: league._id, realFixture: realFixture._id });
+        await Roster.populate(rosters, { path: 'fantasyRoster' });
+        for (const roster of rosters) {
+            const { player, team, fantasyRoster } = roster;
+            const newRoster = {
+                player,
+                team,
+                realFixture: nextRealFixture,
+                fantasyRoster,
+                league,
+            };
+            const rosterCreated = await Roster.create(newRoster);
+            if (roster.fantasyRoster != null) {
+                const { fantasyTeam, status, draft, contract, yearContract } = roster.fantasyRoster as IFantasyRoster;
+                const newFantasyRoster = {
+                    roster,
+                    fantasyTeam,
+                    status,
+                    draft,
+                    contract,
+                    yearContract,
+                    realFixture: nextRealFixture,
                     league,
                 };
-                const rosterCreated = await Roster.create(newRoster);
-                if (roster.fantasyRoster != null) {
-                    const { fantasyTeam, status, draft, contract, yearContract } = roster.fantasyRoster as IFantasyRoster;
-                    const newFantasyRoster = {
-                        roster,
-                        fantasyTeam,
-                        status,
-                        draft,
-                        contract,
-                        yearContract,
-                        realFixture: firstUnpreparedRealFixture,
-                        league,
-                    };
-                    const fantasyRosterCreated = await FantasyRoster.create(newFantasyRoster);
-                    rosterCreated.fantasyRoster = fantasyRosterCreated;
-                    await rosterCreated.save();
-                }
+                const fantasyRosterCreated = await FantasyRoster.create(newFantasyRoster);
+                rosterCreated.fantasyRoster = fantasyRosterCreated;
+                await rosterCreated.save();
             }
-            firstUnpreparedRealFixture.prepared = true;
-            await firstUnpreparedRealFixture.save();
         }
+        nextRealFixture.prepared = true;
+        await nextRealFixture.save();
     }
 };
 
