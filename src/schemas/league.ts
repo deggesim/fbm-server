@@ -211,7 +211,7 @@ schema.methods.nextFixture = async function () {
 schema.methods.nextRealFixture = async function () {
     const league = this;
     const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id, prepared: true }).sort({ _id: -1 }) as IRealFixture;
-    await realFixture.populate('fixtures').execPopulate();
+    await realFixture.populate('fixtures').populate('teamsWithNoGame').execPopulate();
     return realFixture;
 };
 
@@ -258,12 +258,14 @@ schema.methods.progress = async function (realFixture: IRealFixture) {
         const firstUnpreparedRealFixture = await RealFixture.findOne({ league: league._id, prepared: false }, [], { sort: { _id: 1 } });
         if (firstUnpreparedRealFixture != null) {
             const rosters: IRoster[] = await Roster.find({ league: league._id, realFixture: realFixture._id });
+            await Roster.populate(rosters, { path: 'fantasyRoster' });
             for (const roster of rosters) {
-                const { player, team } = roster;
+                const { player, team, fantasyRoster } = roster;
                 const newRoster = {
                     player,
                     team,
                     realFixture: firstUnpreparedRealFixture,
+                    fantasyRoster,
                     league,
                 };
                 const rosterCreated = await Roster.create(newRoster);
@@ -277,6 +279,7 @@ schema.methods.progress = async function (realFixture: IRealFixture) {
                         contract,
                         yearContract,
                         realFixture: firstUnpreparedRealFixture,
+                        league,
                     };
                     const fantasyRosterCreated = await FantasyRoster.create(newFantasyRoster);
                     rosterCreated.fantasyRoster = fantasyRosterCreated;
@@ -284,7 +287,7 @@ schema.methods.progress = async function (realFixture: IRealFixture) {
                 }
             }
             firstUnpreparedRealFixture.prepared = true;
-            firstUnpreparedRealFixture.save();
+            await firstUnpreparedRealFixture.save();
         }
     }
 };

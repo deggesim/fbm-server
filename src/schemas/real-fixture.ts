@@ -60,6 +60,7 @@ schema.statics.findByFixture = async (leagueId: string | ObjectId, fixtureId: st
     if (realFixture == null) {
         throw new Error(entityNotFound(realFixture, leagueId, fixtureId));
     }
+    await realFixture.populate('fixtures').execPopulate();
     return realFixture;
 };
 

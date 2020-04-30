@@ -88,7 +88,6 @@ leagueRouter.get('/leagues/:id/next-realfixture', auth(), parseToken(), async (c
             ctx.throw(400, 'Lega non trovata');
         }
         const realFixture: IRealFixture = await league.nextRealFixture();
-        await realFixture.populate('fixtures').populate('teamsWithNoGame').execPopulate();
         await Fixture.populate(realFixture.fixtures, { path: 'round' });
         ctx.body = realFixture;
     } catch (error) {
