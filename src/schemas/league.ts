@@ -181,12 +181,14 @@ schema.methods.completePreseason = async function () {
 
 schema.methods.isPreseason = async function () {
     const league = this;
-    return !await RealFixture.exists({ league: league._id, prepared: true });
+    const exist = await RealFixture.exists({ league: league._id, prepared: true });
+    return !exist;
 };
 
 schema.methods.isOffseason = async function () {
     const league = this;
-    return !await Fixture.exists({ league: league._id, completed: false });
+    const exist = await Fixture.exists({ league: league._id, completed: false });
+    return !exist;
 };
 
 schema.methods.isPostseason = async function () {
@@ -198,7 +200,7 @@ schema.methods.isPostseason = async function () {
 schema.methods.nextFixture = async function () {
     const league = this;
     let realFixture: IRealFixture;
-    if (this.isPreseason()) {
+    if (await this.isPreseason()) {
         realFixture = await RealFixture.findOne({ league: league._id }).sort({ _id: 1 }) as IRealFixture;
     } else {
         realFixture = await RealFixture.findOne({ league: league._id, prepared: true }).sort({ _id: -1 }) as IRealFixture;
@@ -216,7 +218,7 @@ schema.methods.nextFixture = async function () {
 schema.methods.nextRealFixture = async function () {
     const league = this;
     let realFixture: IRealFixture;
-    if (this.isPreseason()) {
+    if (await this.isPreseason()) {
         realFixture = await RealFixture.findOne({ league: league._id }).sort({ _id: 1 }) as IRealFixture;
     } else {
         realFixture = await RealFixture.findOne({ league: league._id, prepared: true }).sort({ _id: -1 }) as IRealFixture;

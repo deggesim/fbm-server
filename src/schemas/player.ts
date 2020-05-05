@@ -132,7 +132,7 @@ schema.statics.insertPlayers = async (uploadedPlayers: any[], league: ILeague) =
         };
         await Roster.create(roster);
         for (const realFixture of allRealFixtures) {
-            Performance.create({
+            await Performance.create({
                 player: player._id,
                 realFixture: realFixture._id,
                 league: league._id,
