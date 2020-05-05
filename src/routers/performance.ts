@@ -35,7 +35,7 @@ performanceRouter.get('/performances/:id', auth(), parseToken(), tenant(), async
 performanceRouter.get('/performances/team/:teamId/real-fixture/:realFixtureId', auth(), parseToken(), tenant(),
     async (ctx: Router.IRouterContext, next: Koa.Next) => {
         try {
-            const rosters = await Roster.find({ league: ctx.get('league'), team: ctx.params.teamId });
+            const rosters = await Roster.find({ league: ctx.get('league'), team: ctx.params.teamId, realFixture: ctx.params.realFixtureId });
             const playersId = rosters.map((roster: IRoster) => roster.player);
             const performances =
                 await Performance.find({ league: ctx.get('league'), realFixture: ctx.params.realFixtureId, player: { $in: playersId } });
