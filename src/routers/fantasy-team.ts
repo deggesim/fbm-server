@@ -1,5 +1,6 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
+import { ObjectId } from 'mongodb';
 import { FantasyTeam, IFantasyTeam } from '../schemas/fantasy-team';
 import { ILeague, League } from '../schemas/league';
 import { IRealFixture } from '../schemas/real-fixture';
@@ -81,6 +82,16 @@ fantasyTeamRouter.patch('/fantasy-teams/:id', auth(), parseToken(), tenant(), ad
         fantasyTeamToUpdate.set(updatedFantasyTeam);
         const fantasyTeam = await fantasyTeamToUpdate.save();
         await fantasyTeam.populate('owners').execPopulate();
+        // add league to owners
+        const owners = fantasyTeam.owners as IUser[];
+        for (const user of owners) {
+            const managedLeagues = user.leagues as ObjectId[];
+            if (managedLeagues.find((managedLeague) => managedLeague.equals(league._id)) == null) {
+                // add league to owner
+                user.leagues.push(league);
+                await user.save();
+            }
+        }
         await fantasyTeam.populate({
             path: 'fantasyRosters',
             match: {
