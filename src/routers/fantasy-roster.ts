@@ -70,8 +70,13 @@ fantasyRosterRouter.get('/fantasy-rosters/:id', auth(), parseToken(), tenant(), 
 
 fantasyRosterRouter.patch('/fantasy-rosters/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-        const updatedFantasyRoster: IFantasyRoster = ctx.request.body;
         const fantasyRosterToUpdate = await FantasyRoster.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IFantasyRoster;
+        // gestione fantasyTeam
+        await remove(fantasyRosterToUpdate);
+
+        const values = ctx.request.body;
+        const { fantasyTeam, status, draft, contract, yearContract } = values;
+        const updatedFantasyRoster = { fantasyTeam, status, draft, contract, yearContract };
         if (fantasyRosterToUpdate == null) {
             ctx.throw(404, 'Giocatore non trovato');
         }
@@ -79,8 +84,7 @@ fantasyRosterRouter.patch('/fantasy-rosters/:id', auth(), parseToken(), tenant()
         const fantasyRoster = await fantasyRosterToUpdate.save();
 
         // gestione fantasyTeam
-        remove(fantasyRoster);
-        buy(fantasyRoster);
+        await buy(fantasyRoster);
 
         await fantasyRoster.populate('roster').execPopulate();
         await fantasyRoster.populate('fantasyTeam').execPopulate();
