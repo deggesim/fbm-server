@@ -24,14 +24,14 @@ interface ILeagueDocument extends Document {
   playoffFirstRealFixture: number;
   playoutFirstRealFixture: number;
   cupFirstRealFixture: number;
-  parameters: [{
+  parameters: Array<{
     parameter: string;
     value: number;
-  }];
-  roles: [{
+  }>;
+  roles: Array<{
     role: string;
     spots: number[];
-  }];
+  }>;
 }
 
 export interface ITenant extends Document {
@@ -155,7 +155,7 @@ schema.methods.populateLeague = async function() {
 
 schema.methods.setParameters = async function(parameters: Array<{ parameter: string, value: number }>) {
   const league = this;
-  await League.findByIdAndUpdate(league._id, { parameters: [] });
+  league.parameters = [];
   for (const param of parameters) {
     league.parameters.push(param);
   }
