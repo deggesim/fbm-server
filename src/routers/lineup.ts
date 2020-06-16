@@ -1,17 +1,17 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { FantasyRoster, IFantasyRoster } from '../schemas/fantasy-roster';
+import { IFantasyTeam } from '../schemas/fantasy-team';
 import { ILeague, League } from '../schemas/league';
 import { ILineup, Lineup } from '../schemas/lineup';
 import { IPerformance, Performance } from '../schemas/performance';
 import { IPlayer, Player } from '../schemas/player';
 import { IRealFixture, RealFixture } from '../schemas/real-fixture';
 import { IRoster } from '../schemas/roster';
+import { IUser } from '../schemas/user';
 import { auth, parseToken } from '../util/auth';
 import { entityNotFound } from '../util/functions';
 import { tenant } from '../util/tenant';
-import { IUser } from '../schemas/user';
-import { IFantasyTeam } from '../schemas/fantasy-team';
 
 const lineupRouter: Router = new Router<ILineup>();
 

@@ -83,7 +83,7 @@ const schema = new Schema<IUser>({
   timestamps: true,
 });
 
-schema.methods.toJSON = function () {
+schema.methods.toJSON = function() {
   const user = this;
   const userObject = user.toObject();
   delete userObject.password;
@@ -91,7 +91,7 @@ schema.methods.toJSON = function () {
   return userObject;
 };
 
-schema.methods.generateAuthToken = async function () {
+schema.methods.generateAuthToken = async function() {
   const user = this;
   const token = jwt.sign({ _id: user._id.toString() }, String(process.env.PUBLIC_KEY), {
     expiresIn: '14d',
@@ -101,17 +101,17 @@ schema.methods.generateAuthToken = async function () {
   return Promise.resolve(token);
 };
 
-schema.methods.isUser = function () {
+schema.methods.isUser = function() {
   const user = this;
   return user.role === Role.User;
 };
 
-schema.methods.isAdmin = function () {
+schema.methods.isAdmin = function() {
   const user = this;
   return user.role === Role.Admin;
 };
 
-schema.methods.isSuperAdmin = function () {
+schema.methods.isSuperAdmin = function() {
   const user = this;
   return user.role === Role.SuperAdmin;
 };
@@ -134,7 +134,7 @@ schema.statics.allSuperAdmins = async () => {
 };
 
 // Hash the plain text password before saving
-schema.pre<IUser>('save', async function (next: HookNextFunction) {
+schema.pre<IUser>('save', async function(next: HookNextFunction) {
   const user = this;
   if (user.isModified('password')) {
     user.password = await bcrypt.hash(user.password, 8);

@@ -78,14 +78,14 @@ const schema = new Schema<IRound>({
   timestamps: true,
 });
 
-schema.methods.buildRoundRobinMatchList = async function (): Promise<void> {
+schema.methods.buildRoundRobinMatchList = async function(): Promise<void> {
   const round: IRound = this;
   const leagueId = round.league as ObjectId;
   await round.populate('fixtures').execPopulate();
   await roundRobinMatchList(leagueId, round.rounds, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
 };
 
-schema.methods.buildPlayoffMatchList = async function (): Promise<void> {
+schema.methods.buildPlayoffMatchList = async function(): Promise<void> {
   const round: IRound = this;
   const leagueId = round.league as ObjectId;
   await round.populate('fixtures').execPopulate();

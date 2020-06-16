@@ -140,7 +140,7 @@ const schema = new Schema<ILeague>({
   timestamps: true,
 });
 
-schema.methods.populateLeague = async function () {
+schema.methods.populateLeague = async function() {
   const league = this;
   await cleanLeague(league);
   await populateCompetition(league);
@@ -153,7 +153,7 @@ schema.methods.populateLeague = async function () {
   return Promise.resolve(league);
 };
 
-schema.methods.setParameters = async function (parameters: Array<{ parameter: string, value: number }>) {
+schema.methods.setParameters = async function(parameters: Array<{ parameter: string, value: number }>) {
   const league = this;
   await League.findByIdAndUpdate(league._id, { parameters: [] });
   for (const param of parameters) {
@@ -162,7 +162,7 @@ schema.methods.setParameters = async function (parameters: Array<{ parameter: st
   return league.save();
 };
 
-schema.methods.setRoles = async function (roles: Array<{ role: string, spots: number[] }>) {
+schema.methods.setRoles = async function(roles: Array<{ role: string, spots: number[] }>) {
   const league = this;
   await League.findByIdAndUpdate(league._id, { roles: [] });
   for (const role of roles) {
@@ -171,7 +171,7 @@ schema.methods.setRoles = async function (roles: Array<{ role: string, spots: nu
   return league.save();
 };
 
-schema.methods.completePreseason = async function () {
+schema.methods.completePreseason = async function() {
   const league = this;
   const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id }).sort({ id: 1 }) as IRealFixture;
   realFixture.prepared = true;
@@ -179,25 +179,25 @@ schema.methods.completePreseason = async function () {
   return Promise.resolve(league);
 };
 
-schema.methods.isPreseason = async function () {
+schema.methods.isPreseason = async function() {
   const league = this;
   const exist = await RealFixture.exists({ league: league._id, prepared: true });
   return !exist;
 };
 
-schema.methods.isOffseason = async function () {
+schema.methods.isOffseason = async function() {
   const league = this;
   const exist = await Fixture.exists({ league: league._id, completed: false });
   return !exist;
 };
 
-schema.methods.isPostseason = async function () {
+schema.methods.isPostseason = async function() {
   const league = this;
   const round: IRound = await Round.findOne({ league: league._id, name: 'Stagione Regolare' }) as IRound;
   return round.completed;
 };
 
-schema.methods.nextFixture = async function () {
+schema.methods.nextFixture = async function() {
   const league = this;
   let realFixture: IRealFixture;
   if (await this.isPreseason()) {
@@ -215,7 +215,7 @@ schema.methods.nextFixture = async function () {
   }
 };
 
-schema.methods.nextRealFixture = async function () {
+schema.methods.nextRealFixture = async function() {
   const league = this;
   let realFixture: IRealFixture;
   if (await this.isPreseason()) {
@@ -227,7 +227,7 @@ schema.methods.nextRealFixture = async function () {
   return realFixture;
 };
 
-schema.methods.progress = async function (realFixture: IRealFixture) {
+schema.methods.progress = async function(realFixture: IRealFixture) {
   const league = this;
   const rounds = await Round.find({ league: league._id });
   // check all rounds
