@@ -7,23 +7,23 @@ import { ITenant } from './league';
 import { IRound } from './round';
 
 interface IMatchDocument extends ITenant {
-    homeTeam: IFantasyTeam | ObjectId;
-    awayTeam: IFantasyTeam | ObjectId;
-    homeRanking: number;
-    homeRanking40Min: number;
-    awayRanking: number;
-    awayRanking40Min: number;
-    homeFactor: number;
-    homeOer: number;
-    awayOer: number;
-    homePlusMinus: number;
-    awayPlusMinus: number;
-    homeGrade: number;
-    awayGrade: number;
-    homeScore: number;
-    awayScore: number;
-    overtime: number;
-    completed: boolean;
+  homeTeam: IFantasyTeam | ObjectId;
+  awayTeam: IFantasyTeam | ObjectId;
+  homeRanking: number;
+  homeRanking40Min: number;
+  awayRanking: number;
+  awayRanking40Min: number;
+  homeFactor: number;
+  homeOer: number;
+  awayOer: number;
+  homePlusMinus: number;
+  awayPlusMinus: number;
+  homeGrade: number;
+  awayGrade: number;
+  homeScore: number;
+  awayScore: number;
+  overtime: number;
+  completed: boolean;
 }
 
 /**
@@ -31,95 +31,95 @@ interface IMatchDocument extends ITenant {
  */
 // tslint:disable-next-line: no-empty-interface
 export interface IMatch extends IMatchDocument {
-    // metodi d'istanza
+  // metodi d'istanza
 }
 
 /**
  * Estensione del Model per l'aggiunta di metodi statici
  */
 export interface IMatchModel extends Model<IMatch> {
-    // metodi statici
-    buildRoundRobinMatchList: (round: IRound) => Promise<IMatch[]>;
-    buildPlayoffMatchList: (round: IRound) => Promise<IMatch[]>;
+  // metodi statici
+  buildRoundRobinMatchList: (round: IRound) => Promise<IMatch[]>;
+  buildPlayoffMatchList: (round: IRound) => Promise<IMatch[]>;
 }
 
 const schema = new Schema<IMatch>({
-    homeTeam: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'FantasyTeam',
-    },
-    awayTeam: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'FantasyTeam',
-    },
-    homeRanking: {
-        type: Number,
-    },
-    homeRanking40Min: {
-        type: Number,
-    },
-    awayRanking: {
-        type: Number,
-    },
-    awayRanking40Min: {
-        type: Number,
-    },
-    homeFactor: {
-        type: Number,
-    },
-    homeOer: {
-        type: Number,
-    },
-    awayOer: {
-        type: Number,
-    },
-    homePlusMinus: {
-        type: Number,
-    },
-    awayPlusMinus: {
-        type: Number,
-    },
-    homeGrade: {
-        type: Number,
-    },
-    awayGrade: {
-        type: Number,
-    },
-    homeScore: {
-        type: Number,
-    },
-    awayScore: {
-        type: Number,
-    },
-    overtime: {
-        type: Number,
-    },
-    completed: {
-        type: Boolean,
-        required: true,
-        default: false,
-    },
-    league: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'League',
-    },
+  homeTeam: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'FantasyTeam',
+  },
+  awayTeam: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'FantasyTeam',
+  },
+  homeRanking: {
+    type: Number,
+  },
+  homeRanking40Min: {
+    type: Number,
+  },
+  awayRanking: {
+    type: Number,
+  },
+  awayRanking40Min: {
+    type: Number,
+  },
+  homeFactor: {
+    type: Number,
+  },
+  homeOer: {
+    type: Number,
+  },
+  awayOer: {
+    type: Number,
+  },
+  homePlusMinus: {
+    type: Number,
+  },
+  awayPlusMinus: {
+    type: Number,
+  },
+  homeGrade: {
+    type: Number,
+  },
+  awayGrade: {
+    type: Number,
+  },
+  homeScore: {
+    type: Number,
+  },
+  awayScore: {
+    type: Number,
+  },
+  overtime: {
+    type: Number,
+  },
+  completed: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  league: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'League',
+  },
 }, {
-    timestamps: true,
+  timestamps: true,
 });
 
 schema.statics.buildRoundRobinMatchList = async (round: IRound): Promise<IMatch[]> => {
-    const leagueId = round.league as ObjectId;
-    await round.populate('fixtures').execPopulate();
-    return await roundRobinMatchList(leagueId, round.rounds, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
+  const leagueId = round.league as ObjectId;
+  await round.populate('fixtures').execPopulate();
+  return await roundRobinMatchList(leagueId, round.rounds, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
 };
 
 schema.statics.buildPlayoffMatchList = async (round: IRound, fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
-    const leagueId = round.league;
-    await round.populate('fixtures').execPopulate();
-    return await playoffMatchList(leagueId as ObjectId, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
+  const leagueId = round.league;
+  await round.populate('fixtures').execPopulate();
+  return await playoffMatchList(leagueId as ObjectId, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
 };
 
 export const Match = model<IMatch, IMatchModel>('Match', schema);

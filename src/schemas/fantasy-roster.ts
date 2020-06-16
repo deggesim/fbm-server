@@ -6,13 +6,13 @@ import { IRealFixture } from './real-fixture';
 import { IRoster } from './roster';
 
 interface IFantasyRosterDocument extends ITenant {
-    roster: IRoster | ObjectId;
-    fantasyTeam: IFantasyTeam | ObjectId;
-    status: string;
-    draft: boolean;
-    contract: number;
-    yearContract: number;
-    realFixture: IRealFixture | ObjectId;
+  roster: IRoster | ObjectId;
+  fantasyTeam: IFantasyTeam | ObjectId;
+  status: string;
+  draft: boolean;
+  contract: number;
+  yearContract: number;
+  realFixture: IRealFixture | ObjectId;
 }
 
 /**
@@ -20,56 +20,56 @@ interface IFantasyRosterDocument extends ITenant {
  */
 // tslint:disable-next-line: no-empty-interface
 export interface IFantasyRoster extends IFantasyRosterDocument {
-    // metodi d'istanza
+  // metodi d'istanza
 }
 
 /**
  * Estensione del Model per l'aggiunta di metodi statici
  */
 export interface IFantasyRosterModel extends Model<IFantasyRoster> {
-    // metodi statici
+  // metodi statici
 }
 
 const schema = new Schema<IFantasyRoster>({
-    roster: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'Roster',
-    },
-    fantasyTeam: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'FantasyTeam',
-    },
-    status: {
-        type: String,
-        required: true,
-        enum: ['EXT', 'COM', 'STR', 'ITA'],
-    },
-    draft: {
-        type: Boolean,
-        required: true,
-        default: false,
-    },
-    contract: {
-        type: Number,
-    },
-    yearContract: {
-        type: Number,
-        required: true,
-    },
-    realFixture: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'RealFixture',
-    },
-    league: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'League',
-    },
+  roster: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'Roster',
+  },
+  fantasyTeam: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'FantasyTeam',
+  },
+  status: {
+    type: String,
+    required: true,
+    enum: ['EXT', 'COM', 'STR', 'ITA'],
+  },
+  draft: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  contract: {
+    type: Number,
+  },
+  yearContract: {
+    type: Number,
+    required: true,
+  },
+  realFixture: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'RealFixture',
+  },
+  league: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'League',
+  },
 }, {
-    timestamps: true,
+  timestamps: true,
 });
 
 export const FantasyRoster = model<IFantasyRoster, IFantasyRosterModel>('FantasyRoster', schema);

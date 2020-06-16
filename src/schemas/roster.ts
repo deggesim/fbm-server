@@ -7,10 +7,10 @@ import { IRealFixture } from './real-fixture';
 import { ITeam } from './team';
 
 interface IRosterDocument extends ITenant {
-    player: IPlayer | ObjectId;
-    team: ITeam | ObjectId;
-    realFixture: IRealFixture | ObjectId;
-    fantasyRoster?: IFantasyRoster | ObjectId;
+  player: IPlayer | ObjectId;
+  team: ITeam | ObjectId;
+  realFixture: IRealFixture | ObjectId;
+  fantasyRoster?: IFantasyRoster | ObjectId;
 }
 
 /**
@@ -18,43 +18,43 @@ interface IRosterDocument extends ITenant {
  */
 // tslint:disable-next-line: no-empty-interface
 export interface IRoster extends IRosterDocument {
-    // metodi d'istanza
+  // metodi d'istanza
 }
 
 /**
  * Estensione del Model per l'aggiunta di metodi statici
  */
 export interface IRosterModel extends Model<IRoster> {
-    // metodi statici
+  // metodi statici
 }
 
 const schema = new Schema<IRoster>({
-    player: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'Player',
-    },
-    team: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'Team',
-    },
-    realFixture: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'RealFixture',
-    },
-    fantasyRoster: {
-        type: Schema.Types.ObjectId,
-        ref: 'FantasyRoster',
-    },
-    league: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'League',
-    },
+  player: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'Player',
+  },
+  team: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'Team',
+  },
+  realFixture: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'RealFixture',
+  },
+  fantasyRoster: {
+    type: Schema.Types.ObjectId,
+    ref: 'FantasyRoster',
+  },
+  league: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'League',
+  },
 }, {
-    timestamps: true,
+  timestamps: true,
 });
 
 export const Roster = model<IRoster, IRosterModel>('Roster', schema);
