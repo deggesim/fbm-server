@@ -86,6 +86,8 @@ const schema = new Schema<IPlayer>({
   },
 }, {
   timestamps: true,
+  toObject: { virtuals: true },
+  toJSON: { virtuals: true },
 });
 
 schema.virtual('performances', {

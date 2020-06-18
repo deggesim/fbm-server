@@ -52,6 +52,7 @@ const schema = new Schema<IFixture>({
   },
 }, {
   timestamps: true,
+  toObject: { virtuals: true },
   toJSON: { virtuals: true },
 });
 
