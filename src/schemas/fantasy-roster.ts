@@ -70,6 +70,15 @@ const schema = new Schema<IFantasyRoster>({
   },
 }, {
   timestamps: true,
+  toObject: { virtuals: true },
+  toJSON: { virtuals: true },
+});
+
+schema.virtual('lineup', {
+  ref: 'Lineup',
+  localField: '_id',
+  foreignField: 'fantasyRoster',
+  justOne: true,
 });
 
 export const FantasyRoster = model<IFantasyRoster, IFantasyRosterModel>('FantasyRoster', schema);

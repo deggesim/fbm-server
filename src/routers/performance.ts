@@ -1,7 +1,7 @@
 
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
-import { ILeague, League } from '../schemas/league';
+import { FantasyRoster, IFantasyRoster } from '../schemas/fantasy-roster';
 import { IPerformance, Performance } from '../schemas/performance';
 import { IRoster, Roster } from '../schemas/roster';
 import { auth, parseToken } from '../util/auth';
@@ -35,10 +35,31 @@ performanceRouter.get('/performances/:id', auth(), parseToken(), tenant(), async
 performanceRouter.get('/performances/team/:teamId/real-fixture/:realFixtureId', auth(), parseToken(), tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const rosters = await Roster.find({ league: ctx.get('league'), team: ctx.params.teamId, realFixture: ctx.params.realFixtureId });
+      const queryString = ctx.query;
+      const filter = parseInt(queryString?.filter, 0);
+      let rosters: IRoster[] = [];
+      if (filter != null) {
+        switch (filter) {
+          case 1:
+            // signed players
+            rosters = await Roster.find({ league: ctx.get('league'), team: ctx.params.teamId, realFixture: ctx.params.realFixtureId, fantasyRoster: { $exists: true } });
+            break;
+          case 2:
+            // players in lineup
+            rosters = await Roster.find({ league: ctx.get('league'), team: ctx.params.teamId, realFixture: ctx.params.realFixtureId, fantasyRoster: { $exists: true } });
+            await Roster.populate(rosters, { path: 'fantasyRoster' });
+            const fantasyRosters = rosters.map((roster: IRoster) => roster.fantasyRoster as IFantasyRoster);
+            await FantasyRoster.populate(fantasyRosters, { path: 'lineup' });
+            rosters = rosters.filter((roster: IRoster) => (roster?.fantasyRoster as IFantasyRoster).get('lineup') != null);
+            break;
+          default:
+            // all players
+            rosters = await Roster.find({ league: ctx.get('league'), team: ctx.params.teamId, realFixture: ctx.params.realFixtureId });
+            break;
+        }
+      }
       const playersId = rosters.map((roster: IRoster) => roster.player);
-      const performances =
-        await Performance.find({ league: ctx.get('league'), realFixture: ctx.params.realFixtureId, player: { $in: playersId } });
+      const performances = await Performance.find({ league: ctx.get('league'), realFixture: ctx.params.realFixtureId, player: { $in: playersId } });
       for (const performance of performances) {
         await performance.populate('player').execPopulate();
       }
