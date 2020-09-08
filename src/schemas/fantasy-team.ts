@@ -97,21 +97,13 @@ schema.virtual('fantasyRosters', {
 schema.statics.insertFantasyTeams = async (fantasyTeams: IFantasyTeam[], league: ILeague) => {
   try {
     const ret: IFantasyTeam[] = [];
-    // aggiunta della lega ai superAdmin
-    const superAdmins: IUser[] = await User.allSuperAdmins();
-    for (const superAdmin of superAdmins) {
-      superAdmin.leagues.push(league);
-      await superAdmin.save();
-    }
     for await (const newFantasyTeam of fantasyTeams) {
       newFantasyTeam.league = league._id;
       const fantasyTeam = await FantasyTeam.create(newFantasyTeam);
       for await (const owner of fantasyTeam.owners) {
         const user: IUser = await User.findById(owner) as IUser;
-        // aggiunta lega all'utente
-        const leagueFound = user.leagues.find((managedLeague) => {
-          managedLeague.equals(league._id);
-        });
+        // aggiunta lega all'utente (se non già presente)
+        const leagueFound = user.leagues.find((managedLeague) => managedLeague.equals(league._id));
         if (!leagueFound) {
           user.leagues.push(league._id);
         }
@@ -122,6 +114,17 @@ schema.statics.insertFantasyTeams = async (fantasyTeams: IFantasyTeam[], league:
       }
       ret.push(fantasyTeam);
     }
+
+    // aggiunta della lega ai superAdmin (se non già presente)
+    const superAdmins: IUser[] = await User.allSuperAdmins();
+    for (const superAdmin of superAdmins) {
+      const found = superAdmin.leagues.find((managedLeague: ILeague | ObjectId) => (managedLeague as ObjectId).equals(league._id));
+      if (!found) {
+        superAdmin.leagues.push(league);
+        await superAdmin.save();
+      }
+    }
+
     return Promise.resolve(ret);
   } catch (error) {
     return Promise.reject(error.message);
