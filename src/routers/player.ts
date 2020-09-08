@@ -36,12 +36,14 @@ const multer = require('@koa/multer');
 const upload = multer({
   storage: multer.memoryStorage(),
 });
-playerRouter.post('/players/upload', auth(), parseToken(), tenant(), admin(), admin(), upload.single('players'),
+playerRouter.post('/players/upload', auth(), parseToken(), tenant(), admin(), upload.single('players'),
   async (ctx: Router.IRouterContext) => {
     try {
       const players = parseCsv(ctx.request.body.players.toString(), ['name', 'role', 'nationality', 'team', 'number', 'yearBirth', 'height', 'weight']);
+      const playersLength = players.length;
       const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
-      ctx.body = await Player.insertPlayers(players, league);
+      Player.insertPlayers(players, league);
+      ctx.body = playersLength;
       ctx.status = 201;
     } catch (error) {
       console.log(error);
