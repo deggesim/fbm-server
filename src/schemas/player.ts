@@ -7,6 +7,8 @@ import { IRealFixture, RealFixture } from './real-fixture';
 import { Roster } from './roster';
 import { ITeam, Team } from './team';
 
+const uploadPercentage = new Map<string, number>();
+
 interface IPlayerDocument extends ITenant {
   name: string;
   nationality: string;
@@ -31,6 +33,7 @@ export interface IPlayer extends IPlayerDocument {
 export interface IPlayerModel extends Model<IPlayer> {
   // metodi statici
   insertPlayers: (players: any[], league: ILeague) => Promise<IPlayer[]>;
+  uploadPercentage: (leagueId: string) => number;
 }
 
 const schema = new Schema<IPlayer>({
@@ -97,12 +100,16 @@ schema.virtual('performances', {
 });
 
 schema.statics.insertPlayers = async (uploadedPlayers: any[], league: ILeague) => {
+  uploadPercentage.set(league.id, 0);
+  const uploadedPlayersLength = uploadedPlayers.length;
+
   const ret: IPlayer[] = [];
   // pulizia tabelle correlate
   await Performance.deleteMany({ league: league._id });
   await Roster.deleteMany({ league: league._id });
   await FantasyRoster.deleteMany({ league: league._id });
   await Player.deleteMany({ league: league._id });
+
   const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find({ league: league._id });
   for (const fantasyTeam of fantasyTeams) {
     fantasyTeam.outgo = 0;
@@ -115,6 +122,7 @@ schema.statics.insertPlayers = async (uploadedPlayers: any[], league: ILeague) =
   const teams: ITeam[] = await Team.find();
   const nextRealFixture: IRealFixture = await league.nextRealFixture();
   const allRealFixtures: IRealFixture[] = await RealFixture.find({ league: league._id });
+  let index = 1;
   for (const uploadedPlayer of uploadedPlayers) {
     // tslint:disable-next-line: variable-name
     const { name, role, nationality, number, yearBirth, height, weight } = uploadedPlayer;
@@ -140,8 +148,15 @@ schema.statics.insertPlayers = async (uploadedPlayers: any[], league: ILeague) =
         league: league._id,
       });
     }
+
+    uploadPercentage.set(league.id, (index++ / uploadedPlayersLength) * 100);
   }
   return ret;
+};
+
+schema.statics.uploadPercentage = (leagueId: string) => {
+  console.log('uploadPercentage.get(league)', uploadPercentage.get(leagueId));
+  return uploadPercentage.get(leagueId);
 };
 
 export const Player = model<IPlayer, IPlayerModel>('Player', schema);

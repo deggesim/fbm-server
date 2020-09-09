@@ -51,6 +51,16 @@ playerRouter.post('/players/upload', auth(), parseToken(), tenant(), admin(), up
     }
   });
 
+playerRouter.get('/players/upload-percentage', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+  try {
+    const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+    ctx.body = Player.uploadPercentage(league.id);
+  } catch (error) {
+    console.log(error);
+    ctx.throw(500, error.message);
+  }
+});
+
 playerRouter.patch('/players/:id', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
     const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
