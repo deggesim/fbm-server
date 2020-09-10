@@ -32,7 +32,7 @@ userRouter.get('/users/me', auth(), parseToken(), async (ctx: Router.IRouterCont
   }
 });
 
-userRouter.post('/users', superAdmin(), async (ctx: Router.IRouterContext) => {
+userRouter.post('/users', auth(), parseToken(), superAdmin(), async (ctx: Router.IRouterContext) => {
   try {
     const newUser: IUser = ctx.request.body;
     ctx.body = await User.create(newUser);
