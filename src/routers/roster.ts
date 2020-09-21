@@ -71,7 +71,7 @@ rosterRouter.post('/rosters', auth(), parseToken(), tenant(), admin(), async (ct
     for (const realFixture of performanceRealFixtures) {
       await Performance.create({
         player: (newRoster.player as IPlayer)._id,
-        realFixture: realFixture._id,
+        realFixture: (realFixture as IRealFixture)._id,
         league: league._id,
       });
     }

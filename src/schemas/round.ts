@@ -11,7 +11,7 @@ interface IRoundDocument extends ITenant {
   homeFactor: number;
   teams: number;
   roundRobin: boolean;
-  rounds: number;
+  rounds?: number;
   fantasyTeams: Array<IFantasyTeam | ObjectId>;
   fixtures: Array<IFixture | ObjectId>;
 }
@@ -82,7 +82,7 @@ schema.methods.buildRoundRobinMatchList = async function(): Promise<void> {
   const round: IRound = this;
   const leagueId = round.league as ObjectId;
   await round.populate('fixtures').execPopulate();
-  await roundRobinMatchList(leagueId, round.rounds, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
+  await roundRobinMatchList(leagueId, round.rounds as number, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
 };
 
 schema.methods.buildPlayoffMatchList = async function(): Promise<void> {

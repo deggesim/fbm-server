@@ -44,7 +44,7 @@ export const computeResult = (
     homeGrade = grade(homeLineup, previousPerformances);
   }
 
-  homePartialResult = homeRanking + match.homeFactor + homeOer + homePlusMinus + homeGrade;
+  homePartialResult = homeRanking + (match.homeFactor as number) + homeOer + homePlusMinus + homeGrade;
   let homeFinalResult = getFinalResult(homePartialResult, resultDivisor);
 
   // AWAY
@@ -99,9 +99,9 @@ export const computeResult = (
     otBenchMinutes(homeLineup, minutesNeeded);
     homeRanking = ranking(homeLineup);
     if (resultWithGrade) {
-      homePartialResult = homeRanking + match.homeFactor + homeGrade;
+      homePartialResult = homeRanking + (match.homeFactor as number) + homeGrade;
     } else {
-      homePartialResult = homeRanking + match.homeFactor;
+      homePartialResult = homeRanking + (match.homeFactor as number);
     }
     homeFinalResult = getFinalResult(homePartialResult, resultDivisor);
 

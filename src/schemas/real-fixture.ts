@@ -1,15 +1,15 @@
 import { ObjectId } from 'mongodb';
 import { Model, model, Schema } from 'mongoose';
 import { entityNotFound } from '../util/functions';
-import { IFixture } from './fixture';
+import { Fixture, IFixture } from './fixture';
 import { ITenant } from './league';
 import { ITeam } from './team';
 
 interface IRealFixtureDocument extends ITenant {
   name: string;
-  prepared: boolean;
+  prepared?: boolean;
   fixtures: Array<IFixture | ObjectId>;
-  teamsWithNoGame: Array<ITeam | ObjectId>;
+  teamsWithNoGame?: Array<ITeam | ObjectId>;
 }
 
 /**
@@ -56,7 +56,8 @@ const schema = new Schema<IRealFixture>({
 });
 
 schema.statics.findByFixture = async (leagueId: string | ObjectId, fixtureId: string | ObjectId): Promise<IRealFixture> => {
-  const realFixture = await RealFixture.findOne({ league: leagueId, fixtures: fixtureId }) as IRealFixture;
+  const fixture = await Fixture.findOne({ league: leagueId, id: fixtureId }) as IFixture;
+  const realFixture = await RealFixture.findOne({ league: leagueId, fixtures: fixture._id }) as IRealFixture;
   if (realFixture == null) {
     throw new Error(entityNotFound(realFixture, leagueId, fixtureId));
   }
