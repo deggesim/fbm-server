@@ -23,7 +23,7 @@ const router: Router = new Router();
 
 // tslint:disable-next-line: no-var-requires
 const cors = require('@koa/cors');
-app.use(cors());
+app.use(cors({exposeHeaders: 'X-Total-Count'}));
 
 app.use(logger());
 app.use(bodyParser());

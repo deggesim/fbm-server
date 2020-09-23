@@ -41,6 +41,7 @@
     "koa-router": "^7.4.0",
     "mongodb": "^3.6.2",
     "mongoose": "^5.10.6",
+    "mongoose-paginate": "^5.0.3",
     "multer": "^1.4.2",
     "node-fetch": "^2.6.1",
     "validator": "^12.2.0"
@@ -57,6 +58,7 @@
     "@types/koa-router": "^7.4.1",
     "@types/mongodb": "^3.5.27",
     "@types/mongoose": "^5.7.36",
+    "@types/mongoose-paginate": "^5.0.8",
     "@types/multer": "^1.4.4",
     "@types/node": "^12.12.62",
     "@types/node-fetch": "^2.5.7",
