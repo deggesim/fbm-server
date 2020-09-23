@@ -7,11 +7,11 @@ import { IRealFixture } from './real-fixture';
 interface IPerformanceDocument extends ITenant {
   player: IPlayer | ObjectId;
   realFixture: IRealFixture | ObjectId;
-  ranking: number;
-  minutes: number;
-  oer: number;
-  plusMinus: number;
-  grade: number;
+  ranking?: number;
+  minutes?: number;
+  oer?: number;
+  plusMinus?: number;
+  grade?: number;
 }
 
 /**

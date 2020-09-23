@@ -1,8 +1,10 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
+import { ObjectId } from 'mongodb';
+import { PaginateResult } from 'mongoose';
 import { ILeague, League } from '../schemas/league';
 import { Performance } from '../schemas/performance';
-import { IPlayer } from '../schemas/player';
+import { IPlayer, Player } from '../schemas/player';
 import { IRealFixture, RealFixture } from '../schemas/real-fixture';
 import { IRoster, Roster } from '../schemas/roster';
 import { admin, auth, parseToken } from '../util/auth';
@@ -14,14 +16,17 @@ rosterRouter.get('/rosters', auth(), parseToken(), tenant(), async (ctx: Router.
   try {
     const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
-    const rosters: IRoster[] = await Roster.find({ league: ctx.get('league'), realFixture: nextRealFixture._id });
-    for (const roster of rosters) {
+    const { page, limit, filter } = ctx.query;
+    const parameters = await buildParameters(league, nextRealFixture, filter);
+    const result: PaginateResult<IRoster> = await Roster.paginate(parameters, { page: Number(page), limit: Number(limit) });
+    ctx.set('X-Total-Count', String(result.total));
+    for (const roster of result.docs) {
       await roster.populate('player').execPopulate();
       await roster.populate('team').execPopulate();
       await roster.populate('realFixture').execPopulate();
       await roster.populate('fantasyRoster').execPopulate();
     }
-    ctx.body = rosters;
+    ctx.body = result.docs;
   } catch (error) {
     console.log(error);
     ctx.throw(500, error.message);
@@ -32,14 +37,16 @@ rosterRouter.get('/rosters/free', auth(), parseToken(), tenant(), async (ctx: Ro
   try {
     const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
-    const rosters: IRoster[] =
-      await Roster.find({ league: ctx.get('league'), realFixture: nextRealFixture._id, fantasyRoster: { $exists: false } });
-    for (const roster of rosters) {
+    const { page, limit, filter } = ctx.query;
+    const parameters = await buildParameters(league, nextRealFixture, filter);
+    const result: PaginateResult<IRoster> = await Roster.paginate(parameters, { page: Number(page), limit: Number(limit) });
+    ctx.set('X-Total-Count', String(result.total));
+    for (const roster of result.docs) {
       await roster.populate('player').execPopulate();
       await roster.populate('team').execPopulate();
       await roster.populate('realFixture').execPopulate();
     }
-    ctx.body = rosters;
+    ctx.body = result.docs;
   } catch (error) {
     console.log(error);
     ctx.throw(500, error.message);
@@ -71,7 +78,7 @@ rosterRouter.post('/rosters', auth(), parseToken(), tenant(), admin(), async (ct
     for (const realFixture of performanceRealFixtures) {
       await Performance.create({
         player: (newRoster.player as IPlayer)._id,
-        realFixture: realFixture._id,
+        realFixture: (realFixture as IRealFixture)._id,
         league: league._id,
       });
     }
@@ -118,5 +125,24 @@ rosterRouter.delete('/rosters/:id', auth(), parseToken(), tenant(), admin(), asy
   }
 
 });
+
+const buildParameters = async (league: ILeague, nextRealFixture: IRealFixture, filter?: string) => {
+  let parameters;
+  if (filter != null) {
+    const players = await Player.find({ name: { $regex: new RegExp(filter, 'i') } }) as IPlayer[];
+    const playersId: ObjectId[] = players.map((player: IPlayer) => player._id);
+    parameters = {
+      league: league._id,
+      realFixture: nextRealFixture._id,
+      player: playersId,
+    };
+  } else {
+    parameters = {
+      league: league._id,
+      realFixture: nextRealFixture._id,
+    };
+  }
+  return parameters;
+};
 
 export default rosterRouter;

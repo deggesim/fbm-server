@@ -9,20 +9,20 @@ import { IRound } from './round';
 interface IMatchDocument extends ITenant {
   homeTeam: IFantasyTeam | ObjectId;
   awayTeam: IFantasyTeam | ObjectId;
-  homeRanking: number;
-  homeRanking40Min: number;
-  awayRanking: number;
-  awayRanking40Min: number;
-  homeFactor: number;
-  homeOer: number;
-  awayOer: number;
-  homePlusMinus: number;
-  awayPlusMinus: number;
-  homeGrade: number;
-  awayGrade: number;
-  homeScore: number;
-  awayScore: number;
-  overtime: number;
+  homeRanking?: number;
+  homeRanking40Min?: number;
+  awayRanking?: number;
+  awayRanking40Min?: number;
+  homeFactor?: number;
+  homeOer?: number;
+  awayOer?: number;
+  homePlusMinus?: number;
+  awayPlusMinus?: number;
+  homeGrade?: number;
+  awayGrade?: number;
+  homeScore?: number;
+  awayScore?: number;
+  overtime?: number;
   completed: boolean;
 }
 
@@ -113,7 +113,7 @@ const schema = new Schema<IMatch>({
 schema.statics.buildRoundRobinMatchList = async (round: IRound): Promise<IMatch[]> => {
   const leagueId = round.league as ObjectId;
   await round.populate('fixtures').execPopulate();
-  return await roundRobinMatchList(leagueId, round.rounds, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
+  return await roundRobinMatchList(leagueId, round.rounds as number, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
 };
 
 schema.statics.buildPlayoffMatchList = async (round: IRound, fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {

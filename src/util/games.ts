@@ -138,6 +138,7 @@ export const roundRobinMatchList = async (idLeague: ObjectId, rounds: number, fi
           homeTeam: fantasyTeams[teamsSlots[g][i]],
           awayTeam: fantasyTeams[teamsSlots[g][i + 1]],
           league: idLeague,
+          completed: false,
         };
         const newMatch: IMatch = await Match.create(match);
         fixture.matches.push(newMatch);
@@ -156,6 +157,7 @@ export const roundRobinMatchList = async (idLeague: ObjectId, rounds: number, fi
             homeTeam: fantasyTeams[teamsSlots[g][i + 1]],
             awayTeam: fantasyTeams[teamsSlots[g][i]],
             league: idLeague,
+            completed: false,
           };
           const newMatch: IMatch = await Match.create(match);
           fixture.matches.push(newMatch);
@@ -186,6 +188,7 @@ export const playoffMatchList = async (idLeague: ObjectId, fixtures: IFixture[],
           homeTeam: upperSublist[j],
           awayTeam: lowerSublist[size / 2 - (j + 1)],
           league: idLeague,
+          completed: false,
         };
         const newMatch: IMatch = await Match.create(match);
         fixture.matches.push(newMatch);
@@ -196,6 +199,7 @@ export const playoffMatchList = async (idLeague: ObjectId, fixtures: IFixture[],
           homeTeam: lowerSublist[size / 2 - (j + 1)],
           awayTeam: upperSublist[j],
           league: idLeague,
+          completed: false,
         };
         const newMatch: IMatch = await Match.create(match);
         fixture.matches.push(newMatch);

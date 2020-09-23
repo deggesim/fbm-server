@@ -75,7 +75,7 @@ lineupRouter.post('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', aut
     const newLineup: ILineup[] = ctx.request.body;
     for (const lineup of newLineup) {
       const playerId = (((lineup.fantasyRoster as IFantasyRoster).roster as IRoster).player as IPlayer)._id;
-      const player = await Player.findOne({ league: league._id, _id: playerId });
+      const player = await Player.findOne({ league: league._id, _id: playerId }) as IPlayer;
       const performance = await Performance.findOne({ player, realFixture }) as IPerformance;
       if (performance == null) {
         ctx.throw(404, entityNotFound('IPerformance', playerId, realFixture._id));

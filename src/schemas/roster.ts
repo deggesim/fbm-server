@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
-import { Model, model, Schema } from 'mongoose';
+import { Model, model, PaginateOptions, PaginateResult, Schema } from 'mongoose';
+import * as mongoosePaginate from 'mongoose-paginate';
 import { IFantasyRoster } from './fantasy-roster';
 import { ITenant } from './league';
 import { IPlayer } from './player';
@@ -26,6 +27,8 @@ export interface IRoster extends IRosterDocument {
  */
 export interface IRosterModel extends Model<IRoster> {
   // metodi statici
+  // tslint:disable-next-line: ban-types
+  paginate(query?: Object, options?: PaginateOptions, callback?: (err: any, result: PaginateResult<IRoster>) => void): Promise<PaginateResult<IRoster>>;
 }
 
 const schema = new Schema<IRoster>({
@@ -56,5 +59,7 @@ const schema = new Schema<IRoster>({
 }, {
   timestamps: true,
 });
+
+schema.plugin(mongoosePaginate);
 
 export const Roster = model<IRoster, IRosterModel>('Roster', schema);
