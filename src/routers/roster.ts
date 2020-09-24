@@ -1,5 +1,6 @@
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
+import * as _ from 'lodash';
 import { ObjectId } from 'mongodb';
 import { PaginateResult } from 'mongoose';
 import { ILeague, League } from '../schemas/league';
@@ -17,7 +18,7 @@ rosterRouter.get('/rosters', auth(), parseToken(), tenant(), async (ctx: Router.
     const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
     const { page, limit, filter } = ctx.query;
-    const parameters = await buildParameters(league, nextRealFixture, filter);
+    const parameters = await buildParameters(league, nextRealFixture, false, filter);
     const result: PaginateResult<IRoster> = await Roster.paginate(parameters, { page: Number(page), limit: Number(limit) });
     ctx.set('X-Total-Count', String(result.total));
     for (const roster of result.docs) {
@@ -38,7 +39,7 @@ rosterRouter.get('/rosters/free', auth(), parseToken(), tenant(), async (ctx: Ro
     const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
     const { page, limit, filter } = ctx.query;
-    const parameters = await buildParameters(league, nextRealFixture, filter);
+    const parameters = await buildParameters(league, nextRealFixture, true, filter);
     const result: PaginateResult<IRoster> = await Roster.paginate(parameters, { page: Number(page), limit: Number(limit) });
     ctx.set('X-Total-Count', String(result.total));
     for (const roster of result.docs) {
@@ -126,21 +127,18 @@ rosterRouter.delete('/rosters/:id', auth(), parseToken(), tenant(), admin(), asy
 
 });
 
-const buildParameters = async (league: ILeague, nextRealFixture: IRealFixture, filter?: string) => {
-  let parameters;
+const buildParameters = async (league: ILeague, nextRealFixture: IRealFixture, free: boolean, filter?: string) => {
+  const parameters = {
+    league: league._id,
+    realFixture: nextRealFixture._id,
+  };
+  if (free) {
+    _.extend(parameters, { fantasyRoster: { $exists: false } });
+  }
   if (filter != null) {
     const players = await Player.find({ name: { $regex: new RegExp(filter, 'i') } }) as IPlayer[];
     const playersId: ObjectId[] = players.map((player: IPlayer) => player._id);
-    parameters = {
-      league: league._id,
-      realFixture: nextRealFixture._id,
-      player: playersId,
-    };
-  } else {
-    parameters = {
-      league: league._id,
-      realFixture: nextRealFixture._id,
-    };
+    _.extend(parameters, { player: playersId });
   }
   return parameters;
 };
