@@ -11,28 +11,6 @@ import { tenant } from '../util/tenant';
 
 const fantasyRosterRouter: Router = new Router<IFantasyRoster>();
 
-fantasyRosterRouter.post('/fantasy-rosters', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
-  try {
-    const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
-    const newFantasyRoster: IFantasyRoster = ctx.request.body;
-    newFantasyRoster.league = league._id;
-    const nextRealFixture: IRealFixture = await league.nextRealFixture();
-    newFantasyRoster.realFixture = nextRealFixture._id;
-    const fantasyRoster = await FantasyRoster.create(newFantasyRoster);
-
-    // gestione fantasyTeam
-    await buy(fantasyRoster);
-
-    await fantasyRoster.populate('roster').execPopulate();
-    await fantasyRoster.populate('realFixture').execPopulate();
-    ctx.body = fantasyRoster;
-    ctx.status = 201;
-  } catch (error) {
-    console.log(error);
-    ctx.throw(500, error.message);
-  }
-});
-
 fantasyRosterRouter.get('/fantasy-rosters/fantasy-team/:id/real-fixture/:realFixtureId', auth(), parseToken(), tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
@@ -68,6 +46,33 @@ fantasyRosterRouter.get('/fantasy-rosters/:id', auth(), parseToken(), tenant(), 
   }
 });
 
+fantasyRosterRouter.post('/fantasy-rosters', auth(), parseToken(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+  try {
+    const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+    const newFantasyRoster: IFantasyRoster = ctx.request.body;
+    newFantasyRoster.league = league._id;
+    const nextRealFixture: IRealFixture = await league.nextRealFixture();
+    newFantasyRoster.realFixture = nextRealFixture._id;
+
+    if (newFantasyRoster.draft) {
+      newFantasyRoster.yearContract = 1;
+    }
+    const fantasyRoster = await FantasyRoster.create(newFantasyRoster);
+
+    // gestione fantasyTeam
+    await buy(fantasyRoster);
+
+    await fantasyRoster.populate('roster').execPopulate();
+    await fantasyRoster.populate('realFixture').execPopulate();
+    ctx.body = fantasyRoster;
+    ctx.status = 201;
+  } catch (error) {
+    console.log(error);
+    ctx.throw(500, error.message);
+  }
+});
+
+
 fantasyRosterRouter.patch('/fantasy-rosters/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
     const fantasyRosterToUpdate = await FantasyRoster.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IFantasyRoster;
@@ -81,6 +86,10 @@ fantasyRosterRouter.patch('/fantasy-rosters/:id', auth(), parseToken(), tenant()
       ctx.throw(404, 'Giocatore non trovato');
     }
     fantasyRosterToUpdate.set(updatedFantasyRoster);
+
+    if (fantasyRosterToUpdate.draft) {
+      fantasyRosterToUpdate.yearContract = 1;
+    }
     const fantasyRoster = await fantasyRosterToUpdate.save();
 
     // gestione fantasyTeam
