@@ -56,7 +56,7 @@ const schema = new Schema<IRealFixture>({
 });
 
 schema.statics.findByFixture = async (leagueId: string | ObjectId, fixtureId: string | ObjectId): Promise<IRealFixture> => {
-  const fixture = await Fixture.findOne({ league: leagueId, id: fixtureId }) as IFixture;
+  const fixture = await Fixture.findOne({ league: leagueId, _id: fixtureId }) as IFixture;
   const realFixture = await RealFixture.findOne({ league: leagueId, fixtures: fixture._id }) as IRealFixture;
   if (realFixture == null) {
     throw new Error(entityNotFound(realFixture, leagueId, fixtureId));
