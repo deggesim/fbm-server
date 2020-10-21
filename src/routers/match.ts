@@ -94,6 +94,8 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
         // fixture completed
         fixture.completed = true;
         await fixture.save();
+        // update realFixture with fixture completed
+        await realFixture.populate('fixtures').execPopulate();
         // progress league
         await league.progress(realFixture);
       }
