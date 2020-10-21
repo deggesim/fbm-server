@@ -23,6 +23,23 @@ matchRouter.get('/matches', auth(), parseToken(), tenant(), async (ctx: Router.I
   }
 });
 
+matchRouter.get('/matches/fixture/:fixtureId', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+  try {
+    const fixture = await Fixture.findOne({ _id: ctx.params.fixtureId, league: ctx.get('league') }) as IFixture;
+    for (let i = 0; i < fixture.matches.length; i++) {
+      await fixture.populate(`matches.${i}`).execPopulate();
+      await fixture
+        .populate(`matches.${i}.homeTeam`)
+        .populate(`matches.${i}.awayTeam`)
+        .execPopulate();
+    }
+    ctx.body = fixture.matches;
+  } catch (error) {
+    console.log(error);
+    ctx.throw(500, error.message);
+  }
+});
+
 matchRouter.post('/matches', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
     const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
