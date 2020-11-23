@@ -70,6 +70,15 @@ performanceRouter.get('/performances/team/:teamId/real-fixture/:realFixtureId', 
     }
   });
 
+performanceRouter.get('/performances/player/:playerId', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+  try {
+    ctx.body = await Performance.find({ league: ctx.get('league'), player: ctx.params.playerId });
+  } catch (error) {
+    console.log(error);
+    ctx.throw(500, error.message);
+  }
+});
+
 performanceRouter.post('/performances', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
     const performances: IPerformance[] = ctx.request.body;
