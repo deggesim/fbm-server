@@ -21,10 +21,9 @@
     "build": "tsc --rootDir ./src/",
     "start": "ts-node src/index.ts",
     "local": "tsc --rootDir ./src/ & node dist/index.js",
-    "start:dev": "env-cmd -f ./config/dev.env nodemon",
-    "start:prod": "env-cmd -f ./config/prod.env nodemon",
+    "start:dev": "env-cmd -f ./config/dev.env nodemon --config nodemon.json src/index.ts",
+    "start:prod": "env-cmd -f ./config/prod.env nodemon --config nodemon.json src/index.ts",
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
-    "debug": "nodemon --inspect src/index.ts",
     "postinstall": "npm run build"
   },
   "dependencies": {
