@@ -2,6 +2,7 @@ import * as Koa from 'koa';
 import * as Router from 'koa-router';
 import { ILeague, League } from '../schemas/league';
 import { IUser } from '../schemas/user';
+import { Role } from './globals';
 
 export const tenant = () => {
   return async (ctx: Router.IRouterContext, next: Koa.Next) => {
@@ -12,7 +13,7 @@ export const tenant = () => {
     // verifica che la lega sia tra quelle abilitate
     const user: IUser = ctx.state.user;
     const userLeague = user.leagues.find((leagueId) => league._id.equals(leagueId));
-    if (userLeague != null) {
+    if (userLeague != null || user.role === Role.SuperAdmin) {
       ctx.set('league', league.id);
       await next();
     } else {
