@@ -10,9 +10,9 @@ import { tenant } from '../util/tenant';
 
 const fantasyTeamRouter: Router = new Router<IFantasyTeam>();
 
-fantasyTeamRouter.post('/fantasy-teams', auth(), parseToken(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
+fantasyTeamRouter.post('/fantasy-teams/league/:id', auth(), parseToken(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
-    const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
+    const league: ILeague = await League.findById(ctx.params.id) as ILeague;
     const fantasyTeams: IFantasyTeam[] = ctx.request.body;
     ctx.body = FantasyTeam.insertFantasyTeams(fantasyTeams, league);
     ctx.status = 201;
