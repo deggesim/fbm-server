@@ -1,56 +1,89 @@
-import * as fetch from 'node-fetch';
-import { IPerformance } from '../schemas/performance';
-import { IPlayer } from '../schemas/player';
+import * as jsdom from "jsdom";
+import * as fetch from "node-fetch";
+import { IPerformance } from "../schemas/performance";
+import { IPlayer } from "../schemas/player";
+
+interface BoxScore {
+  name?: string;
+  minutes?: number;
+  ranking?: number;
+  oer?: number;
+  plusMinus?: number;
+}
 
 export const boxscore = async (performances: IPerformance[], url: string) => {
   const response = await fetch.default(url);
   let content = await response.text();
-  console.log(response);
-  console.log(content);
-  content = content.replace(/&nbsp;/g, ' ');
-  content = content.replace(/<\/span>/g, '');
-  content = content.toUpperCase();
+  const dom = new jsdom.JSDOM(content);
+  const ht_match_scores: HTMLCollection = dom.window.document
+    .getElementById("ht_match_scores")
+    ?.querySelector("tbody")?.children as HTMLCollection;
+  const vt_match_scores: HTMLCollection = dom.window.document
+    .getElementById("vt_match_scores")
+    ?.querySelector("tbody")?.children as HTMLCollection;
+
+  const tabellinoCasa = calcolaBoxScore(ht_match_scores);
+  const tabellinoTrasferta = calcolaBoxScore(vt_match_scores);
 
   for (const performance of performances) {
-    await performance.populate('player').execPopulate();
+    await performance.populate("player").execPopulate();
     const playerName = (performance.player as IPlayer).name.toUpperCase();
-    const indexOfPlayer = content.indexOf(playerName);
-    if (indexOfPlayer !== -1) {
-      // giocatore trovato, ne preleviamo valutazione e minuti
-      // la riga html ha 25 elementi td, l'elemento in posizione 2 (indice 1) rappresenta i minuti giocati
-      // l'elemento in posizione 23 (indice 22) la valutazione
-      // l'elemento in posizione 24 (indice 23) l'OER
-      // l'elemento in posizione 25 (indice 24) il Plus Minus
-      const temp = content.substring(indexOfPlayer, content.length);
-      const regExpr = />\s*-?[0-9]+\.?[0-9]?[0-9]?\s*\</g;
-      const values: string[] = [];
-      const matches = temp.match(regExpr) as RegExpMatchArray;
-      for (const match of matches) {
-        values.push(match);
-      }
-      const minutes = getIntegerCleanValue(values[1]);
-      const ranking = getIntegerCleanValue(values[22]);
-      const oer = getIntegerCleanValue(values[23]);
-      const plusMinus = getIntegerCleanValue(values[24]);
-      performance.minutes = minutes;
-      performance.ranking = ranking;
-      performance.oer = oer;
-      performance.plusMinus = plusMinus;
+    const boxScoreC = tabellinoCasa.find(
+      (bs: BoxScore) => bs.name === playerName
+    );
+    if (boxScoreC) {
+      performance.minutes = boxScoreC.minutes;
+      performance.ranking = boxScoreC.ranking;
+      performance.oer = boxScoreC.oer;
+      performance.plusMinus = boxScoreC.plusMinus;
       await performance.save();
+    } else {
+      const boxScoreT = tabellinoTrasferta.find(
+        (bs: BoxScore) => bs.name === playerName
+      );
+      if (boxScoreT) {
+        performance.minutes = boxScoreT.minutes;
+        performance.ranking = boxScoreT.ranking;
+        performance.oer = boxScoreT.oer;
+        performance.plusMinus = boxScoreT.plusMinus;
+        await performance.save();
+      }
     }
   }
 };
 
-function getIntegerCleanValue(value: string) {
-  const withoutDelimiters = value.substring(1, value.length - 1);
-  const trimmed = withoutDelimiters.trim();
-  const intValue = Number(trimmed);
-  return intValue;
-}
-
-function getDoubleCleanValue(value: string) {
-  const withoutDelimiters = value.substring(1, value.length - 1);
-  const trimmed = withoutDelimiters.trim();
-  const doubleValue = Number(trimmed);
-  return doubleValue;
+function calcolaBoxScore(ht_match_scores: HTMLCollection): BoxScore[] {
+  const length = ht_match_scores.length;
+  console.log(length);
+  const tabellinoCasa: BoxScore[] = [];
+  for (let i = 0; i < length; i++) {
+    const tableDatas = ht_match_scores[i]?.children;
+    const tdLength = tableDatas.length;
+    const boxScore: BoxScore = {};
+    for (let j = 0; j < tdLength; j++) {
+      const td: HTMLTableCellElement = tableDatas[j] as HTMLTableCellElement;
+      if (i < length - 2) {
+        // solo i giocatori: Squadra e totali li ignoriamo
+        if (j == 0) {
+          // colonna Numero COGNOME Nome
+          const nsn = td.textContent
+            ?.replace(/\r?\n|\r/g, "")
+            .trim()
+            .split(" ")
+            .filter((char) => char) as string[];
+          boxScore.name = `${nsn[2].toUpperCase()} ${nsn[1].toUpperCase()}`;
+        } else if (j === 2) {
+          boxScore.minutes = Number(td?.textContent);
+        } else if (j == 24) {
+          boxScore.ranking = Number(td?.textContent);
+        } else if (j == 25) {
+          boxScore.oer = Number(td?.textContent?.replace(",", "."));
+        } else if (j == 26) {
+          boxScore.plusMinus = Number(td?.textContent);
+        }
+      }
+    }
+    tabellinoCasa.push(boxScore);
+  }
+  return tabellinoCasa;
 }
