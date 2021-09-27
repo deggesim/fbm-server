@@ -128,7 +128,9 @@ schema.statics.insertPlayers = async (
       await fantasyTeam.save();
     }
 
-    const teams: ITeam[] = await Team.find();
+    const teams: ITeam[] = await Team.find({
+      league: league._id,
+    });
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
     const allRealFixtures: IRealFixture[] = await RealFixture.find({
       league: league._id,
