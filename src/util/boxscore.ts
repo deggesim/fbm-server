@@ -70,8 +70,17 @@ function calcolaBoxScore(ht_match_scores: HTMLCollection): BoxScore[] {
             ?.replace(/\r?\n|\r/g, "")
             .trim()
             .split(" ")
-            .filter((char) => char) as string[];
-          boxScore.name = `${nsn[2].toUpperCase()} ${nsn[1].toUpperCase()}`;
+            .filter((char) => char)
+            .filter((char) => !isNumeric(char)) as string[];
+          // il cognome è tutto maiuscolo.
+          const surnameList = nsn.filter((text) => text === text.toUpperCase());
+          const surname = surnameList.join(" ");
+          const name = nsn
+            .filter((text) => text !== text.toUpperCase())
+            .join(" ")
+            .toUpperCase();
+
+          boxScore.name = `${name} ${surname}`;
         } else if (j === 2) {
           boxScore.minutes = Number(td?.textContent);
         } else if (j == 24) {
@@ -86,4 +95,12 @@ function calcolaBoxScore(ht_match_scores: HTMLCollection): BoxScore[] {
     tabellinoCasa.push(boxScore);
   }
   return tabellinoCasa;
+}
+
+function isNumeric(str: any) {
+  if (typeof str != "string") return false; // we only process strings!
+  return (
+    !isNaN(str as any) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+    !isNaN(parseFloat(str))
+  ); // ...and ensure strings of whitespace fail
 }
