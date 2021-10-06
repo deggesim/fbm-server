@@ -17,6 +17,7 @@ import rosterRouter from './routers/roster';
 import roundRouter from './routers/round';
 import teamRouter from './routers/team';
 import userRouter from './routers/user';
+import statisticsRouter from './routers/statistics';
 
 const app: Koa = new Koa();
 const router: Router = new Router();
@@ -42,6 +43,7 @@ app.use(rosterRouter.routes());
 app.use(roundRouter.routes());
 app.use(teamRouter.routes());
 app.use(userRouter.routes());
+app.use(statisticsRouter.routes());
 
 app.use(router.allowedMethods());
 const port = process.env.PORT || 5000;
