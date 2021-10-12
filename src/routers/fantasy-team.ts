@@ -28,9 +28,6 @@ fantasyTeamRouter.get('/fantasy-teams', auth(), parseToken(), tenant(), async (c
     const user: IUser = ctx.state.user;
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
     const conditions: any = { league: league._id };
-    if (user.isUser()) {
-      conditions.owners = user._id;
-    }
     const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find(conditions);
     for (const fantasyTeam of fantasyTeams) {
       await fantasyTeam.populate('owners').execPopulate();
