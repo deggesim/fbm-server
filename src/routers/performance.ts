@@ -72,7 +72,11 @@ performanceRouter.get('/performances/team/:teamId/real-fixture/:realFixtureId', 
 
 performanceRouter.get('/performances/player/:playerId', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
-    ctx.body = await Performance.find({ league: ctx.get('league'), player: ctx.params.playerId });
+    const performances = await Performance.find({ league: ctx.get('league'), player: ctx.params.playerId });
+    for (const performance of performances) {
+      await performance.populate('realFixture').execPopulate();
+    }
+    ctx.body = performances;
   } catch (error) {
     console.log(error);
     ctx.throw(500, error.message);
