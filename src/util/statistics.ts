@@ -1,6 +1,14 @@
-import { ObjectId } from "mongodb";
-import { IPerformance, Performance } from "../schemas/performance";
+import { mean } from "lodash";
+import { PaginateResult } from "mongoose";
+import { IFantasyRoster } from "../schemas/fantasy-roster";
+import { IFantasyTeam } from "../schemas/fantasy-team";
+import { ILeague, League } from "../schemas/league";
+import { IPerformance } from "../schemas/performance";
 import { IPlayer } from "../schemas/player";
+import { IRealFixture } from "../schemas/real-fixture";
+import { IRoster, Roster } from "../schemas/roster";
+import { ITeam } from "../schemas/team";
+import { buildParameters } from "./roster";
 
 export interface PlayerStatistic {
   player: IPlayer;
@@ -14,18 +22,63 @@ export interface PlayerStatistic {
   rankingMinutesRatio: number;
 }
 
+export interface PlayerStatisticList {
+  total: number;
+  playerStatistics: PlayerStatistic[];
+}
+
 export const statistics = async (
-  idLeague: string
-): Promise<PlayerStatistic[]> => {
+  idLeague: string, page: number, limit: number, free: boolean, filter?: string
+): Promise<PlayerStatisticList> => {
   const playerStatistics: PlayerStatistic[] = [];
 
-  const allPerformances = await Performance.find({ league: idLeague })
-    .populate({ path: "player" })
-    .populate({ path: "realFixture" });
+  const league: ILeague = (await League.findById(idLeague)) as ILeague;
+  const nextRealFixture: IRealFixture = await league.nextRealFixture();
 
-    for (const performance of allPerformances) {
-      console.log(performance);
+  const parameters = await buildParameters(league, nextRealFixture, free, filter);
+  const result: PaginateResult<IRoster> = await Roster.paginate(parameters, { page: Number(page), limit: Number(limit) });
+
+  for (const roster of result.docs) {
+    await roster.populate({ path: "player" }).execPopulate();
+    await roster.populate({ path: "team" }).execPopulate();
+    await roster.populate({ path: "fantasyRoster" }).execPopulate();
+    const fantasyRoster = roster.fantasyRoster as IFantasyRoster;
+    let fantasyTeam = "",
+      status = "";
+    if (fantasyRoster) {
+      await fantasyRoster.populate({ path: "fantasyTeam" }).execPopulate();
+      fantasyTeam = fantasyRoster.fantasyTeam
+        ? (fantasyRoster.fantasyTeam as IFantasyTeam).name
+        : "";
+      status = fantasyRoster.status;
     }
+    const player = roster.player as IPlayer;
+    await player.populate({ path: "performances" }).execPopulate();
+    const performances: IPerformance[] = (player as any).performances;
+    const filteredPerformances = performances.filter((perf) => perf.minutes);
+    const rankings = filteredPerformances.map((performance: IPerformance) => performance.ranking);
+    const avgRanking = mean(rankings);
 
-  return Promise.resolve(playerStatistics);
+    const minutes = filteredPerformances.map((performance: IPerformance) => performance.minutes);
+    const avgMinutes = mean(minutes);
+
+    const grades = filteredPerformances.map((performance: IPerformance) => performance.grade);
+    const avgGrade = mean(grades);
+
+    const playerStatistic: PlayerStatistic = {
+      player,
+      performances: filteredPerformances,
+      team: (roster.team as ITeam).fullName,
+      fantasyTeam,
+      status,
+      avgRanking,
+      avgMinutes,
+      avgGrade,
+      rankingMinutesRatio: avgRanking / avgMinutes,
+    };
+
+    playerStatistics.push(playerStatistic);
+  }
+
+  return Promise.resolve({total: result.total, playerStatistics});
 };
