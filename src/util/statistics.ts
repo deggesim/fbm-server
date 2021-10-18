@@ -87,6 +87,9 @@ export const statistics = async (
     }
     const playerObj = roster.player as IPlayer;
     await playerObj.populate({ path: "performances" }).execPopulate();
+    for (const performance of (playerObj as any).performances) {
+      await performance.populate({ path: "realFixture" }).execPopulate();
+    }
     const performances: IPerformance[] = (playerObj as any).performances;
 
     const playerStatistic: PlayerStatistic = {
