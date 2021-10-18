@@ -28,7 +28,7 @@ export interface IPerformance extends IPerformanceDocument {
  */
 export interface IPerformanceModel extends Model<IPerformance> {
   // metodi statici
-  aggregatePaginate(aggregate: Aggregate<IPerformance[]>, options: any, callback?: (err: any, res: any, limit: any, total: any) => void): Promise<any>;
+  aggregatePaginate(aggregate: Aggregate<IPerformance[]>, options: any, callback?: (err: any, res: IPerformance[], pages: number, total: number) => Promise<any>): Promise<any>;
 }
 
 const schema = new Schema<IPerformance>(
