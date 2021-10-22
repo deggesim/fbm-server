@@ -1,9 +1,8 @@
 import { ObjectId } from "mongodb";
-import { Aggregate, Model, model, Schema } from "mongoose";
+import { Model, model, Schema } from "mongoose";
 import { ITenant } from "./league";
 import { IPlayer } from "./player";
 import { IRealFixture } from "./real-fixture";
-let mongooseAggregatePaginate = require("mongoose-aggregate-paginate");
 
 interface IPerformanceDocument extends ITenant {
   player: IPlayer | ObjectId;
@@ -28,7 +27,6 @@ export interface IPerformance extends IPerformanceDocument {
  */
 export interface IPerformanceModel extends Model<IPerformance> {
   // metodi statici
-  aggregatePaginate(aggregate: Aggregate<IPerformance[]>, options: any, callback?: (err: any, res: IPerformance[], pages: number, total: number) => Promise<any>): Promise<any>;
 }
 
 const schema = new Schema<IPerformance>(
@@ -68,8 +66,6 @@ const schema = new Schema<IPerformance>(
     timestamps: true,
   }
 );
-
-schema.plugin(mongooseAggregatePaginate);
 
 export const Performance = model<IPerformance, IPerformanceModel>(
   "Performance",

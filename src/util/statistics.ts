@@ -1,16 +1,11 @@
-import { IFantasyRoster } from "../schemas/fantasy-roster";
-import { IFantasyTeam } from "../schemas/fantasy-team";
 import { ILeague, League } from "../schemas/league";
-import { IPerformance, Performance } from "../schemas/performance";
+import { IPerformance } from "../schemas/performance";
 import { IPlayer } from "../schemas/player";
-import { IRealFixture } from "../schemas/real-fixture";
-import { IRoster, Roster } from "../schemas/roster";
-import { ITeam } from "../schemas/team";
-import { buildParameters } from "./roster";
+import { Roster } from "../schemas/roster";
 
 export interface PlayerStatistic {
   player: IPlayer;
-  performances: IPerformance[];
+  performances?: IPerformance[];
   team: string;
   fantasyTeam: string;
   status: string;
@@ -33,21 +28,59 @@ export const statistics = async (
   filter?: string
 ): Promise<PlayerStatisticList> => {
   const playerStatistics: PlayerStatistic[] = [];
-
   const league: ILeague = (await League.findById(idLeague)) as ILeague;
-  const nextRealFixture: IRealFixture = await league.nextRealFixture();
 
-  const aggregate = Performance.aggregate();
+  const aggregate = Roster.aggregate();
   aggregate
-    .match({ league: league._id, minutes: { $gt: 0 } })
+    .match({ league: league._id })
+    .lookup({
+      from: "players",
+      localField: "player",
+      foreignField: "_id",
+      as: "player",
+    })
+    .unwind("$player")
+    .lookup({
+      from: "teams",
+      localField: "team",
+      foreignField: "_id",
+      as: "team",
+    })
+    .unwind("$team")
+    .lookup({
+      from: "fantasyrosters",
+      localField: "fantasyRoster",
+      foreignField: "_id",
+      as: "fantasyRoster",
+    })
+    .unwind("$fantasyRoster")
+    .lookup({
+      from: "fantasyteams",
+      localField: "fantasyRoster.fantasyTeam",
+      foreignField: "_id",
+      as: "fantasyRoster.fantasyTeam",
+    })
+    .unwind("$fantasyRoster.fantasyTeam")
+    .lookup({
+      from: "performances",
+      as: "performance",
+      localField: "player._id",
+      foreignField: "player",
+    })
+    .unwind("$performance")
+    .match({ "performance.minutes": { $gt: 0 } })
     .group({
       _id: "$player",
-      avgRanking: { $avg: "$ranking" },
-      avgMinutes: { $avg: "$minutes" },
-      avgGrade: { $avg: "$grade" },
+      team: { $first: "$team" },
+      fantasyRoster: { $first: "$fantasyRoster" },
+      avgRanking: { $avg: "$performance.ranking" },
+      avgMinutes: { $avg: "$performance.minutes" },
+      avgGrade: { $avg: "$performance.grade" },
     })
     .project({
       player: "$_id",
+      team: "$team",
+      fantasyRoster: "$fantasyRoster",
       avgRanking: "$avgRanking",
       avgMinutes: "$avgMinutes",
       avgGrade: "$avgGrade",
@@ -55,54 +88,34 @@ export const statistics = async (
     })
     .sort({ rankingMinutesRatio: -1 });
 
-  let result = await Performance.aggregatePaginate(aggregate, {
+  let result = await Roster.aggregatePaginate(aggregate, {
     page: Number(page),
     limit: Number(limit),
   });
 
   for (const stat of result.docs) {
-    const { avgRanking, avgMinutes, avgGrade, rankingMinutesRatio, player } =
-      stat;
-    const parameters = await buildParameters(
-      league,
-      nextRealFixture,
-      free,
-      filter,
-      player
-    );
-    const roster = (await Roster.findOne(parameters)) as IRoster;
-
-    await roster.populate({ path: "player" }).execPopulate();
-    await roster.populate({ path: "team" }).execPopulate();
-    await roster.populate({ path: "fantasyRoster" }).execPopulate();
-    const fantasyRoster = roster.fantasyRoster as IFantasyRoster;
-    let fantasyTeam = "",
-      status = "";
-    if (fantasyRoster) {
-      await fantasyRoster.populate({ path: "fantasyTeam" }).execPopulate();
-      fantasyTeam = fantasyRoster.fantasyTeam
-        ? (fantasyRoster.fantasyTeam as IFantasyTeam).name
-        : "";
-      status = fantasyRoster.status;
-    }
-    const playerObj = roster.player as IPlayer;
-    await playerObj.populate({ path: "performances" }).execPopulate();
-    for (const performance of (playerObj as any).performances) {
-      await performance.populate({ path: "realFixture" }).execPopulate();
-    }
-    const performances: IPerformance[] = (playerObj as any).performances;
-
+    const {
+      avgRanking,
+      avgMinutes,
+      avgGrade,
+      rankingMinutesRatio,
+      player,
+      team,
+      fantasyRoster,
+    } = stat;
     const playerStatistic: PlayerStatistic = {
-      player: playerObj,
-      performances,
-      team: (roster.team as ITeam).fullName,
-      fantasyTeam,
-      status,
+      player,
+      team: team ? team.fullName : null,
+      fantasyTeam: fantasyRoster.fantasyTeam
+        ? fantasyRoster.fantasyTeam.name
+        : null,
+      status: fantasyRoster.status,
       avgRanking,
       avgMinutes,
       avgGrade,
       rankingMinutesRatio,
     };
+
     playerStatistics.push(playerStatistic);
   }
 
