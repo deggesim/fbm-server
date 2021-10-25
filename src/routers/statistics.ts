@@ -13,12 +13,15 @@ statisticsRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const { page, limit } = ctx.query;
+      const { page, limit, team, fantasyTeam, role, freePlayers } = ctx.query;
       const playerStatisticList = await statistics(
         ctx.get("league"),
         page,
         limit,
-        false
+        team,
+        fantasyTeam,
+        role,
+        freePlayers
       );
       ctx.set("X-Total-Count", String(playerStatisticList.total));
       ctx.body = playerStatisticList.playerStatistics;

@@ -1,3 +1,4 @@
+import { ObjectId } from "bson";
 import { ILeague, League } from "../schemas/league";
 import { IPerformance } from "../schemas/performance";
 import { IPlayer } from "../schemas/player";
@@ -24,43 +25,71 @@ export const statistics = async (
   idLeague: string,
   page: number,
   limit: number,
-  free: boolean,
-  filter?: string
+  team?: string,
+  fantasyTeam?: string,
+  role?: string,
+  freePlayers?: boolean
 ): Promise<PlayerStatisticList> => {
   const playerStatistics: PlayerStatistic[] = [];
   const league: ILeague = (await League.findById(idLeague)) as ILeague;
 
   const aggregate = Roster.aggregate();
+  aggregate.match({ league: league._id });
+
   aggregate
-    .match({ league: league._id })
     .lookup({
       from: "players",
       localField: "player",
       foreignField: "_id",
       as: "player",
     })
-    .unwind("$player")
+    .unwind("$player");
+  if (role) {
+    aggregate.match({ "player.role": role });
+  }
+
+  aggregate
     .lookup({
       from: "teams",
       localField: "team",
       foreignField: "_id",
       as: "team",
     })
-    .unwind("$team")
+    .unwind("$team");
+  if (team) {
+    aggregate.match({ "team._id": new ObjectId(team) });
+  }
+
+  aggregate
     .lookup({
       from: "fantasyrosters",
       localField: "fantasyRoster",
       foreignField: "_id",
       as: "fantasyRoster",
     })
-    .unwind("$fantasyRoster")
+    .unwind({ path: "$fantasyRoster", preserveNullAndEmptyArrays: true });
+  if (freePlayers) {
+    aggregate.match({ fantasyRoster: { $exists: false } });
+  }
+
+  aggregate
     .lookup({
       from: "fantasyteams",
       localField: "fantasyRoster.fantasyTeam",
       foreignField: "_id",
       as: "fantasyRoster.fantasyTeam",
     })
-    .unwind("$fantasyRoster.fantasyTeam")
+    .unwind({
+      path: "$fantasyRoster.fantasyTeam",
+      preserveNullAndEmptyArrays: true,
+    });
+  if (fantasyTeam) {
+    aggregate.match({
+      "fantasyRoster.fantasyTeam._id": new ObjectId(fantasyTeam),
+    });
+  }
+
+  aggregate
     .lookup({
       from: "performances",
       as: "performance",
