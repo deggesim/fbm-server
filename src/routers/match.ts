@@ -80,7 +80,7 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
       const tieAllowed = !round.roundRobin && round.fixtures.length % 2 === 0;
       let previousPerformances: IPerformance[] = [];
       const realFixture: IRealFixture = await RealFixture.findByFixture(ctx.get('league'), ctx.params.fixtureId);
-      const allRealFixtures: IRealFixture[] = await RealFixture.find({ league: ctx.get('league') }).sort({ id: 1 });
+      const allRealFixtures: IRealFixture[] = await RealFixture.find({ league: ctx.get('league') }).sort({ _id: 1 });
       const index = allRealFixtures.findIndex((rf) => rf._id.equals(realFixture._id));
       if (index > 0) {
         const previousRealFixture = allRealFixtures[index - 1];

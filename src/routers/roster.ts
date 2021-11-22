@@ -3,7 +3,7 @@ import * as Router from "koa-router";
 import { PaginateResult } from "mongoose";
 import { ILeague, League } from "../schemas/league";
 import { Performance } from "../schemas/performance";
-import { IPlayer } from "../schemas/player";
+import { IPlayer, Player } from "../schemas/player";
 import { IRealFixture, RealFixture } from "../schemas/real-fixture";
 import { IRoster, Roster } from "../schemas/roster";
 import { admin, auth, parseToken } from "../util/auth";
@@ -100,7 +100,7 @@ rosterRouter.post(
       newRoster.league = league._id;
       const rosterRealFixture = newRoster.realFixture as IRealFixture;
       const realFixtures = await RealFixture.find({ league: league._id }).sort({
-        id: 1,
+        _id: 1,
       });
       const indexOfRosterRealFixture = realFixtures.findIndex((rf) =>
         rf._id.equals(rosterRealFixture._id)
@@ -183,14 +183,38 @@ rosterRouter.delete(
       const league: ILeague = (await League.findById(
         ctx.get("league")
       )) as ILeague;
-      const roster = (await Roster.findOneAndDelete({
+
+      const roster = (await Roster.findOne({
         _id: ctx.params.id,
         league: league._id,
       })) as IRoster;
+
       if (roster == null) {
         ctx.status = 404;
+      } else {
+        let canDelete = true;
+        const rostersRelated = await Roster.find({ player: roster.player });
+        for (const rosterRelated of rostersRelated) {
+          if (rosterRelated.fantasyRoster) {
+            canDelete = false;
+            break;
+          }
+        }
+
+        if (canDelete) {
+          // delete rosters and player
+          const rostersId: string[] = rostersRelated.map(
+            (rosterRelated: IRoster) => rosterRelated._id
+          );
+          await Roster.deleteMany({ _id: { $in: rostersId } });
+          await Performance.deleteMany({ player: roster.player });
+          await Player.deleteOne({ _id: roster.player });
+          ctx.body = roster;
+        } else {
+          ctx.status = 400;
+          ctx.message = "Giocatore tesserato: impossibile eliminare";
+        }
       }
-      ctx.body = roster;
     } catch (error) {
       console.log(error);
       ctx.throw(500, error.message);

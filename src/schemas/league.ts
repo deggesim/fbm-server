@@ -173,7 +173,7 @@ schema.methods.setRoles = async function(roles: Array<{ role: string, spots: num
 
 schema.methods.completePreseason = async function() {
   const league = this;
-  const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id }).sort({ id: 1 }) as IRealFixture;
+  const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id }).sort({ _id: 1 }) as IRealFixture;
   realFixture.prepared = true;
   await realFixture.save();
   return Promise.resolve(league);
