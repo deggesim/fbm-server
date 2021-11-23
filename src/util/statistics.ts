@@ -67,10 +67,10 @@ export const statistics = async (
       foreignField: "_id",
       as: "fantasyRoster",
     })
-    .unwind({ path: "$fantasyRoster", preserveNullAndEmptyArrays: true });
-  if (freePlayers) {
-    aggregate.match({ fantasyRoster: { $exists: false } });
-  }
+    .unwind({
+      path: "$fantasyRoster",
+      preserveNullAndEmptyArrays: true,
+    });
 
   aggregate
     .lookup({
@@ -100,8 +100,8 @@ export const statistics = async (
     .match({ "performance.minutes": { $gt: 0 } })
     .group({
       _id: "$player",
-      team: { $first: "$team" },
-      fantasyRoster: { $first: "$fantasyRoster" },
+      team: { $last: "$team" },
+      fantasyRoster: { $last: "$fantasyRoster" },
       avgRanking: { $avg: "$performance.ranking" },
       avgMinutes: { $avg: "$performance.minutes" },
       avgGrade: { $avg: "$performance.grade" },
@@ -114,8 +114,13 @@ export const statistics = async (
       avgMinutes: "$avgMinutes",
       avgGrade: "$avgGrade",
       rankingMinutesRatio: { $divide: ["$avgRanking", "$avgMinutes"] },
-    })
-    .sort({ rankingMinutesRatio: -1 });
+    });
+
+  if (freePlayers) {
+    aggregate.match({ "fantasyRoster._id": { $exists: false } });
+  }
+
+  aggregate.sort({ rankingMinutesRatio: -1 });
 
   let result = await Roster.aggregatePaginate(aggregate, {
     page: Number(page),
