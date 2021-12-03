@@ -1,54 +1,69 @@
-import * as Koa from 'koa';
-import * as Router from 'koa-router';
-import { FantasyTeam } from '../schemas/fantasy-team';
-import { IFixture } from '../schemas/fixture';
-import { IRound, Round } from '../schemas/round';
-import { admin, auth, parseToken } from '../util/auth';
-import { tenant } from '../util/tenant';
+import * as Koa from "koa";
+import * as Router from "koa-router";
+import { FantasyTeam } from "../schemas/fantasy-team";
+import { IFixture } from "../schemas/fixture";
+import { IRound, Round } from "../schemas/round";
+import { admin, auth, parseToken } from "../util/auth";
+import { tenant } from "../util/tenant";
 
 const roundRouter: Router = new Router<IRound>();
 
-roundRouter.get('/rounds', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
-  try {
-    const rounds: IRound[] = await Round.find({ league: ctx.get('league') });
-    for (const round of rounds) {
-      await populateAll(round);
+roundRouter.get(
+  "/rounds",
+  auth(),
+  parseToken(),
+  tenant(),
+  async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+      const rounds: IRound[] = await Round.find({ league: ctx.get("league") });
+      for (const round of rounds) {
+        await populateAll(round);
+      }
+      ctx.body = rounds;
+    } catch (error) {
+      console.log(error);
+      ctx.throw(500, error.message);
     }
-    ctx.body = rounds;
-  } catch (error) {
-    console.log(error);
-    ctx.throw(500, error.message);
   }
-});
+);
 
-roundRouter.post('/rounds/:id/matches', auth(), parseToken(), tenant(), admin(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
-  try {
-    const updatedRound: IRound = ctx.request.body;
-    const roundToUpdate = await Round.findOne({ _id: ctx.params.id, league: ctx.get('league') }) as IRound;
-    if (!roundToUpdate) {
-      ctx.throw(404, 'Round non trovato');
+roundRouter.post(
+  "/rounds/:id/matches",
+  auth(),
+  parseToken(),
+  tenant(),
+  admin(),
+  async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+      const updatedRound: IRound = ctx.request.body;
+      const roundToUpdate = (await Round.findOne({
+        _id: ctx.params.id,
+        league: ctx.get("league"),
+      })) as IRound;
+      if (!roundToUpdate) {
+        ctx.throw(404, "Round non trovato");
+      }
+      roundToUpdate.set(updatedRound);
+      const round = await roundToUpdate.save();
+      // popolamnto match
+      if (round.roundRobin) {
+        await round.buildRoundRobinMatchList();
+      } else {
+        await round.buildPlayoffMatchList();
+      }
+      await populateAll(round);
+      ctx.body = round;
+    } catch (error) {
+      console.log(error);
+      ctx.throw(400, error.message);
     }
-    roundToUpdate.set(updatedRound);
-    const round = await roundToUpdate.save();
-    // popolamnto match
-    if (round.roundRobin) {
-      await round.buildRoundRobinMatchList();
-    } else {
-      await round.buildPlayoffMatchList();
-    }
-    await populateAll(round);
-    ctx.body = round;
-  } catch (error) {
-    console.log(error);
-    ctx.throw(400, error.message);
   }
-});
+);
 
 async function populateAll(round: IRound) {
-  await round.populate('fantasyTeams')
-    .populate('fixtures')
-    .execPopulate();
-  await FantasyTeam.populate(round.fantasyTeams, { path: 'owners' });
+  await round.populate("competition");
+  await round.populate("fantasyTeams").populate("fixtures").execPopulate();
+  await FantasyTeam.populate(round.fantasyTeams, { path: "owners" });
   for (const fixture of round.fixtures as IFixture[]) {
     for (let i = 0; i < fixture.matches.length; i++) {
       await fixture.populate(`matches.${i}`).execPopulate();
