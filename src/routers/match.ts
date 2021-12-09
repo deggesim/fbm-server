@@ -93,7 +93,7 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
       const resultWithPlusMinus = league.parameters.find((param) => param.parameter === 'RESULT_WITH_PLUS_MINUS')?.value === 1;
       const resultDivisor = league.parameters.find((param) => param.parameter === 'RESULT_DIVISOR')?.value as number;
       match.homeFactor = round.homeFactor != null ? round.homeFactor : 0;
-      computeResult(
+      await computeResult(
         match,
         homeLinup,
         awayLinup,

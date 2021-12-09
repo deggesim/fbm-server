@@ -10,7 +10,7 @@ import { ITeam } from '../schemas/team';
 import { halfDownRound } from './functions';
 import { AppConfig, isEmpty } from './globals';
 
-export const computeResult = (
+export const computeResult = async (
   match: IMatch,
   homeLineup: ILineup[],
   awayLineup: ILineup[],
@@ -145,7 +145,7 @@ export const computeResult = (
     player.save();
   }
   match.completed = true;
-  match.save();
+  await match.save();
 };
 
 // FUNZIONI DI SUPPORTO
