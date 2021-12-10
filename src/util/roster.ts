@@ -20,6 +20,7 @@ export const buildParameters = async (
   }
   if (filter != null) {
     const players = await Player.find({
+      league,
       name: { $regex: new RegExp(filter, "i") },
     });
     const playersId: ObjectId[] = players.map((pl: IPlayer) => pl._id);
