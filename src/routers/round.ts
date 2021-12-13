@@ -19,7 +19,21 @@ roundRouter.get(
       for (const round of rounds) {
         await populateAll(round);
       }
-      ctx.body = rounds;
+      ctx.body = [...rounds].sort((r1, r2) => {
+        if (!r1 || !r2) {
+          return 0;
+        } else {
+          if (r1.competition && r2.competition) {
+            if (r1.competition.id !== r2.competition.id) {
+              return r1.competition.id.localeCompare(r2.competition.id);
+            } else {
+              return r1.id.localeCompare(r2.id)
+            }
+          } else {
+            return 0;
+          }
+        }
+      });
     } catch (error) {
       console.log(error);
       ctx.throw(500, error.message);

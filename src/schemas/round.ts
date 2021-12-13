@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { Model, model, Schema } from "mongoose";
 import { playoffMatchList, roundRobinMatchList } from "../util/games";
+import { ICompetition } from "./competition";
 import { IFantasyTeam } from "./fantasy-team";
 import { IFixture } from "./fixture";
 import { ITenant } from "./league";
@@ -14,6 +15,8 @@ interface IRoundDocument extends ITenant {
   rounds?: number;
   fantasyTeams: Array<IFantasyTeam | ObjectId>;
   fixtures: Array<IFixture | ObjectId>;
+  // virtual
+  competition?: ICompetition;
 }
 
 /**
