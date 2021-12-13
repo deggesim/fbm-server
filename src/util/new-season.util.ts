@@ -408,18 +408,32 @@ export const createCup = async (
     firstRealFixture - 1,
     lastRealFixture
   );
-  for (let i = 0; i < realFixturesSubList.length; i++) {
+  if (realFixturesSubList.length === 1) {
     const fixture = {
-      name: `Quarti di Finale - Gara #${i + 1}`,
+      name: `Gara unica`,
       unnecessary: false,
       completed: false,
       matches: [],
       league: league._id,
     };
     const newFixture = await Fixture.create(fixture);
-    realFixturesSubList[i].fixtures.push(newFixture);
-    await realFixturesSubList[i].save();
+    realFixturesSubList[0].fixtures.push(newFixture);
+    await realFixturesSubList[0].save();
     newRound.fixtures.push(newFixture);
+  } else {
+    for (let i = 0; i < realFixturesSubList.length; i++) {
+      const fixture = {
+        name: `Gara #${i + 1}`,
+        unnecessary: false,
+        completed: false,
+        matches: [],
+        league: league._id,
+      };
+      const newFixture = await Fixture.create(fixture);
+      realFixturesSubList[i].fixtures.push(newFixture);
+      await realFixturesSubList[i].save();
+      newRound.fixtures.push(newFixture);
+    }
   }
   await newRound.save();
   firstRealFixture = lastRealFixture + 1;
@@ -446,18 +460,32 @@ export const createCup = async (
     firstRealFixture - 1,
     lastRealFixture
   );
-  for (let i = 0; i < realFixturesSubList.length; i++) {
+  if (realFixturesSubList.length === 1) {
     const fixture = {
-      name: `Semifinale - Gara #${i + 1}`,
+      name: `Gara unica`,
       unnecessary: false,
       completed: false,
       matches: [],
       league: league._id,
     };
     const newFixture = await Fixture.create(fixture);
-    realFixturesSubList[i].fixtures.push(newFixture);
-    await realFixturesSubList[i].save();
+    realFixturesSubList[0].fixtures.push(newFixture);
+    await realFixturesSubList[0].save();
     newRound.fixtures.push(newFixture);
+  } else {
+    for (let i = 0; i < realFixturesSubList.length; i++) {
+      const fixture = {
+        name: `Gara #${i + 1}`,
+        unnecessary: false,
+        completed: false,
+        matches: [],
+        league: league._id,
+      };
+      const newFixture = await Fixture.create(fixture);
+      realFixturesSubList[i].fixtures.push(newFixture);
+      await realFixturesSubList[i].save();
+      newRound.fixtures.push(newFixture);
+    }
   }
   await newRound.save();
   firstRealFixture = lastRealFixture + 1;
@@ -484,18 +512,32 @@ export const createCup = async (
     firstRealFixture - 1,
     lastRealFixture
   );
-  for (let i = 0; i < realFixturesSubList.length; i++) {
+  if (realFixturesSubList.length === 1) {
     const fixture = {
-      name: `Finale - Gara #${i + 1}`,
+      name: `Gara unica`,
       unnecessary: false,
       completed: false,
       matches: [],
       league: league._id,
     };
     const newFixture = await Fixture.create(fixture);
-    realFixturesSubList[i].fixtures.push(newFixture);
-    await realFixturesSubList[i].save();
+    realFixturesSubList[0].fixtures.push(newFixture);
+    await realFixturesSubList[0].save();
     newRound.fixtures.push(newFixture);
+  } else {
+    for (let i = 0; i < realFixturesSubList.length; i++) {
+      const fixture = {
+        name: `Gara #${i + 1}`,
+        unnecessary: false,
+        completed: false,
+        matches: [],
+        league: league._id,
+      };
+      const newFixture = await Fixture.create(fixture);
+      realFixturesSubList[i].fixtures.push(newFixture);
+      await realFixturesSubList[i].save();
+      newRound.fixtures.push(newFixture);
+    }
   }
   await newRound.save();
   await competition.save();
