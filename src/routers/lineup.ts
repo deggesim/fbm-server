@@ -11,6 +11,7 @@ import { IRoster } from '../schemas/roster';
 import { IUser } from '../schemas/user';
 import { auth, parseToken } from '../util/auth';
 import { entityNotFound } from '../util/functions';
+import { notifyLineup } from '../util/push-notification';
 import { tenant } from '../util/tenant';
 
 const lineupRouter: Router = new Router<ILineup>();
@@ -85,6 +86,7 @@ lineupRouter.post('/lineups/fantasy-team/:fantasyTeamId/fixture/:fixtureId', aut
     }
     ctx.body = await Lineup.insertMany(newLineup);
     ctx.status = 201;
+    notifyLineup(league, user, ctx.params.fantasyTeamId, ctx.params.fixtureId);
   });
 
 lineupRouter.patch('/lineups/:id', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
