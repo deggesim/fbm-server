@@ -43,11 +43,11 @@ export const notifyLineup = async (
 
   const payload = {
     notification: {
-      title: "Formazione inserita",
+      title: `Formazione inserita - ${league.name}`,
       body: `La squadra ${fantasyTeam?.name} ha inserito la formazione per la giornata ${fixture?.name}`,
       icon: "assets/icons/icon-96x96.png",
       badge: "assets/icons/icon-96x96.png",
-      lang: "it-IT", // BCP 47,
+      lang: "it-IT",
       tag: "nuova-formazione",
       renotify: true,
       data: {
