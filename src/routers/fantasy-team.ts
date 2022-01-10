@@ -25,7 +25,6 @@ fantasyTeamRouter.post('/fantasy-teams/league/:id', auth(), parseToken(), admin(
 fantasyTeamRouter.get('/fantasy-teams', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
     const league: ILeague = await League.findById(ctx.get('league')) as ILeague;
-    const user: IUser = ctx.state.user;
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
     const conditions: any = { league: league._id };
     const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find(conditions);

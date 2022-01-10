@@ -25,7 +25,6 @@ interface IRosterDocument extends ITenant {
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
  */
-// tslint:disable-next-line: no-empty-interface
 export interface IRoster extends IRosterDocument {
   // metodi d'istanza
 }
@@ -35,7 +34,6 @@ export interface IRoster extends IRosterDocument {
  */
 export interface IRosterModel extends Model<IRoster> {
   // metodi statici
-  // tslint:disable-next-line: ban-types
   paginate(
     query?: Object,
     options?: PaginateOptions,

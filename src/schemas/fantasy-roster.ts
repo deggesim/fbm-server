@@ -18,7 +18,6 @@ interface IFantasyRosterDocument extends ITenant {
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
  */
-// tslint:disable-next-line: no-empty-interface
 export interface IFantasyRoster extends IFantasyRosterDocument {
   // metodi d'istanza
 }

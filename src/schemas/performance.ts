@@ -17,7 +17,6 @@ interface IPerformanceDocument extends ITenant {
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
  */
-// tslint:disable-next-line: no-empty-interface
 export interface IPerformance extends IPerformanceDocument {
   // metodi d'istanza
 }

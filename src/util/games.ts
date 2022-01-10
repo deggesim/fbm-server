@@ -122,7 +122,6 @@ games.set(20, [
   [0, 15, 18, 3, 16, 19, 5, 1, 11, 17, 12, 6, 10, 9, 8, 13, 4, 14, 2, 7],
 ]);
 
-// tslint:disable-next-line: max-line-length
 export const roundRobinMatchList = async (idLeague: ObjectId, rounds: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
   const ret: IMatch[] = [];
   try {

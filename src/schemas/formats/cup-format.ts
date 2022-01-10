@@ -1,4 +1,3 @@
-// tslint:disable-next-line: interface-over-type-literal
 type CupType = {
   label: string;
   games: number;

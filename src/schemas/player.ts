@@ -22,7 +22,6 @@ interface IPlayerDocument extends ITenant {
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
  */
-// tslint:disable-next-line: no-empty-interface
 export interface IPlayer extends IPlayerDocument {
   // metodi d'istanza
 }
@@ -137,7 +136,6 @@ schema.statics.insertPlayers = async (
     });
     let index = 1;
     for (const uploadedPlayer of uploadedPlayers) {
-      // tslint:disable-next-line: variable-name
       const { name, role, nationality, number, yearBirth, height, weight } =
         uploadedPlayer;
       const playerTeam = uploadedPlayer.team;

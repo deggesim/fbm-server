@@ -1,4 +1,3 @@
-// tslint:disable-next-line: interface-over-type-literal
 type RoundFormatType = {
   label: string;
 };
