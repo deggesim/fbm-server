@@ -46,7 +46,7 @@ export const notifyLineup = async (
       title: `Formazione inserita - ${league.name}`,
       body: `La squadra ${fantasyTeam?.name} ha inserito la formazione per la giornata ${fixture?.name}`,
       icon: "assets/icons/icon-96x96.png",
-      badge: "assets/icons/icon-96x96.png",
+      badge: "assets/icons/badge.png",
       lang: "it-IT",
       tag: "nuova-formazione",
       renotify: true,
