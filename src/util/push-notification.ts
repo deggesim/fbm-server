@@ -1,11 +1,12 @@
 import * as webpush from "web-push";
 import { FantasyTeam } from "../schemas/fantasy-team";
-import { Fixture } from "../schemas/fixture";
+import { Fixture, IFixture } from "../schemas/fixture";
 import { ILeague } from "../schemas/league";
 import {
   IPushSubscription,
-  PushSubscription,
+  PushSubscription
 } from "../schemas/push-subscription";
+import { IRound } from "../schemas/round";
 import { IUser } from "../schemas/user";
 
 const vapidKeys = {
@@ -35,7 +36,13 @@ export const notifyLineup = async (
 ) => {
   const email = user.email;
   const fantasyTeam = await FantasyTeam.findById(fantasyTeamId);
-  const fixture = await Fixture.findById(fixtureId);
+  const fixture: IFixture = (await Fixture.findById(fixtureId)) as IFixture;
+  await fixture?.populate("round").execPopulate();
+  const round: IRound = fixture?.get("round");
+  await round.populate("competition").execPopulate();
+  const competition = round.get("competition");
+  console.log(round.name);
+  console.log(competition.name);
   const subscriptions = await getAllSubscriptions(league);
   const filteredSubscriptions = subscriptions.filter(
     (sub: IPushSubscription) => sub.email !== email
@@ -43,8 +50,8 @@ export const notifyLineup = async (
 
   const payload = {
     notification: {
-      title: `Formazione inserita - ${league.name}`,
-      body: `La squadra ${fantasyTeam?.name} ha inserito la formazione per la giornata ${fixture?.name}`,
+      title: league.name,
+      body: `La squadra ${fantasyTeam?.name} ha inserito la formazione per la competizione ${competition?.name}, ${round.name}, ${fixture.name}`,
       icon: "assets/icons/icon-96x96.png",
       badge: "assets/icons/badge.png",
       lang: "it-IT",
