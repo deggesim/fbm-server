@@ -1,10 +1,10 @@
 import * as webpush from "web-push";
-import { FantasyTeam } from "../schemas/fantasy-team";
+import { FantasyTeam, IFantasyTeam } from "../schemas/fantasy-team";
 import { Fixture, IFixture } from "../schemas/fixture";
 import { ILeague } from "../schemas/league";
 import {
   IPushSubscription,
-  PushSubscription
+  PushSubscription,
 } from "../schemas/push-subscription";
 import { IRound } from "../schemas/round";
 import { IUser } from "../schemas/user";
@@ -15,6 +15,26 @@ const vapidKeys = {
     ? process.env.VAPID_PRIVATE_KEY
     : "",
 };
+
+interface Payload {
+  notification: {
+    title: string;
+    body: string;
+    icon: string;
+    badge: string;
+    lang: string;
+    tag: string;
+    renotify: boolean;
+    data: {
+      onActionClick: {
+        default: {
+          operation: string;
+          url: string;
+        };
+      };
+    };
+  };
+}
 
 webpush.setVapidDetails(
   `mailto:${process.env.VAPID_MAILTO}`,
@@ -35,18 +55,20 @@ export const notifyLineup = async (
   fixtureId: string
 ) => {
   const email = user.email;
-  const fantasyTeam = await FantasyTeam.findById(fantasyTeamId);
+  const fantasyTeam: IFantasyTeam = (await FantasyTeam.findById(
+    fantasyTeamId
+  )) as IFantasyTeam;
   const fixture: IFixture = (await Fixture.findById(fixtureId)) as IFixture;
   await fixture?.populate("round").execPopulate();
   const round: IRound = fixture?.get("round");
   await round.populate("competition").execPopulate();
   const competition = round.get("competition");
-  console.log(round.name);
-  console.log(competition.name);
   const subscriptions = await getAllSubscriptions(league);
   const filteredSubscriptions = subscriptions.filter(
     (sub: IPushSubscription) => sub.email !== email
   );
+
+  const url = `/competitions/lineups?round=${round.id}&fixture=${fixture.id}&fantasyTeam=${fantasyTeam.id}`;
 
   const payload = {
     notification: {
@@ -59,13 +81,50 @@ export const notifyLineup = async (
       renotify: true,
       data: {
         onActionClick: {
+          default: { operation: "navigateLastFocusedOrOpen", url },
+        },
+      },
+    },
+  };
+
+  sendToSubscribers(filteredSubscriptions, payload);
+};
+
+export const notifyFixtureCompleted = async (
+  league: ILeague,
+  fixture: IFixture
+) => {
+  await fixture.populate("round").execPopulate();
+  const round: IRound = fixture.get("round");
+  await round.populate("competition").execPopulate();
+  const competition = round.get("competition");
+  const subscriptions = await getAllSubscriptions(league);
+
+  const payload = {
+    notification: {
+      title: league.name,
+      body: `Il turno ${fixture.name} per la competizione ${competition?.name}, ${round.name} è stato completato`,
+      icon: "assets/icons/icon-96x96.png",
+      badge: "assets/icons/badge.png",
+      lang: "it-IT",
+      tag: "giornata-completata",
+      renotify: true,
+      data: {
+        onActionClick: {
           default: { operation: "navigateLastFocusedOrOpen", url: "/" },
         },
       },
     },
   };
 
-  filteredSubscriptions.forEach((sub: IPushSubscription) => {
+  sendToSubscribers(subscriptions, payload);
+};
+
+const sendToSubscribers = (
+  subscriptions: IPushSubscription[],
+  payload: Payload
+) => {
+  subscriptions.forEach((sub: IPushSubscription) => {
     webpush
       .sendNotification(sub, JSON.stringify(payload))
       .catch(function (err: any) {
