@@ -1,13 +1,17 @@
 import * as webpush from "web-push";
+import { IFantasyRoster } from "../schemas/fantasy-roster";
 import { FantasyTeam, IFantasyTeam } from "../schemas/fantasy-team";
 import { Fixture, IFixture } from "../schemas/fixture";
 import { ILeague } from "../schemas/league";
+import { IPlayer } from "../schemas/player";
 import {
   IPushSubscription,
   PushSubscription,
 } from "../schemas/push-subscription";
+import { IRoster } from "../schemas/roster";
 import { IRound } from "../schemas/round";
 import { IUser } from "../schemas/user";
+import { halfDownRound } from "../util/functions";
 
 const vapidKeys = {
   publicKey: process.env.VAPID_PUBLIC_KEY ? process.env.VAPID_PUBLIC_KEY : "",
@@ -69,7 +73,6 @@ export const notifyLineup = async (
   );
 
   const url = `/competitions/lineups?round=${round.id}&fixture=${fixture.id}&fantasyTeam=${fantasyTeam.id}`;
-
   const payload = {
     notification: {
       title: league.name,
@@ -78,6 +81,65 @@ export const notifyLineup = async (
       badge: "assets/icons/badge.png",
       lang: "it-IT",
       tag: "nuova-formazione",
+      renotify: true,
+      data: {
+        onActionClick: {
+          default: { operation: "navigateLastFocusedOrOpen", url },
+        },
+      },
+    },
+  };
+
+  sendToSubscribers(filteredSubscriptions, payload);
+};
+
+export const notifyTransaction = async (
+  league: ILeague,
+  user: IUser,
+  fantasyRoster: IFantasyRoster,
+  operation: "buy" | "update" | "release" | "remove"
+) => {
+  const email = user.email;
+  const subscriptions = await getAllSubscriptions(league);
+  const filteredSubscriptions = subscriptions.filter(
+    (sub: IPushSubscription) => sub.email !== email
+  );
+
+  const fantasyTeam = fantasyRoster.fantasyTeam as IFantasyTeam;
+  const player = (fantasyRoster?.roster as IRoster)?.player as IPlayer;
+  const url = `/teams/fantasy-rosters?fantasyTeam=${fantasyTeam.id}`;
+
+  let body = "";
+  switch (operation) {
+    case "buy":
+      body = `La squadra ${fantasyTeam?.name} ha ingaggiato il giocatore ${player?.name} per un costo di ${fantasyRoster?.contract}`;
+      break;
+    case "update":
+      body = `L'ingaggio del giocatore ${player?.name} da parte della squadra ${fantasyTeam?.name} è stato modificato`;
+      break;
+    case "release":
+      body = `La squadra ${
+        fantasyTeam?.name
+      } ha rilasciato il giocatore ${player?.name} recuperando ${halfDownRound(
+        fantasyRoster.contract,
+        2
+      )} crediti`;
+      break;
+    case "remove":
+      body = `La squadra ${fantasyTeam?.name} ha rimosso il giocatore ${player?.name} recuperando ${fantasyRoster?.contract} crediti`;
+      break;
+    default:
+      break;
+  }
+
+  const payload = {
+    notification: {
+      title: league.name,
+      body,
+      icon: "assets/icons/icon-96x96.png",
+      badge: "assets/icons/badge.png",
+      lang: "it-IT",
+      tag: "mercato-libero",
       renotify: true,
       data: {
         onActionClick: {
@@ -100,6 +162,7 @@ export const notifyFixtureCompleted = async (
   const competition = round.get("competition");
   const subscriptions = await getAllSubscriptions(league);
 
+  const url = `/competitions/calendar?round=${round.id}`;
   const payload = {
     notification: {
       title: league.name,
@@ -111,7 +174,7 @@ export const notifyFixtureCompleted = async (
       renotify: true,
       data: {
         onActionClick: {
-          default: { operation: "navigateLastFocusedOrOpen", url: "/" },
+          default: { operation: "navigateLastFocusedOrOpen", url },
         },
       },
     },

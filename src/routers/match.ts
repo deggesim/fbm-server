@@ -158,7 +158,10 @@ matchRouter.patch('/matches/fixture/:id', auth(), parseToken(), tenant(), admin(
       await fixture.save();
       // progress league
       const realFixture: IRealFixture = await RealFixture.findByFixture(ctx.get('league'), fixture._id);
+      // progress l6eague
       await league.progress(realFixture);
+      // push notification
+      notifyFixtureCompleted(league, fixture);
     }
 
     ctx.body = returnedMatches;
