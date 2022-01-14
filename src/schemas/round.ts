@@ -22,7 +22,6 @@ interface IRoundDocument extends ITenant {
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
  */
-// tslint:disable-next-line: no-empty-interface
 export interface IRound extends IRoundDocument {
   // metodi d'istanza
   buildRoundRobinMatchList: () => Promise<void>;

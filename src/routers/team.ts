@@ -44,7 +44,6 @@ teamRouter.post('/teams', auth(), parseToken(), tenant(), admin(), async (ctx: R
   }
 });
 
-// tslint:disable-next-line: no-var-requires
 const multer = require('@koa/multer');
 const upload = multer({
   storage: multer.memoryStorage(),

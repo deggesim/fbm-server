@@ -9,6 +9,7 @@ import { IPerformance, Performance } from '../schemas/performance';
 import { IRealFixture, RealFixture } from '../schemas/real-fixture';
 import { IRound, Round } from '../schemas/round';
 import { admin, auth, parseToken } from '../util/auth';
+import { notifyFixtureCompleted } from '../util/push-notification';
 import { computeResult } from '../util/result-calculator';
 import { tenant } from '../util/tenant';
 
@@ -115,6 +116,8 @@ matchRouter.post('/matches/:id/round/:roundId/fixture/:fixtureId/compute', auth(
         await realFixture.populate('fixtures').execPopulate();
         // progress league
         await league.progress(realFixture);
+        // push notification
+        notifyFixtureCompleted(league, fixture);
       }
       await match.populate('homeTeam').populate('awayTeam').execPopulate();
       ctx.body = match;
@@ -155,7 +158,10 @@ matchRouter.patch('/matches/fixture/:id', auth(), parseToken(), tenant(), admin(
       await fixture.save();
       // progress league
       const realFixture: IRealFixture = await RealFixture.findByFixture(ctx.get('league'), fixture._id);
+      // progress l6eague
       await league.progress(realFixture);
+      // push notification
+      notifyFixtureCompleted(league, fixture);
     }
 
     ctx.body = returnedMatches;

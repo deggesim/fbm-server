@@ -22,7 +22,6 @@ interface ILineupDocument extends ITenant {
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
  */
-// tslint:disable-next-line: no-empty-interface
 export interface ILineup extends ILineupDocument {
   // metodi d'istanza
 }

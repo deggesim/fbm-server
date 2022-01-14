@@ -75,7 +75,6 @@ userRouter.post('/users/logout', auth(), parseToken(), async (ctx: Router.IRoute
 
 });
 
-// tslint:disable-next-line: no-var-requires
 const multer = require('@koa/multer');
 const upload = multer({
   storage: multer.memoryStorage(),

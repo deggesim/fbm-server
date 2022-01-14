@@ -18,7 +18,6 @@ interface IFantasyTeamDocument extends ITenant {
 /**
  * Estensione del Document per l'aggiunta di metodi d'istanza
  */
-// tslint:disable-next-line: no-empty-interface
 export interface IFantasyTeam extends IFantasyTeamDocument {
   // metodi d'istanza
 }
