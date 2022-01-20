@@ -227,8 +227,8 @@ schema.methods.nextRealFixture = async function() {
 };
 
 schema.methods.progress = async function(realFixture: IRealFixture) {
-  console.info('progress', new Date().toUTCString());
-  console.info('realFixture', realFixture.id);
+  console.info('[PROGRESS] ', new Date().toUTCString());
+  console.info('[PROGRESS] realFixture', realFixture.id);
   const league = this;
   const rounds = await Round.find({ league: league._id });
   // check all rounds
@@ -269,16 +269,16 @@ schema.methods.progress = async function(realFixture: IRealFixture) {
   const allFixturesComplete = fixtures.every((fixture) => fixture.completed);
   const allRealFixtures: IRealFixture[] = await RealFixture.find({ league: league._id }).sort({ _id: 1 });
   const indexOfRealFixture = allRealFixtures.findIndex((rf) => rf._id.equals(realFixture._id));
-  console.info('actualRealFixture', allRealFixtures[indexOfRealFixture]?.id);
+  console.info('[PROGRESS] actualRealFixture', allRealFixtures[indexOfRealFixture]?.id);
   let indexOfNextRealFixture;
   if (indexOfRealFixture != null && indexOfRealFixture !== -1 && indexOfRealFixture !== allRealFixtures.length) {
     indexOfNextRealFixture = indexOfRealFixture + 1;
   }
   const nextRealFixture = indexOfNextRealFixture != null ? allRealFixtures[indexOfNextRealFixture] : null;
-  console.info('nextRealFixture', nextRealFixture?.id);
+  console.info('[PROGRESS] nextRealFixture', nextRealFixture?.id);
   if (allFixturesComplete && nextRealFixture != null && realFixture.prepared && !nextRealFixture.prepared) {
-    console.info('realFixture.prepared', realFixture.prepared);
-    console.info('!nextRealFixture.prepared', !nextRealFixture.prepared);
+    console.info('[PROGRESS] realFixture.prepared', realFixture.prepared);
+    console.info('[PROGRESS] !nextRealFixture.prepared', !nextRealFixture.prepared);
     // popoliamo i roster solo se la giornata successiva esiste e non è prepared, e quella attuale sì
     const rosters: IRoster[] = await Roster.find({ league: league._id, realFixture: realFixture._id });
     await Roster.populate(rosters, { path: 'fantasyRoster' });
@@ -292,7 +292,7 @@ schema.methods.progress = async function(realFixture: IRealFixture) {
         league,
       };
       const rosterCreated = await Roster.create(newRoster);
-      console.info('rosterCreated', rosterCreated.id);
+      console.info('[PROGRESS] rosterCreated', rosterCreated.id);
       if (roster.fantasyRoster != null) {
         const { fantasyTeam, status, draft, contract, yearContract } = roster.fantasyRoster as IFantasyRoster;
         const newFantasyRoster = {
@@ -306,15 +306,15 @@ schema.methods.progress = async function(realFixture: IRealFixture) {
           league,
         };
         const fantasyRosterCreated = await FantasyRoster.create(newFantasyRoster);
-        console.info('fantasyRosterCreated', fantasyRosterCreated.id);
+        console.info('[PROGRESS] fantasyRosterCreated', fantasyRosterCreated.id);
         rosterCreated.fantasyRoster = fantasyRosterCreated;
         await rosterCreated.save();
-        console.info('rosterCreated.save()', rosterCreated.id);
+        console.info('[PROGRESS] rosterCreated.save()', rosterCreated.id);
       }
     }
     nextRealFixture.prepared = true;
     await nextRealFixture.save();
-    console.info('nextRealFixture.save()', nextRealFixture.id);
+    console.info('[PROGRESS] nextRealFixture.save()', nextRealFixture.id);
   }
 };
 
