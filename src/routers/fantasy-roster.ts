@@ -151,6 +151,45 @@ fantasyRosterRouter.patch(
   }
 );
 
+fantasyRosterRouter.patch(
+  "/fantasy-rosters/:id/switch",
+  auth(),
+  parseToken(),
+  tenant(),
+  async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+      const league: ILeague = (await League.findById(
+        ctx.get("league")
+      )) as ILeague;
+      const fantasyRosterToUpdate = (await FantasyRoster.findOne({
+        _id: ctx.params.id,
+        league,
+      })) as IFantasyRoster;
+      if (fantasyRosterToUpdate == null) {
+        ctx.throw(404, "Giocatore non trovato");
+      }
+
+      const values = ctx.request.body;
+      const { fantasyTeam } = values;
+      const updatedFantasyRoster = {
+        fantasyTeam,
+        yearContract: 1,
+      };
+      fantasyRosterToUpdate.set(updatedFantasyRoster);
+      const fantasyRoster = await fantasyRosterToUpdate.save();
+      await fantasyRoster.populate("roster").execPopulate();
+      await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
+      await fantasyRoster.populate("fantasyTeam").execPopulate();
+      await fantasyRoster.populate("realFixture").execPopulate();
+      ctx.body = fantasyRoster;
+      notifyTransaction(league, ctx.state.user, fantasyRoster, "update");
+    } catch (error) {
+      console.log(error);
+      ctx.throw(400, error.message);
+    }
+  }
+);
+
 fantasyRosterRouter.delete(
   "/fantasy-rosters/:id/release",
   auth(),
