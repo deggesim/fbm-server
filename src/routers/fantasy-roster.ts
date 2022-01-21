@@ -182,7 +182,6 @@ fantasyRosterRouter.patch(
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
       ctx.body = fantasyRoster;
-      notifyTransaction(league, ctx.state.user, fantasyRoster, "update");
     } catch (error) {
       console.log(error);
       ctx.throw(400, error.message);
