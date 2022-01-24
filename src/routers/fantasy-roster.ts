@@ -1,8 +1,10 @@
 import * as Koa from "koa";
 import * as Router from "koa-router";
 import { FantasyRoster, IFantasyRoster } from "../schemas/fantasy-roster";
+import { FantasyRosterHistory } from "../schemas/fantasy-roster-history";
 import { IFantasyTeam } from "../schemas/fantasy-team";
 import { ILeague, League } from "../schemas/league";
+import { IPlayer } from "../schemas/player";
 import { IRealFixture } from "../schemas/real-fixture";
 import { IRoster, Roster } from "../schemas/roster";
 import { auth, parseToken } from "../util/auth";
@@ -89,6 +91,21 @@ fantasyRosterRouter.post(
       await fantasyRoster.populate("roster").execPopulate();
       await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
+
+      // history
+      const frh = {
+        name: ((fantasyRoster.roster as IRoster).player as IPlayer).name,
+        fantasyTeam: fantasyRoster.fantasyTeam,
+        status: fantasyRoster.status,
+        draft: fantasyRoster.draft,
+        balance: fantasyRoster.contract,
+        yearContract: fantasyRoster.yearContract,
+        operation: "BUY",
+        realFixture: nextRealFixture,
+        league,
+      };
+      await FantasyRosterHistory.create(frh);
+
       ctx.body = fantasyRoster;
       ctx.status = 201;
       const switchOffNotifications =
@@ -117,8 +134,30 @@ fantasyRosterRouter.patch(
         _id: ctx.params.id,
         league,
       })) as IFantasyRoster;
+      await fantasyRosterToUpdate.populate("roster").execPopulate();
+      await (fantasyRosterToUpdate.roster as IRoster)
+        .populate("player")
+        .execPopulate();
+      await fantasyRosterToUpdate.populate("fantasyTeam").execPopulate();
+
       // gestione fantasyTeam
       await remove(fantasyRosterToUpdate);
+
+      // history (remove)
+      const nextRealFixture: IRealFixture = await league.nextRealFixture();
+      const frh1 = {
+        name: ((fantasyRosterToUpdate.roster as IRoster).player as IPlayer)
+          .name,
+        fantasyTeam: fantasyRosterToUpdate.fantasyTeam,
+        status: fantasyRosterToUpdate.status,
+        draft: fantasyRosterToUpdate.draft,
+        balance: fantasyRosterToUpdate.contract,
+        yearContract: fantasyRosterToUpdate.yearContract,
+        operation: "REMOVE",
+        realFixture: nextRealFixture,
+        league,
+      };
+      await FantasyRosterHistory.create(frh1);
 
       const values = ctx.request.body;
       const { fantasyTeam, status, draft, contract, yearContract } = values;
@@ -146,6 +185,21 @@ fantasyRosterRouter.patch(
       await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
+
+      // history (remove)
+      const frh2 = {
+        name: ((fantasyRoster.roster as IRoster).player as IPlayer).name,
+        fantasyTeam: fantasyRoster.fantasyTeam,
+        status: fantasyRoster.status,
+        draft: fantasyRoster.draft,
+        balance: fantasyRoster.contract,
+        yearContract: fantasyRoster.yearContract,
+        operation: "BUY",
+        realFixture: nextRealFixture,
+        league,
+      };
+      await FantasyRosterHistory.create(frh2);
+
       ctx.body = fantasyRoster;
       const switchOffNotifications =
         process.env.SWITCH_OFF_NOTIFICATIONS === "true";
@@ -176,6 +230,26 @@ fantasyRosterRouter.patch(
       if (fantasyRosterToUpdate == null) {
         ctx.throw(404, "Giocatore non trovato");
       }
+      await fantasyRosterToUpdate.populate("roster").execPopulate();
+      await (fantasyRosterToUpdate.roster as IRoster)
+        .populate("player")
+        .execPopulate();
+      await fantasyRosterToUpdate.populate("fantasyTeam").execPopulate();
+
+      // history (trade out)
+      const nextRealFixture: IRealFixture = await league.nextRealFixture();
+      const frh1 = {
+        name: ((fantasyRosterToUpdate.roster as IRoster).player as IPlayer).name,
+        fantasyTeam: fantasyRosterToUpdate.fantasyTeam,
+        status: fantasyRosterToUpdate.status,
+        draft: fantasyRosterToUpdate.draft,
+        balance: fantasyRosterToUpdate.contract,
+        yearContract: fantasyRosterToUpdate.yearContract,
+        operation: "TRADE_OUT",
+        realFixture: nextRealFixture,
+        league,
+      };
+      await FantasyRosterHistory.create(frh1);
 
       const values = ctx.request.body;
       const { fantasyTeam } = values;
@@ -189,6 +263,21 @@ fantasyRosterRouter.patch(
       await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
+
+      // history (trade in)
+      const frh2 = {
+        name: ((fantasyRoster.roster as IRoster).player as IPlayer).name,
+        fantasyTeam: fantasyRoster.fantasyTeam,
+        status: fantasyRoster.status,
+        draft: fantasyRoster.draft,
+        balance: fantasyRoster.contract,
+        yearContract: fantasyRoster.yearContract,
+        operation: "TRADE_IN",
+        realFixture: nextRealFixture,
+        league,
+      };
+      await FantasyRosterHistory.create(frh2);
+
       ctx.body = fantasyRoster;
     } catch (error) {
       console.log(error);
@@ -222,6 +311,22 @@ fantasyRosterRouter.delete(
       await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
+
+      // history
+      const nextRealFixture: IRealFixture = await league.nextRealFixture();
+      const frh = {
+        name: ((fantasyRoster.roster as IRoster).player as IPlayer).name,
+        fantasyTeam: fantasyRoster.fantasyTeam,
+        status: fantasyRoster.status,
+        draft: fantasyRoster.draft,
+        balance: fantasyRoster.contract,
+        yearContract: fantasyRoster.yearContract,
+        operation: "RELEASE",
+        realFixture: nextRealFixture,
+        league,
+      };
+      await FantasyRosterHistory.create(frh);
+
       ctx.body = fantasyRoster;
       const switchOffNotifications =
         process.env.SWITCH_OFF_NOTIFICATIONS === "true";
@@ -260,6 +365,22 @@ fantasyRosterRouter.delete(
       await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
+
+      // history
+      const nextRealFixture: IRealFixture = await league.nextRealFixture();
+      const frh = {
+        name: ((fantasyRoster.roster as IRoster).player as IPlayer).name,
+        fantasyTeam: fantasyRoster.fantasyTeam,
+        status: fantasyRoster.status,
+        draft: fantasyRoster.draft,
+        balance: fantasyRoster.contract,
+        yearContract: fantasyRoster.yearContract,
+        operation: "REMOVE",
+        realFixture: nextRealFixture,
+        league,
+      };
+      await FantasyRosterHistory.create(frh);
+
       ctx.body = fantasyRoster;
       const switchOffNotifications =
         process.env.SWITCH_OFF_NOTIFICATIONS === "true";
