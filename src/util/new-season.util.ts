@@ -49,6 +49,7 @@ export const populateRealFixture = async (
     const realFixture = {
       name: `Giornata #${i}`,
       prepared: false,
+      order: i,
       fixtures: [],
       league: league._id,
     };

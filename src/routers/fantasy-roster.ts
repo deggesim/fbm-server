@@ -91,7 +91,11 @@ fantasyRosterRouter.post(
       await fantasyRoster.populate("realFixture").execPopulate();
       ctx.body = fantasyRoster;
       ctx.status = 201;
-      notifyTransaction(league, ctx.state.user, fantasyRoster, "buy");
+      const switchOffNotifications =
+        process.env.SWITCH_OFF_NOTIFICATIONS === "true";
+      if (!switchOffNotifications) {
+        notifyTransaction(league, ctx.state.user, fantasyRoster, "buy");
+      }
     } catch (error) {
       console.log(error);
       ctx.throw(500, error.message);
@@ -143,7 +147,11 @@ fantasyRosterRouter.patch(
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
       ctx.body = fantasyRoster;
-      notifyTransaction(league, ctx.state.user, fantasyRoster, "update");
+      const switchOffNotifications =
+        process.env.SWITCH_OFF_NOTIFICATIONS === "true";
+      if (!switchOffNotifications) {
+        notifyTransaction(league, ctx.state.user, fantasyRoster, "update");
+      }
     } catch (error) {
       console.log(error);
       ctx.throw(400, error.message);
@@ -215,7 +223,11 @@ fantasyRosterRouter.delete(
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
       ctx.body = fantasyRoster;
-      notifyTransaction(league, ctx.state.user, fantasyRoster, "release");
+      const switchOffNotifications =
+        process.env.SWITCH_OFF_NOTIFICATIONS === "true";
+      if (!switchOffNotifications) {
+        notifyTransaction(league, ctx.state.user, fantasyRoster, "release");
+      }
     } catch (error) {
       console.log(error);
       ctx.throw(500, error.message);
@@ -249,7 +261,11 @@ fantasyRosterRouter.delete(
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
       ctx.body = fantasyRoster;
-      notifyTransaction(league, ctx.state.user, fantasyRoster, "remove");
+      const switchOffNotifications =
+        process.env.SWITCH_OFF_NOTIFICATIONS === "true";
+      if (!switchOffNotifications) {
+        notifyTransaction(league, ctx.state.user, fantasyRoster, "remove");
+      }
     } catch (error) {
       console.log(error);
       ctx.throw(500, error.message);

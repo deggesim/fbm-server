@@ -172,7 +172,7 @@ schema.methods.setRoles = async function(roles: Array<{ role: string, spots: num
 
 schema.methods.completePreseason = async function() {
   const league = this;
-  const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id }).sort({ _id: 1 }) as IRealFixture;
+  const realFixture: IRealFixture = await RealFixture.findOne({ league: league._id }).sort({ order: 1 }) as IRealFixture;
   realFixture.prepared = true;
   await realFixture.save();
   return Promise.resolve(league);
@@ -200,15 +200,15 @@ schema.methods.nextFixture = async function() {
   const league = this;
   let realFixture: IRealFixture;
   if (await this.isPreseason()) {
-    realFixture = await RealFixture.findOne({ league: league._id }).sort({ _id: 1 }) as IRealFixture;
+    realFixture = await RealFixture.findOne({ league: league._id }).sort({ order: 1 }) as IRealFixture;
   } else {
-    realFixture = await RealFixture.findOne({ league: league._id, prepared: true }).sort({ _id: -1 }) as IRealFixture;
+    realFixture = await RealFixture.findOne({ league: league._id, prepared: true }).sort({ order: -1 }) as IRealFixture;
   }
   await realFixture.populate('fixtures').execPopulate();
   const fixtures = realFixture.fixtures as IFixture[];
   const allCompleted = fixtures.every((fixture) => fixture.completed);
   if (allCompleted) {
-    return fixtures.sort((a, b) => b._id - a._id)[0];
+    return [...fixtures].sort((a, b) => b._id - a._id)[0];
   } else {
     return fixtures.filter((fixture) => !fixture.completed).sort((a, b) => a._id - b._id)[0];
   }
@@ -218,9 +218,9 @@ schema.methods.nextRealFixture = async function() {
   const league = this;
   let realFixture: IRealFixture;
   if (await this.isPreseason()) {
-    realFixture = await RealFixture.findOne({ league: league._id }).sort({ _id: 1 }) as IRealFixture;
+    realFixture = await RealFixture.findOne({ league: league._id }).sort({ order: 1 }) as IRealFixture;
   } else {
-    realFixture = await RealFixture.findOne({ league: league._id, prepared: true }).sort({ _id: -1 }) as IRealFixture;
+    realFixture = await RealFixture.findOne({ league: league._id, prepared: true }).sort({ order: -1 }) as IRealFixture;
   }
   await realFixture.populate('fixtures').populate('teamsWithNoGame').execPopulate();
   return realFixture;
@@ -267,7 +267,7 @@ schema.methods.progress = async function(realFixture: IRealFixture) {
   // prepare next realFixture if necessary
   const fixtures = realFixture.fixtures as IFixture[];
   const allFixturesComplete = fixtures.every((fixture) => fixture.completed);
-  const allRealFixtures: IRealFixture[] = await RealFixture.find({ league: league._id }).sort({ _id: 1 });
+  const allRealFixtures: IRealFixture[] = await RealFixture.find({ league: league._id }).sort({ order: 1 });
   const indexOfRealFixture = allRealFixtures.findIndex((rf) => rf._id.equals(realFixture._id));
   console.info('[PROGRESS] actualRealFixture', allRealFixtures[indexOfRealFixture]?.id);
   let indexOfNextRealFixture;

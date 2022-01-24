@@ -9,4 +9,4 @@ mongoose.connect(PORT, {
   useUnifiedTopology: true,
 });
 
-mongoose.set('debug', process.env.DEBUG_MODE || false);
+mongoose.set('debug', process.env.DEBUG_MODE === 'true');

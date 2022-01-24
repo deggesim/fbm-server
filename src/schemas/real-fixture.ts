@@ -8,6 +8,7 @@ import { ITeam } from './team';
 interface IRealFixtureDocument extends ITenant {
   name: string;
   prepared?: boolean;
+  order: number;
   fixtures: Array<IFixture | ObjectId>;
   teamsWithNoGame?: Array<ITeam | ObjectId>;
 }
@@ -35,6 +36,10 @@ const schema = new Schema<IRealFixture>({
   prepared: {
     type: Boolean,
     deafault: false,
+  },
+  order: {
+    type: Number,
+    required: true,
   },
   fixtures: [{
     type: Schema.Types.ObjectId,
