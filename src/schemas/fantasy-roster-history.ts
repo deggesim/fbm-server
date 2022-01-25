@@ -9,9 +9,11 @@ interface IFantasyRosterHistoryDocument extends ITenant {
   fantasyTeam: IFantasyTeam | ObjectId;
   status: string;
   draft: boolean;
-  balance?: number;
+  contract?: number;
   yearContract: number;
+  role: string;
   operation: string;
+  balance: number;
   realFixture: IRealFixture | ObjectId;
 }
 
@@ -49,17 +51,35 @@ const schema = new Schema<IFantasyRosterHistory>({
     required: true,
     default: false,
   },
-  balance: {
+  contract: {
     type: Number,
   },
   yearContract: {
     type: Number,
     required: true,
   },
+  role: {
+    type: String,
+    required: true,
+    trim: true,
+    enum: [
+      "Playmaker",
+      "Play/Guardia",
+      "Guardia",
+      "Guardia/Ala",
+      "Ala",
+      "Ala/Centro",
+      "Centro",
+    ],
+  },
   operation: {
     type: String,
     required: true,
-    enum: ['DRAFT', 'BUY', 'UPDATE', 'REMOVE', 'RELEASE', 'TRADE_OUT', 'TRADE_IN'],
+    enum: ['DRAFT', 'BUY', 'UPDATE', 'REMOVE', 'RELEASE', 'TRADE_OUT', 'TRADE_IN', 'UPDATE_BALANCE'],
+  },
+  balance: {
+    type: Number,
+    required: true,
   },
   realFixture: {
     type: Schema.Types.ObjectId,

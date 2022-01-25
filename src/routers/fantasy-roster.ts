@@ -1,7 +1,10 @@
 import * as Koa from "koa";
 import * as Router from "koa-router";
 import { FantasyRoster, IFantasyRoster } from "../schemas/fantasy-roster";
-import { FantasyRosterHistory } from "../schemas/fantasy-roster-history";
+import {
+  FantasyRosterHistory,
+  IFantasyRosterHistory,
+} from "../schemas/fantasy-roster-history";
 import { IFantasyTeam } from "../schemas/fantasy-team";
 import { ILeague, League } from "../schemas/league";
 import { IPlayer } from "../schemas/player";
@@ -98,9 +101,11 @@ fantasyRosterRouter.post(
         fantasyTeam: fantasyRoster.fantasyTeam,
         status: fantasyRoster.status,
         draft: fantasyRoster.draft,
-        balance: fantasyRoster.contract,
+        contract: fantasyRoster.contract,
         yearContract: fantasyRoster.yearContract,
+        role: ((fantasyRoster.roster as IRoster).player as IPlayer).role,
         operation: "BUY",
+        balance: -fantasyRoster.contract,
         realFixture: nextRealFixture,
         league,
       };
@@ -151,9 +156,12 @@ fantasyRosterRouter.patch(
         fantasyTeam: fantasyRosterToUpdate.fantasyTeam,
         status: fantasyRosterToUpdate.status,
         draft: fantasyRosterToUpdate.draft,
-        balance: fantasyRosterToUpdate.contract,
+        contract: fantasyRosterToUpdate.contract,
         yearContract: fantasyRosterToUpdate.yearContract,
+        role: ((fantasyRosterToUpdate.roster as IRoster).player as IPlayer)
+          .role,
         operation: "REMOVE",
+        balance: fantasyRosterToUpdate.contract,
         realFixture: nextRealFixture,
         league,
       };
@@ -192,9 +200,11 @@ fantasyRosterRouter.patch(
         fantasyTeam: fantasyRoster.fantasyTeam,
         status: fantasyRoster.status,
         draft: fantasyRoster.draft,
-        balance: fantasyRoster.contract,
+        contract: fantasyRoster.contract,
         yearContract: fantasyRoster.yearContract,
+        role: ((fantasyRoster.roster as IRoster).player as IPlayer).role,
         operation: "BUY",
+        balance: -fantasyRosterToUpdate.contract,
         realFixture: nextRealFixture,
         league,
       };
@@ -239,13 +249,17 @@ fantasyRosterRouter.patch(
       // history (trade out)
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const frh1 = {
-        name: ((fantasyRosterToUpdate.roster as IRoster).player as IPlayer).name,
+        name: ((fantasyRosterToUpdate.roster as IRoster).player as IPlayer)
+          .name,
         fantasyTeam: fantasyRosterToUpdate.fantasyTeam,
         status: fantasyRosterToUpdate.status,
         draft: fantasyRosterToUpdate.draft,
-        balance: fantasyRosterToUpdate.contract,
+        contract: fantasyRosterToUpdate.contract,
         yearContract: fantasyRosterToUpdate.yearContract,
+        role: ((fantasyRosterToUpdate.roster as IRoster).player as IPlayer)
+          .role,
         operation: "TRADE_OUT",
+        balance: 0,
         realFixture: nextRealFixture,
         league,
       };
@@ -270,9 +284,11 @@ fantasyRosterRouter.patch(
         fantasyTeam: fantasyRoster.fantasyTeam,
         status: fantasyRoster.status,
         draft: fantasyRoster.draft,
-        balance: fantasyRoster.contract,
+        contract: fantasyRoster.contract,
         yearContract: fantasyRoster.yearContract,
+        role: ((fantasyRoster.roster as IRoster).player as IPlayer).role,
         operation: "TRADE_IN",
+        balance: 0,
         realFixture: nextRealFixture,
         league,
       };
@@ -319,9 +335,11 @@ fantasyRosterRouter.delete(
         fantasyTeam: fantasyRoster.fantasyTeam,
         status: fantasyRoster.status,
         draft: fantasyRoster.draft,
-        balance: fantasyRoster.contract,
+        contract: fantasyRoster.contract,
         yearContract: fantasyRoster.yearContract,
+        role: ((fantasyRoster.roster as IRoster).player as IPlayer).role,
         operation: "RELEASE",
+        balance: fantasyRoster.contract ? halfDownRound(fantasyRoster.contract, 2) : 0,
         realFixture: nextRealFixture,
         league,
       };
@@ -373,9 +391,11 @@ fantasyRosterRouter.delete(
         fantasyTeam: fantasyRoster.fantasyTeam,
         status: fantasyRoster.status,
         draft: fantasyRoster.draft,
-        balance: fantasyRoster.contract,
+        contract: fantasyRoster.contract,
         yearContract: fantasyRoster.yearContract,
+        role: ((fantasyRoster.roster as IRoster).player as IPlayer).role,
         operation: "REMOVE",
+        balance: fantasyRoster.contract ? fantasyRoster.contract : 0,
         realFixture: nextRealFixture,
         league,
       };

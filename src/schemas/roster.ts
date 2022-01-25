@@ -80,6 +80,8 @@ const schema = new Schema<IRoster>(
   },
   {
     timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
   }
 );
 

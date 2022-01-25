@@ -1,10 +1,10 @@
-import { ObjectId } from 'mongodb';
-import { Model, model, Schema } from 'mongoose';
-import { playoffMatchList, roundRobinMatchList } from '../util/games';
-import { IFantasyTeam } from './fantasy-team';
-import { IFixture } from './fixture';
-import { ITenant } from './league';
-import { IRound } from './round';
+import { ObjectId } from "mongodb";
+import { Model, model, Schema } from "mongoose";
+import { playoffMatchList, roundRobinMatchList } from "../util/games";
+import { IFantasyTeam } from "./fantasy-team";
+import { IFixture } from "./fixture";
+import { ITenant } from "./league";
+import { IRound } from "./round";
 
 interface IMatchDocument extends ITenant {
   homeTeam: IFantasyTeam | ObjectId;
@@ -42,83 +42,102 @@ export interface IMatchModel extends Model<IMatch> {
   buildPlayoffMatchList: (round: IRound) => Promise<IMatch[]>;
 }
 
-const schema = new Schema<IMatch>({
-  homeTeam: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: 'FantasyTeam',
+const schema = new Schema<IMatch>(
+  {
+    homeTeam: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "FantasyTeam",
+    },
+    awayTeam: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "FantasyTeam",
+    },
+    homeRanking: {
+      type: Number,
+    },
+    homeRanking40Min: {
+      type: Number,
+    },
+    awayRanking: {
+      type: Number,
+    },
+    awayRanking40Min: {
+      type: Number,
+    },
+    homeFactor: {
+      type: Number,
+    },
+    homeOer: {
+      type: Number,
+    },
+    awayOer: {
+      type: Number,
+    },
+    homePlusMinus: {
+      type: Number,
+    },
+    awayPlusMinus: {
+      type: Number,
+    },
+    homeGrade: {
+      type: Number,
+    },
+    awayGrade: {
+      type: Number,
+    },
+    homeScore: {
+      type: Number,
+    },
+    awayScore: {
+      type: Number,
+    },
+    overtime: {
+      type: Number,
+    },
+    completed: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    league: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "League",
+    },
   },
-  awayTeam: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: 'FantasyTeam',
-  },
-  homeRanking: {
-    type: Number,
-  },
-  homeRanking40Min: {
-    type: Number,
-  },
-  awayRanking: {
-    type: Number,
-  },
-  awayRanking40Min: {
-    type: Number,
-  },
-  homeFactor: {
-    type: Number,
-  },
-  homeOer: {
-    type: Number,
-  },
-  awayOer: {
-    type: Number,
-  },
-  homePlusMinus: {
-    type: Number,
-  },
-  awayPlusMinus: {
-    type: Number,
-  },
-  homeGrade: {
-    type: Number,
-  },
-  awayGrade: {
-    type: Number,
-  },
-  homeScore: {
-    type: Number,
-  },
-  awayScore: {
-    type: Number,
-  },
-  overtime: {
-    type: Number,
-  },
-  completed: {
-    type: Boolean,
-    required: true,
-    default: false,
-  },
-  league: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: 'League',
-  },
-}, {
-  timestamps: true,
-});
+  {
+    timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+  }
+);
 
-schema.statics.buildRoundRobinMatchList = async (round: IRound): Promise<IMatch[]> => {
+schema.statics.buildRoundRobinMatchList = async (
+  round: IRound
+): Promise<IMatch[]> => {
   const leagueId = round.league as ObjectId;
-  await round.populate('fixtures').execPopulate();
-  return await roundRobinMatchList(leagueId, round.rounds as number, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
+  await round.populate("fixtures").execPopulate();
+  return roundRobinMatchList(
+    leagueId,
+    round.rounds as number,
+    round.fixtures as IFixture[],
+    round.fantasyTeams as IFantasyTeam[]
+  );
 };
 
-schema.statics.buildPlayoffMatchList = async (round: IRound, fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
+schema.statics.buildPlayoffMatchList = async (
+  round: IRound,
+  fantasyTeams: IFantasyTeam[]
+): Promise<IMatch[]> => {
   const leagueId = round.league;
-  await round.populate('fixtures').execPopulate();
-  return await playoffMatchList(leagueId as ObjectId, round.fixtures as IFixture[], round.fantasyTeams as IFantasyTeam[]);
+  await round.populate("fixtures").execPopulate();
+  return playoffMatchList(
+    leagueId as ObjectId,
+    round.fixtures as IFixture[],
+    round.fantasyTeams as IFantasyTeam[]
+  );
 };
 
-export const Match = model<IMatch, IMatchModel>('Match', schema);
+export const Match = model<IMatch, IMatchModel>("Match", schema);
