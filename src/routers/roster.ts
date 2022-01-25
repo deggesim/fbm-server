@@ -24,23 +24,57 @@ rosterRouter.get(
       )) as ILeague;
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const { page, limit, filter } = ctx.query;
-      const parameters = await buildParameters(
-        league,
-        nextRealFixture,
-        false,
-        filter
-      );
-      const result: PaginateResult<IRoster> = await Roster.paginate(
-        parameters,
-        { page: Number(page), limit: Number(limit) }
-      );
+
+      const aggregate = Roster.aggregate();
+      aggregate.match({ league: league._id });
+      aggregate.match({ realFixture: nextRealFixture._id });
+      aggregate
+        .lookup({
+          from: "players",
+          localField: "player",
+          foreignField: "_id",
+          as: "player",
+        })
+        .unwind("$player");
+      aggregate
+        .lookup({
+          from: "teams",
+          localField: "team",
+          foreignField: "_id",
+          as: "team",
+        })
+        .unwind("$team");
+      aggregate
+        .lookup({
+          from: "fantasyrosters",
+          localField: "fantasyRoster",
+          foreignField: "_id",
+          as: "fantasyRoster",
+        })
+        .unwind({
+          path: "$fantasyRoster",
+          preserveNullAndEmptyArrays: true,
+        });
+      aggregate
+        .lookup({
+          from: "fantasyteams",
+          localField: "fantasyRoster.fantasyTeam",
+          foreignField: "_id",
+          as: "fantasyRoster.fantasyTeam",
+        })
+        .unwind({
+          path: "$fantasyRoster.fantasyTeam",
+          preserveNullAndEmptyArrays: true,
+        });
+      aggregate.match({ "player.name": { $regex: new RegExp(filter, "i") } });
+      aggregate.sort({ "player.name": 1 });
+
+      let result = await Roster.aggregatePaginate(aggregate, {
+        page: Number(page),
+        limit: Number(limit),
+      });
+
       ctx.set("X-Total-Count", String(result.total));
-      for (const roster of result.docs) {
-        await roster.populate("player").execPopulate();
-        await roster.populate("team").execPopulate();
-        await roster.populate("realFixture").execPopulate();
-        await roster.populate("fantasyRoster").execPopulate();
-      }
       ctx.body = result.docs;
     } catch (error) {
       console.log(error);
@@ -61,22 +95,58 @@ rosterRouter.get(
       )) as ILeague;
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const { page, limit, filter } = ctx.query;
-      const parameters = await buildParameters(
-        league,
-        nextRealFixture,
-        true,
-        filter
-      );
-      const result: PaginateResult<IRoster> = await Roster.paginate(
-        parameters,
-        { page: Number(page), limit: Number(limit) }
-      );
+
+      const aggregate = Roster.aggregate();
+      aggregate.match({ league: league._id });
+      aggregate.match({ realFixture: nextRealFixture._id });
+      aggregate
+        .lookup({
+          from: "players",
+          localField: "player",
+          foreignField: "_id",
+          as: "player",
+        })
+        .unwind("$player");
+      aggregate
+        .lookup({
+          from: "teams",
+          localField: "team",
+          foreignField: "_id",
+          as: "team",
+        })
+        .unwind("$team");
+      aggregate
+        .lookup({
+          from: "fantasyrosters",
+          localField: "fantasyRoster",
+          foreignField: "_id",
+          as: "fantasyRoster",
+        })
+        .unwind({
+          path: "$fantasyRoster",
+          preserveNullAndEmptyArrays: true,
+        });
+      aggregate
+        .lookup({
+          from: "fantasyteams",
+          localField: "fantasyRoster.fantasyTeam",
+          foreignField: "_id",
+          as: "fantasyRoster.fantasyTeam",
+        })
+        .unwind({
+          path: "$fantasyRoster.fantasyTeam",
+          preserveNullAndEmptyArrays: true,
+        });
+      aggregate.match({ "fantasyRoster._id": { $exists: false } });
+      aggregate.match({ "player.name": { $regex: new RegExp(filter, "i") } });
+      aggregate.sort({ "player.name": 1 });
+
+      let result = await Roster.aggregatePaginate(aggregate, {
+        page: Number(page),
+        limit: Number(limit),
+      });
+
       ctx.set("X-Total-Count", String(result.total));
-      for (const roster of result.docs) {
-        await roster.populate("player").execPopulate();
-        await roster.populate("team").execPopulate();
-        await roster.populate("realFixture").execPopulate();
-      }
       ctx.body = result.docs;
     } catch (error) {
       console.log(error);
