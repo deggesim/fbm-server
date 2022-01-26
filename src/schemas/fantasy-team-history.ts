@@ -6,13 +6,8 @@ import { IRealFixture } from './real-fixture';
 
 interface IFantasyTeamHistoryDocument extends ITenant {
   fantasyTeam: IFantasyTeam | ObjectId;
-  initialBalance: number;
-  outgo: number;
-  totalContracts: number;
-  playersInRoster: number;
-  extraPlayers: number;
-  pointsPenalty: number;
-  balancePenalty: number;
+  balance: number;
+  operation: string;
   realFixture: IRealFixture | ObjectId;
 }
 
@@ -36,40 +31,17 @@ const schema = new Schema<IFantasyTeamHistory>({
     required: true,
     ref: 'FantasyTeam',
   },
-  initialBalance: {
+  balance: {
     type: Number,
     required: true,
     default: 200,
   },
-  outgo: {
-    type: Number,
+  operation: {
+    type: String,
     required: true,
-    default: 0,
-  },
-  totalContracts: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-  playersInRoster: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-  extraPlayers: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-  pointsPenalty: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-  balancePenalty: {
-    type: Number,
-    required: true,
-    default: 0,
+    enum: [
+      "UPDATE_BALANCE",
+    ],
   },
   realFixture: {
     type: Schema.Types.ObjectId,

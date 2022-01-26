@@ -1,7 +1,6 @@
 import * as Koa from "koa";
 import * as Router from "koa-router";
 import { ObjectId } from "mongodb";
-import { FantasyRosterHistory } from "../schemas/fantasy-roster-history";
 import { FantasyTeam, IFantasyTeam } from "../schemas/fantasy-team";
 import { FantasyTeamHistory } from "../schemas/fantasy-team-history";
 import { ILeague, League } from "../schemas/league";
@@ -147,13 +146,8 @@ fantasyTeamRouter.patch(
       // history
       const fth = {
         fantasyTeam: fantasyTeam,
-        initialBalance: fantasyTeam.initialBalance,
-        outgo: fantasyTeam.outgo,
-        totalContracts: fantasyTeam.totalContracts,
-        playersInRoster: fantasyTeam.playersInRoster,
-        extraPlayers: fantasyTeam.extraPlayers,
-        pointsPenalty: fantasyTeam.pointsPenalty,
-        balancePenalty: fantasyTeam.balancePenalty,
+        balance: oldOutgo - fantasyTeam.outgo,
+        operation: 'UPDATE_BALANCE',
         realFixture: nextRealFixture,
         league,
       };
