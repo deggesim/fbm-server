@@ -32,7 +32,6 @@ app.use(bodyParser());
 
 app.use(competitionRouter.routes());
 app.use(fantasyRosterRouter.routes());
-app.use(historyRouter.routes());
 app.use(fantasyTeamRouter.routes());
 app.use(fixtureRouter.routes());
 app.use(historyRouter.routes());
