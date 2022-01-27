@@ -63,6 +63,8 @@ const schema = new Schema<IPerformance>(
   },
   {
     timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
   }
 );
 

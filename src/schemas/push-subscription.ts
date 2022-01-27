@@ -58,6 +58,8 @@ const schema = new Schema<IPushSubscription>(
   },
   {
     timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
   }
 );
 

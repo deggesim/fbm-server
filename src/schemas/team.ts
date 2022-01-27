@@ -1,5 +1,5 @@
-import { Model, model, Schema } from 'mongoose';
-import { ILeague, ITenant } from './league';
+import { Model, model, Schema } from "mongoose";
+import { ILeague, ITenant } from "./league";
 
 interface ITeamDocument extends ITenant {
   fullName: string;
@@ -25,46 +25,51 @@ export interface ITeamModel extends Model<ITeam> {
   insertTeams: (teams: ITeam[], league: ILeague) => Promise<ITeam[]>;
 }
 
-const schema = new Schema<ITeam>({
-  fullName: {
-    type: String,
-    required: true,
-    trim: true,
+const schema = new Schema<ITeam>(
+  {
+    fullName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    sponsor: {
+      type: String,
+      trim: true,
+    },
+    name: {
+      type: String,
+      trim: true,
+    },
+    city: {
+      type: String,
+      trim: true,
+    },
+    abbreviation: {
+      type: String,
+      trim: true,
+    },
+    real: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
+    league: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "League",
+    },
   },
-  sponsor: {
-    type: String,
-    trim: true,
-  },
-  name: {
-    type: String,
-    trim: true,
-  },
-  city: {
-    type: String,
-    trim: true,
-  },
-  abbreviation: {
-    type: String,
-    trim: true,
-  },
-  real: {
-    type: Boolean,
-    required: true,
-    default: true,
-  },
-  league: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: 'League',
-  },
-}, {
-  timestamps: true,
-});
+  {
+    timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+  }
+);
 
-schema.virtual('rosters', {
-  ref: 'Roster',
-  localField: '_id',
-  foreignField: 'team',
+schema.virtual("rosters", {
+  ref: "Roster",
+  localField: "_id",
+  foreignField: "team",
 });
 
 schema.statics.insertTeams = (teams: ITeam[], league: ILeague) => {
@@ -76,4 +81,4 @@ schema.statics.insertTeams = (teams: ITeam[], league: ILeague) => {
   return Team.insertMany(teamsToInsert);
 };
 
-export const Team = model<ITeam, ITeamModel>('Team', schema);
+export const Team = model<ITeam, ITeamModel>("Team", schema);

@@ -7,6 +7,7 @@ import { IRealFixture } from "../schemas/real-fixture";
 import { IRoster, Roster } from "../schemas/roster";
 import { auth, parseToken } from "../util/auth";
 import { halfDownRound } from "../util/functions";
+import { writeHistory } from "../util/history";
 import { notifyTransaction } from "../util/push-notification";
 import { tenant } from "../util/tenant";
 
@@ -89,6 +90,24 @@ fantasyRosterRouter.post(
       await fantasyRoster.populate("roster").execPopulate();
       await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
+
+      // history
+      let operation = "";
+      const isPreseason = await league.isPreseason();
+      if (isPreseason) {
+          operation = fantasyRoster.draft ? "DRAFT" : "AUCTION_BUY";
+      } else {
+        operation = "BUY";
+      }
+      await writeHistory(
+        operation,
+        nextRealFixture,
+        fantasyRoster.draft ? 0 : -fantasyRoster.contract,
+        league,
+        fantasyRoster.fantasyTeam as IFantasyTeam,
+        fantasyRoster
+      );
+
       ctx.body = fantasyRoster;
       ctx.status = 201;
       const switchOffNotifications =
@@ -117,8 +136,26 @@ fantasyRosterRouter.patch(
         _id: ctx.params.id,
         league,
       })) as IFantasyRoster;
+      await fantasyRosterToUpdate.populate("roster").execPopulate();
+      await (fantasyRosterToUpdate.roster as IRoster)
+        .populate("player")
+        .execPopulate();
+      await fantasyRosterToUpdate.populate("fantasyTeam").execPopulate();
+
       // gestione fantasyTeam
       await remove(fantasyRosterToUpdate);
+
+      // history (remove)
+      const isPreseason = await league.isPreseason();
+      const nextRealFixture: IRealFixture = await league.nextRealFixture();
+      await writeHistory(
+        isPreseason ? "AUCTION_REMOVE" : "REMOVE",
+        nextRealFixture,
+        fantasyRosterToUpdate.draft ? 0 : fantasyRosterToUpdate.contract,
+        league,
+        fantasyRosterToUpdate.fantasyTeam as IFantasyTeam,
+        fantasyRosterToUpdate
+      );
 
       const values = ctx.request.body;
       const { fantasyTeam, status, draft, contract, yearContract } = values;
@@ -146,6 +183,23 @@ fantasyRosterRouter.patch(
       await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
+
+      // history (buy)
+      let operation = "";
+      if (isPreseason) {
+          operation = fantasyRoster.draft ? "DRAFT" : "AUCTION_BUY";
+      } else {
+        operation = "BUY";
+      }
+      await writeHistory(
+        operation,
+        nextRealFixture,
+        fantasyRoster.draft ? 0 : -fantasyRosterToUpdate.contract,
+        league,
+        fantasyRoster.fantasyTeam as IFantasyTeam,
+        fantasyRoster
+      );
+
       ctx.body = fantasyRoster;
       const switchOffNotifications =
         process.env.SWITCH_OFF_NOTIFICATIONS === "true";
@@ -176,6 +230,22 @@ fantasyRosterRouter.patch(
       if (fantasyRosterToUpdate == null) {
         ctx.throw(404, "Giocatore non trovato");
       }
+      await fantasyRosterToUpdate.populate("roster").execPopulate();
+      await (fantasyRosterToUpdate.roster as IRoster)
+        .populate("player")
+        .execPopulate();
+      await fantasyRosterToUpdate.populate("fantasyTeam").execPopulate();
+
+      // history (trade out)
+      const nextRealFixture: IRealFixture = await league.nextRealFixture();
+      await writeHistory(
+        "TRADE_OUT",
+        nextRealFixture,
+        0,
+        league,
+        fantasyRosterToUpdate.fantasyTeam as IFantasyTeam,
+        fantasyRosterToUpdate
+      );
 
       const values = ctx.request.body;
       const { fantasyTeam } = values;
@@ -189,6 +259,17 @@ fantasyRosterRouter.patch(
       await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
+
+      // history (trade in)
+      await writeHistory(
+        "TRADE_IN",
+        nextRealFixture,
+        0,
+        league,
+        fantasyRoster.fantasyTeam as IFantasyTeam,
+        fantasyRoster
+      );
+
       ctx.body = fantasyRoster;
     } catch (error) {
       console.log(error);
@@ -222,6 +303,18 @@ fantasyRosterRouter.delete(
       await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
+
+      // history (release)
+      const nextRealFixture: IRealFixture = await league.nextRealFixture();
+      await writeHistory(
+        "RELEASE",
+        nextRealFixture,
+        fantasyRoster.contract ? halfDownRound(fantasyRoster.contract, 2) : 0,
+        league,
+        fantasyRoster.fantasyTeam as IFantasyTeam,
+        fantasyRoster
+      );
+
       ctx.body = fantasyRoster;
       const switchOffNotifications =
         process.env.SWITCH_OFF_NOTIFICATIONS === "true";
@@ -260,6 +353,19 @@ fantasyRosterRouter.delete(
       await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
+
+      // history (remove)
+      const nextRealFixture: IRealFixture = await league.nextRealFixture();
+      const operation = (await league.isPreseason()) ? "AUCTION_REMOVE" : "REMOVE";
+      await writeHistory(
+        operation,
+        nextRealFixture,
+        fantasyRoster.draft ? 0 : fantasyRoster.contract,
+        league,
+        fantasyRoster.fantasyTeam as IFantasyTeam,
+        fantasyRoster
+      );
+
       ctx.body = fantasyRoster;
       const switchOffNotifications =
         process.env.SWITCH_OFF_NOTIFICATIONS === "true";

@@ -80,6 +80,8 @@ const schema = new Schema<ILineup>({
   },
 }, {
   timestamps: true,
+  toObject: { virtuals: true },
+  toJSON: { virtuals: true },
 });
 
 schema.statics.getLineupByFantasyTeamAndFixture =
