@@ -2,11 +2,11 @@ import * as Koa from "koa";
 import * as Router from "koa-router";
 import { ObjectId } from "mongodb";
 import { FantasyTeam, IFantasyTeam } from "../schemas/fantasy-team";
-import { FantasyTeamHistory } from "../schemas/fantasy-team-history";
 import { ILeague, League } from "../schemas/league";
 import { IRealFixture } from "../schemas/real-fixture";
 import { IUser } from "../schemas/user";
 import { admin, auth, parseToken } from "../util/auth";
+import { writeHistory } from "../util/history";
 import { tenant } from "../util/tenant";
 
 const fantasyTeamRouter: Router = new Router<IFantasyTeam>();
@@ -116,7 +116,7 @@ fantasyTeamRouter.patch(
       if (fantasyTeamToUpdate == null) {
         ctx.throw(404, "Fantasquadra non trovata");
       }
-      const oldOutgo = fantasyTeamToUpdate.outgo;
+      const { outgo, initialBalance, balancePenalty } = fantasyTeamToUpdate;
       fantasyTeamToUpdate.set(updatedFantasyTeam);
       const fantasyTeam = await fantasyTeamToUpdate.save();
       await fantasyTeam.populate("owners").execPopulate();
@@ -144,14 +144,17 @@ fantasyTeamRouter.patch(
         .execPopulate();
 
       // history
-      const fth = {
-        fantasyTeam: fantasyTeam,
-        balance: oldOutgo - fantasyTeam.outgo,
-        operation: 'UPDATE_BALANCE',
-        realFixture: nextRealFixture,
+      const balance =
+        (fantasyTeam.initialBalance - initialBalance) +
+        (outgo - fantasyTeam.outgo) +
+        (balancePenalty - fantasyTeam.balancePenalty);
+      await writeHistory(
+        "UPDATE_BALANCE",
+        nextRealFixture,
+        balance,
         league,
-      };
-      await FantasyTeamHistory.create(fth);
+        fantasyTeam
+      );
 
       ctx.body = fantasyTeam;
     } catch (error) {

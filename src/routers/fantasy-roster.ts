@@ -1,17 +1,13 @@
 import * as Koa from "koa";
 import * as Router from "koa-router";
 import { FantasyRoster, IFantasyRoster } from "../schemas/fantasy-roster";
-import {
-  FantasyRosterHistory,
-  IFantasyRosterHistory,
-} from "../schemas/fantasy-roster-history";
 import { IFantasyTeam } from "../schemas/fantasy-team";
 import { ILeague, League } from "../schemas/league";
-import { IPlayer } from "../schemas/player";
 import { IRealFixture } from "../schemas/real-fixture";
 import { IRoster, Roster } from "../schemas/roster";
 import { auth, parseToken } from "../util/auth";
 import { halfDownRound } from "../util/functions";
+import { writeHistory } from "../util/history";
 import { notifyTransaction } from "../util/push-notification";
 import { tenant } from "../util/tenant";
 
@@ -96,20 +92,21 @@ fantasyRosterRouter.post(
       await fantasyRoster.populate("realFixture").execPopulate();
 
       // history
-      const frh = {
-        name: ((fantasyRoster.roster as IRoster).player as IPlayer).name,
-        fantasyTeam: fantasyRoster.fantasyTeam,
-        status: fantasyRoster.status,
-        draft: fantasyRoster.draft,
-        contract: fantasyRoster.contract,
-        yearContract: fantasyRoster.yearContract,
-        role: ((fantasyRoster.roster as IRoster).player as IPlayer).role,
-        operation: "BUY",
-        balance: -fantasyRoster.contract,
-        realFixture: nextRealFixture,
+      let operation = "";
+      const isPreseason = await league.isPreseason();
+      if (isPreseason) {
+          operation = fantasyRoster.draft ? "DRAFT" : "AUCTION_BUY";
+      } else {
+        operation = "BUY";
+      }
+      await writeHistory(
+        operation,
+        nextRealFixture,
+        fantasyRoster.draft ? 0 : -fantasyRoster.contract,
         league,
-      };
-      await FantasyRosterHistory.create(frh);
+        fantasyRoster.fantasyTeam as IFantasyTeam,
+        fantasyRoster
+      );
 
       ctx.body = fantasyRoster;
       ctx.status = 201;
@@ -149,23 +146,16 @@ fantasyRosterRouter.patch(
       await remove(fantasyRosterToUpdate);
 
       // history (remove)
+      const isPreseason = await league.isPreseason();
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
-      const frh1 = {
-        name: ((fantasyRosterToUpdate.roster as IRoster).player as IPlayer)
-          .name,
-        fantasyTeam: fantasyRosterToUpdate.fantasyTeam,
-        status: fantasyRosterToUpdate.status,
-        draft: fantasyRosterToUpdate.draft,
-        contract: fantasyRosterToUpdate.contract,
-        yearContract: fantasyRosterToUpdate.yearContract,
-        role: ((fantasyRosterToUpdate.roster as IRoster).player as IPlayer)
-          .role,
-        operation: "REMOVE",
-        balance: fantasyRosterToUpdate.contract,
-        realFixture: nextRealFixture,
+      await writeHistory(
+        isPreseason ? "AUCTION_REMOVE" : "REMOVE",
+        nextRealFixture,
+        fantasyRosterToUpdate.draft ? 0 : fantasyRosterToUpdate.contract,
         league,
-      };
-      await FantasyRosterHistory.create(frh1);
+        fantasyRosterToUpdate.fantasyTeam as IFantasyTeam,
+        fantasyRosterToUpdate
+      );
 
       const values = ctx.request.body;
       const { fantasyTeam, status, draft, contract, yearContract } = values;
@@ -194,21 +184,21 @@ fantasyRosterRouter.patch(
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
 
-      // history (remove)
-      const frh2 = {
-        name: ((fantasyRoster.roster as IRoster).player as IPlayer).name,
-        fantasyTeam: fantasyRoster.fantasyTeam,
-        status: fantasyRoster.status,
-        draft: fantasyRoster.draft,
-        contract: fantasyRoster.contract,
-        yearContract: fantasyRoster.yearContract,
-        role: ((fantasyRoster.roster as IRoster).player as IPlayer).role,
-        operation: "BUY",
-        balance: -fantasyRosterToUpdate.contract,
-        realFixture: nextRealFixture,
+      // history (buy)
+      let operation = "";
+      if (isPreseason) {
+          operation = fantasyRoster.draft ? "DRAFT" : "AUCTION_BUY";
+      } else {
+        operation = "BUY";
+      }
+      await writeHistory(
+        operation,
+        nextRealFixture,
+        fantasyRoster.draft ? 0 : -fantasyRosterToUpdate.contract,
         league,
-      };
-      await FantasyRosterHistory.create(frh2);
+        fantasyRoster.fantasyTeam as IFantasyTeam,
+        fantasyRoster
+      );
 
       ctx.body = fantasyRoster;
       const switchOffNotifications =
@@ -248,22 +238,14 @@ fantasyRosterRouter.patch(
 
       // history (trade out)
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
-      const frh1 = {
-        name: ((fantasyRosterToUpdate.roster as IRoster).player as IPlayer)
-          .name,
-        fantasyTeam: fantasyRosterToUpdate.fantasyTeam,
-        status: fantasyRosterToUpdate.status,
-        draft: fantasyRosterToUpdate.draft,
-        contract: fantasyRosterToUpdate.contract,
-        yearContract: fantasyRosterToUpdate.yearContract,
-        role: ((fantasyRosterToUpdate.roster as IRoster).player as IPlayer)
-          .role,
-        operation: "TRADE_OUT",
-        balance: 0,
-        realFixture: nextRealFixture,
+      await writeHistory(
+        "TRADE_OUT",
+        nextRealFixture,
+        0,
         league,
-      };
-      await FantasyRosterHistory.create(frh1);
+        fantasyRosterToUpdate.fantasyTeam as IFantasyTeam,
+        fantasyRosterToUpdate
+      );
 
       const values = ctx.request.body;
       const { fantasyTeam } = values;
@@ -279,20 +261,14 @@ fantasyRosterRouter.patch(
       await fantasyRoster.populate("realFixture").execPopulate();
 
       // history (trade in)
-      const frh2 = {
-        name: ((fantasyRoster.roster as IRoster).player as IPlayer).name,
-        fantasyTeam: fantasyRoster.fantasyTeam,
-        status: fantasyRoster.status,
-        draft: fantasyRoster.draft,
-        contract: fantasyRoster.contract,
-        yearContract: fantasyRoster.yearContract,
-        role: ((fantasyRoster.roster as IRoster).player as IPlayer).role,
-        operation: "TRADE_IN",
-        balance: 0,
-        realFixture: nextRealFixture,
+      await writeHistory(
+        "TRADE_IN",
+        nextRealFixture,
+        0,
         league,
-      };
-      await FantasyRosterHistory.create(frh2);
+        fantasyRoster.fantasyTeam as IFantasyTeam,
+        fantasyRoster
+      );
 
       ctx.body = fantasyRoster;
     } catch (error) {
@@ -328,22 +304,16 @@ fantasyRosterRouter.delete(
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
 
-      // history
+      // history (release)
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
-      const frh = {
-        name: ((fantasyRoster.roster as IRoster).player as IPlayer).name,
-        fantasyTeam: fantasyRoster.fantasyTeam,
-        status: fantasyRoster.status,
-        draft: fantasyRoster.draft,
-        contract: fantasyRoster.contract,
-        yearContract: fantasyRoster.yearContract,
-        role: ((fantasyRoster.roster as IRoster).player as IPlayer).role,
-        operation: "RELEASE",
-        balance: fantasyRoster.contract ? halfDownRound(fantasyRoster.contract, 2) : 0,
-        realFixture: nextRealFixture,
+      await writeHistory(
+        "RELEASE",
+        nextRealFixture,
+        fantasyRoster.contract ? halfDownRound(fantasyRoster.contract, 2) : 0,
         league,
-      };
-      await FantasyRosterHistory.create(frh);
+        fantasyRoster.fantasyTeam as IFantasyTeam,
+        fantasyRoster
+      );
 
       ctx.body = fantasyRoster;
       const switchOffNotifications =
@@ -384,22 +354,17 @@ fantasyRosterRouter.delete(
       await fantasyRoster.populate("fantasyTeam").execPopulate();
       await fantasyRoster.populate("realFixture").execPopulate();
 
-      // history
+      // history (remove)
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
-      const frh = {
-        name: ((fantasyRoster.roster as IRoster).player as IPlayer).name,
-        fantasyTeam: fantasyRoster.fantasyTeam,
-        status: fantasyRoster.status,
-        draft: fantasyRoster.draft,
-        contract: fantasyRoster.contract,
-        yearContract: fantasyRoster.yearContract,
-        role: ((fantasyRoster.roster as IRoster).player as IPlayer).role,
-        operation: "REMOVE",
-        balance: fantasyRoster.contract ? fantasyRoster.contract : 0,
-        realFixture: nextRealFixture,
+      const operation = (await league.isPreseason()) ? "AUCTION_REMOVE" : "REMOVE";
+      await writeHistory(
+        operation,
+        nextRealFixture,
+        fantasyRoster.draft ? 0 : fantasyRoster.contract,
         league,
-      };
-      await FantasyRosterHistory.create(frh);
+        fantasyRoster.fantasyTeam as IFantasyTeam,
+        fantasyRoster
+      );
 
       ctx.body = fantasyRoster;
       const switchOffNotifications =
