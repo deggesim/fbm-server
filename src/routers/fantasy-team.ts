@@ -120,9 +120,9 @@ fantasyTeamRouter.patch(
       fantasyTeamToUpdate.set(updatedFantasyTeam);
       const fantasyTeam = await fantasyTeamToUpdate.save();
       await fantasyTeam.populate("owners").execPopulate();
-      // add league to owners
       const owners = fantasyTeam.owners as IUser[];
       for (const user of owners) {
+        // add league to owners
         const managedLeagues = user.leagues as ObjectId[];
         if (
           managedLeagues.find((managedLeague) =>
@@ -133,7 +133,20 @@ fantasyTeamRouter.patch(
           user.leagues.push(league);
           await user.save();
         }
+
+        // add fantasyTeam to owners
+        const managedFantasyTeams = user.fantasyTeams as ObjectId[];
+        if (
+          managedFantasyTeams.find((managedFantasyTeam) =>
+            managedFantasyTeam.equals(fantasyTeam._id)
+          ) == null
+        ) {
+          // add fantasyTeam to owner
+          user.fantasyTeams.push(fantasyTeam);
+          await user.save();
+        }
       }
+
       await fantasyTeam
         .populate({
           path: "fantasyRosters",
@@ -145,7 +158,8 @@ fantasyTeamRouter.patch(
 
       // history
       const balance =
-        (fantasyTeam.initialBalance - initialBalance) +
+        fantasyTeam.initialBalance -
+        initialBalance +
         (outgo - fantasyTeam.outgo) +
         (balancePenalty - fantasyTeam.balancePenalty);
       await writeHistory(
@@ -156,7 +170,7 @@ fantasyTeamRouter.patch(
         fantasyTeam
       );
 
-      ctx.body = fantasyTeam;
+      ctx.body = { _id: fantasyTeam._id };
     } catch (error) {
       console.log(error);
       ctx.throw(400, error.message);
