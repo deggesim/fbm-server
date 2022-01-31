@@ -68,18 +68,20 @@ lineupRouter.get(
         ctx.params.fantasyTeamId,
         ctx.params.fixtureId
       );
-      for (const player of lineup) {
-        await player
-          .populate("fantasyRoster")
-          .populate("fixture")
-          .populate("performance")
-          .execPopulate();
-        await player.populate("fantasyRoster.roster").execPopulate();
-        await player
-          .populate("fantasyRoster.roster.player")
-          .populate("fantasyRoster.roster.team")
-          .execPopulate();
-      }
+      await Lineup.populate(lineup, [
+        {
+          path: "fantasyRoster",
+          populate: [
+            { path: "fantasyTeam" },
+            {
+              path: "roster",
+              populate: [{ path: "player" }, { path: "team" }],
+            },
+          ],
+        },
+        { path: "fixture" },
+        { path: "performance" },
+      ]);
       ctx.body = lineup;
     } catch (error) {
       console.log(error);
