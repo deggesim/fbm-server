@@ -244,6 +244,25 @@ leagueRouter.patch(
   }
 );
 
+// fix
+leagueRouter.patch(
+  "/leagues/:id/fix-parameters",
+  async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+      const league = (await League.findById(ctx.params.id)) as ILeague;
+      if (!league) {
+        ctx.throw(404, "Lega non trovata");
+      }
+      league.parameters.push({ parameter: "MAX_STR", value: 6 });
+      await league.save();
+      ctx.body = await league;
+    } catch (error) {
+      console.log(error);
+      ctx.throw(400, error.message);
+    }
+  }
+);
+
 leagueRouter.delete(
   "/leagues/:id",
   auth(),

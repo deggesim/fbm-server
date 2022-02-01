@@ -115,6 +115,7 @@ const schema = new Schema<ILeague>(
           enum: [
             "DRAFT",
             "MAX_CONTRACTS",
+            "MAX_STR",
             "MAX_EXT_OPT_345",
             "MAX_PLAYERS_IN_ROSTER",
             "MAX_STRANGERS_OPT_55",
