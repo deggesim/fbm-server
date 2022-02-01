@@ -96,10 +96,10 @@ schema.virtual('fantasyRosters', {
 schema.statics.insertFantasyTeams = async (fantasyTeams: IFantasyTeam[], league: ILeague) => {
   try {
     const ret: IFantasyTeam[] = [];
-    for await (const newFantasyTeam of fantasyTeams) {
+    for (const newFantasyTeam of fantasyTeams) {
       newFantasyTeam.league = league._id;
       const fantasyTeam = await FantasyTeam.create(newFantasyTeam);
-      for await (const owner of fantasyTeam.owners) {
+      for (const owner of fantasyTeam.owners) {
         const user: IUser = await User.findById(owner) as IUser;
         // aggiunta lega all'utente (se non già presente)
         const leagueFound = user.leagues.find((managedLeague) => managedLeague.equals(league._id));

@@ -1,10 +1,11 @@
 import * as Koa from "koa";
 import * as Router from "koa-router";
+import { isNil } from "lodash";
 import { ObjectId } from "mongodb";
 import { FantasyTeam, IFantasyTeam } from "../schemas/fantasy-team";
 import { ILeague, League } from "../schemas/league";
 import { IRealFixture } from "../schemas/real-fixture";
-import { IUser } from "../schemas/user";
+import { IUser, User } from "../schemas/user";
 import { admin, auth, parseToken } from "../util/auth";
 import { writeHistory } from "../util/history";
 import { tenant } from "../util/tenant";
@@ -119,32 +120,53 @@ fantasyTeamRouter.patch(
       const { outgo, initialBalance, balancePenalty } = fantasyTeamToUpdate;
       fantasyTeamToUpdate.set(updatedFantasyTeam);
       const fantasyTeam = await fantasyTeamToUpdate.save();
-      await fantasyTeam.populate("owners").execPopulate();
-      const owners = fantasyTeam.owners as IUser[];
-      for (const user of owners) {
-        // add league to owners
-        const managedLeagues = user.leagues as ObjectId[];
-        if (
-          managedLeagues.find((managedLeague) =>
-            managedLeague.equals(league._id)
-          ) == null
-        ) {
-          // add league to owner
-          user.leagues.push(league);
-          await user.save();
-        }
+      const allUsers = await User.find();
+      await User.populate(allUsers, [
+        {
+          path: "fantasyTeams",
+          populate: { path: "league" },
+        },
+        { path: "leagues" },
+      ]);
 
-        // add fantasyTeam to owners
-        const managedFantasyTeams = user.fantasyTeams as ObjectId[];
-        if (
-          managedFantasyTeams.find((managedFantasyTeam) =>
-            managedFantasyTeam.equals(fantasyTeam._id)
-          ) == null
-        ) {
-          // add fantasyTeam to owner
-          user.fantasyTeams.push(fantasyTeam);
+      // remove fantasyTeam and league from users
+      for (const user of allUsers) {
+        const indexOfFantasyTeam = (user.fantasyTeams as IFantasyTeam[])
+          .map((ft) => ft._id)
+          .indexOf(fantasyTeamToUpdate._id);
+        if (!isNil(indexOfFantasyTeam) && indexOfFantasyTeam >= 0) {
+          user.fantasyTeams.splice(indexOfFantasyTeam, 1);
+          const foundOtherFantasyTeamSameLeague = (
+            user.fantasyTeams as IFantasyTeam[]
+          ).find((ft) => (ft.league as ILeague)._id.equals(league._id));
+          if (!foundOtherFantasyTeamSameLeague) {
+            const indexOfLeague = (user.leagues as ILeague[])
+              .map((l) => l._id)
+              .indexOf(league._id);
+            if (!isNil(indexOfLeague) && indexOfLeague >= 0) {
+              user.leagues.splice(indexOfLeague, 1);
+            }
+          }
           await user.save();
         }
+      }
+
+      await FantasyTeam.populate(fantasyTeam, {
+        path: "owners",
+        populate: { path: "leagues" },
+      });
+      const owners = fantasyTeam.owners as IUser[];
+
+      // add fantasyTeam and league to owners
+      for (const user of owners) {
+        user.fantasyTeams.push(fantasyTeam);
+        const foundSameLeague = (user.leagues as ILeague[]).find(
+          (l) => l._id.equals(league._id)
+        );
+        if (!foundSameLeague) {
+          user.leagues.push(league);
+        }
+        await user.save();
       }
 
       await fantasyTeam
