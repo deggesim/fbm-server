@@ -16,9 +16,7 @@ roundRouter.get(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
       const rounds: IRound[] = await Round.find({ league: ctx.get("league") });
-      for (const round of rounds) {
-        await populateAll(round);
-      }
+      await populateAll(rounds);
       ctx.body = [...rounds].sort((r1, r2) => {
         if (!r1 || !r2) {
           return 0;
@@ -27,7 +25,7 @@ roundRouter.get(
             if (r1.competition.id !== r2.competition.id) {
               return r1.competition.id.localeCompare(r2.competition.id);
             } else {
-              return r1.id.localeCompare(r2.id)
+              return r1.id.localeCompare(r2.id);
             }
           } else {
             return 0;
@@ -65,7 +63,7 @@ roundRouter.post(
       } else {
         await round.buildPlayoffMatchList();
       }
-      await populateAll(round);
+      await populateAll([round]);
       ctx.body = round;
     } catch (error) {
       console.log(error);
@@ -74,19 +72,19 @@ roundRouter.post(
   }
 );
 
-async function populateAll(round: IRound) {
-  await round.populate("competition");
-  await round.populate("fantasyTeams").populate("fixtures").execPopulate();
-  await FantasyTeam.populate(round.fantasyTeams, { path: "owners" });
-  for (const fixture of round.fixtures as IFixture[]) {
-    for (let i = 0; i < fixture.matches.length; i++) {
-      await fixture.populate(`matches.${i}`).execPopulate();
-      await fixture
-        .populate(`matches.${i}.homeTeam`)
-        .populate(`matches.${i}.awayTeam`)
-        .execPopulate();
-    }
-  }
+async function populateAll(rounds: IRound[]) {
+  await Round.populate(rounds, [
+    { path: "competition" },
+    { path: "fantasyTeams" },
+    {
+      path: "fixtures",
+      populate: {
+        path: "matches",
+        populate: [{ path: "homeTeam" }, { path: "awayTeam" }],
+      },
+    },
+    { path: "owners" },
+  ]);
 }
 
 export default roundRouter;
