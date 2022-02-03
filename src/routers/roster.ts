@@ -38,6 +38,14 @@ rosterRouter.get(
         .unwind("$player");
       aggregate
         .lookup({
+          from: "realfixtures",
+          localField: "realFixture",
+          foreignField: "_id",
+          as: "realFixture",
+        })
+        .unwind("$realFixture");
+      aggregate
+        .lookup({
           from: "teams",
           localField: "team",
           foreignField: "_id",
@@ -107,6 +115,14 @@ rosterRouter.get(
           as: "player",
         })
         .unwind("$player");
+      aggregate
+        .lookup({
+          from: "realfixtures",
+          localField: "realFixture",
+          foreignField: "_id",
+          as: "realFixture",
+        })
+        .unwind("$realFixture");
       aggregate
         .lookup({
           from: "teams",
