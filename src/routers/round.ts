@@ -75,7 +75,7 @@ roundRouter.post(
 async function populateAll(rounds: IRound[]) {
   await Round.populate(rounds, [
     { path: "competition" },
-    { path: "fantasyTeams" },
+    { path: "fantasyTeams", populate: { path: "owners" } },
     {
       path: "fixtures",
       populate: {
@@ -83,7 +83,6 @@ async function populateAll(rounds: IRound[]) {
         populate: [{ path: "homeTeam" }, { path: "awayTeam" }],
       },
     },
-    { path: "owners" },
   ]);
 }
 
