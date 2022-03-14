@@ -178,7 +178,9 @@ matchRouter.post(
       const resultDivisor = league.parameters.find(
         (param) => param.parameter === "RESULT_DIVISOR"
       )?.value as number;
-      match.homeFactor = round.homeFactor != null ? round.homeFactor : 0;
+      if (match.homeFactor == null) {
+        match.homeFactor = round.homeFactor != null ? round.homeFactor : 0;
+      }
       await computeResult(
         match,
         homeLinup,
