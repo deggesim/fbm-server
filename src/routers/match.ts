@@ -178,6 +178,8 @@ matchRouter.post(
       const resultDivisor = league.parameters.find(
         (param) => param.parameter === "RESULT_DIVISOR"
       )?.value as number;
+
+      match.homeFactor = ctx.query.homeFactor ? ctx.query.homeFactor : null;
       if (match.homeFactor == null) {
         match.homeFactor = round.homeFactor != null ? round.homeFactor : 0;
       }
@@ -271,7 +273,6 @@ matchRouter.patch(
           ctx.get("league"),
           fixture._id
         );
-        // progress l6eague
         await league.progress(realFixture);
         // push notification
         const switchOffNotifications =
