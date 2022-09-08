@@ -13,8 +13,8 @@
   },
   "homepage": "https://github.com/deggesim/fbm-server#readme",
   "engines": {
-    "node": "12.x",
-    "npm": "6.x"
+    "node": "16.x",
+    "npm": "8.x"
   },
   "main": "index.js",
   "scripts": {
