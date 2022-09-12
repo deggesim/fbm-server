@@ -5,7 +5,7 @@ export const playersUploadLineError = (players: IPlayer[]): number => {
     const player = players[index];
     if (!player.name || !player.nationality || !player.role) {
       // file error
-      return index;
+      return index + 1;
     }
   }
 
