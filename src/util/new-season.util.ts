@@ -133,8 +133,7 @@ export const createPlayoff = async (
       league: league._id,
     };
     if (
-      league.playoffFormat.toString() ===
-      PlayoffFormat.QF2_SQ4_SF5_F5.toString()
+      league.playoffFormat["key"] === PlayoffFormat.QF2_SQ4_SF5_F5.toString()
     ) {
       // i quarti di finali sono giocati da 4 squadre
       round.teams = 4;
