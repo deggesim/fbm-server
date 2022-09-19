@@ -63,6 +63,42 @@ fantasyTeamRouter.get(
 );
 
 fantasyTeamRouter.get(
+  "/fantasy-teams/draft-board",
+  auth(),
+  parseToken(),
+  tenant(),
+  async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+      const league: ILeague = (await League.findById(
+        ctx.get("league")
+      )) as ILeague;
+      const nextRealFixture: IRealFixture = await league.nextRealFixture();
+      const conditions: any = { league: league._id };
+      const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find(conditions);
+
+      await FantasyTeam.populate(fantasyTeams, [
+        { path: "owners" },
+        {
+          path: "fantasyRosters",
+          match: {
+            realFixture: nextRealFixture._id,
+          },
+          populate: {
+            path: "roster",
+            populate: { path: "player" },
+          },
+        },
+      ]);
+
+      ctx.body = fantasyTeams;
+    } catch (error) {
+      console.log(error);
+      ctx.throw(500, error.message);
+    }
+  }
+);
+
+fantasyTeamRouter.get(
   "/fantasy-teams/:id",
   auth(),
   parseToken(),
@@ -160,8 +196,8 @@ fantasyTeamRouter.patch(
       // add fantasyTeam and league to owners
       for (const user of owners) {
         user.fantasyTeams.push(fantasyTeam);
-        const foundSameLeague = (user.leagues as ILeague[]).find(
-          (l) => l._id.equals(league._id)
+        const foundSameLeague = (user.leagues as ILeague[]).find((l) =>
+          l._id.equals(league._id)
         );
         if (!foundSameLeague) {
           user.leagues.push(league);
