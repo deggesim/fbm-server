@@ -1,7 +1,6 @@
 import * as Koa from "koa";
 import * as Router from "koa-router";
 import { isNil } from "lodash";
-import { ObjectId } from "mongodb";
 import { FantasyTeam, IFantasyTeam } from "../schemas/fantasy-team";
 import { ILeague, League } from "../schemas/league";
 import { IRealFixture } from "../schemas/real-fixture";
