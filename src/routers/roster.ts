@@ -186,24 +186,32 @@ rosterRouter.post(
       newRoster.league = league._id;
       const rosterRealFixture = newRoster.realFixture as IRealFixture;
       const realFixtures = await RealFixture.find({ league: league._id }).sort({
-        _id: 1,
+        order: 1,
       });
       const indexOfRosterRealFixture = realFixtures.findIndex((rf) =>
         rf._id.equals(rosterRealFixture._id)
       );
-      // add roster to all prepared real fixtures
-      const preparedRealFixtures = realFixtures
-        .slice(indexOfRosterRealFixture)
-        .filter((rf) => rf.prepared);
+
       const rosters: IRoster[] = [];
-      for (const realFixture of preparedRealFixtures) {
-        newRoster.realFixture = realFixture;
+      const preSeason = await league.isPreseason();
+      if (preSeason) {
+        // add roster only to first realFixture
         const roster: IRoster = await Roster.create(newRoster);
-        await roster.populate("player").execPopulate();
-        await roster.populate("team").execPopulate();
-        await roster.populate("realFixture").execPopulate();
-        await roster.populate("fantasyRoster").execPopulate();
         rosters.push(roster);
+      } else {
+        // add roster to all prepared real fixtures
+        const preparedRealFixtures = realFixtures
+          .slice(indexOfRosterRealFixture)
+          .filter((rf) => rf.prepared);
+        for (const realFixture of preparedRealFixtures) {
+          newRoster.realFixture = realFixture;
+          const roster: IRoster = await Roster.create(newRoster);
+          await roster.populate("player").execPopulate();
+          await roster.populate("team").execPopulate();
+          await roster.populate("realFixture").execPopulate();
+          await roster.populate("fantasyRoster").execPopulate();
+          rosters.push(roster);
+        }
       }
       // add performances
       const performanceRealFixtures = realFixtures.slice(

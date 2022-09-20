@@ -133,7 +133,7 @@ schema.statics.insertPlayers = async (
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
     const allRealFixtures: IRealFixture[] = await RealFixture.find({
       league: league._id,
-    });
+    }).sort({ order: 1 });
     let index = 1;
     for (const uploadedPlayer of uploadedPlayers) {
       const { name, role, nationality, number, yearBirth, height, weight } =
