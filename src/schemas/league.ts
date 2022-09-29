@@ -251,13 +251,16 @@ schema.methods.nextFixture = async function () {
   await realFixture.populate("fixtures").execPopulate();
   const fixtures = realFixture.fixtures as IFixture[];
   const allCompleted = fixtures.every((fixture) => fixture.completed);
+  let nextFixture = null;
   if (allCompleted) {
-    return [...fixtures].sort((a, b) => b._id - a._id)[0];
+    nextFixture = [...fixtures].sort((a, b) => b._id - a._id)[0];
   } else {
-    return fixtures
+    nextFixture = fixtures
       .filter((fixture) => !fixture.completed)
       .sort((a, b) => a._id - b._id)[0];
   }
+  await nextFixture.populate('round').execPopulate();
+  return nextFixture;
 };
 
 schema.methods.nextRealFixture = async function () {
