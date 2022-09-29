@@ -1,7 +1,5 @@
 import * as Koa from "koa";
 import * as Router from "koa-router";
-import { FantasyTeam } from "../schemas/fantasy-team";
-import { IFixture } from "../schemas/fixture";
 import { IRound, Round } from "../schemas/round";
 import { admin, auth, parseToken } from "../util/auth";
 import { tenant } from "../util/tenant";
@@ -32,6 +30,36 @@ roundRouter.get(
           }
         }
       });
+    } catch (error) {
+      console.log(error);
+      ctx.throw(500, error.message);
+    }
+  }
+);
+
+roundRouter.get(
+  "/rounds/:id",
+  auth(),
+  parseToken(),
+  tenant(),
+  async (ctx: Router.IRouterContext, next: Koa.Next) => {
+    try {
+      const round: IRound = (await Round.findOne({
+        _id: ctx.params.id,
+        league: ctx.get("league"),
+      })) as IRound;
+      await Round.populate(round, [
+        { path: "competition" },
+        { path: "fantasyTeams", populate: { path: "owners" } },
+        {
+          path: "fixtures",
+          populate: {
+            path: "matches",
+            populate: [{ path: "homeTeam" }, { path: "awayTeam" }],
+          },
+        },
+      ]);
+      ctx.body = round;
     } catch (error) {
       console.log(error);
       ctx.throw(500, error.message);
