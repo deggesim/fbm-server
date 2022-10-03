@@ -14,7 +14,7 @@ leagueRouter.get(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      ctx.body = await League.find();
+      ctx.body = await League.find().sort({ name: 1 });
     } catch (error) {
       console.log(error);
       ctx.throw(500, error.message);
