@@ -41,7 +41,9 @@ fantasyTeamRouter.get(
       )) as ILeague;
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const conditions: any = { league: league._id };
-      const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find(conditions);
+      const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find(
+        conditions
+      ).sort({ name: 1 });
       for (const fantasyTeam of fantasyTeams) {
         await fantasyTeam.populate("owners").execPopulate();
         await fantasyTeam
@@ -73,7 +75,9 @@ fantasyTeamRouter.get(
       )) as ILeague;
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const conditions: any = { league: league._id };
-      const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find(conditions);
+      const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find(
+        conditions
+      ).sort({ name: 1 });
 
       await FantasyTeam.populate(fantasyTeams, [
         { path: "owners" },
