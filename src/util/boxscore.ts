@@ -65,21 +65,11 @@ function calcolaBoxScore(ht_match_scores: HTMLCollection): BoxScore[] {
       if (i < length - 2) {
         // solo i giocatori: Squadra e totali li ignoriamo
         if (j == 0) {
-          // colonna Numero COGNOME Nome
-          const nsn = td.textContent
-            ?.replace(/\r?\n|\r/g, "")
-            .trim()
-            .split(" ")
-            .filter((char) => char)
-            .filter((char) => !isNumeric(char)) as string[];
-          // il cognome è tutto maiuscolo.
-          const surnameList = nsn.filter((text) => text === text.toUpperCase());
-          const surname = surnameList.join(" ");
-          const name = nsn
-            .filter((text) => text !== text.toUpperCase())
-            .join(" ")
-            .toUpperCase();
-
+          const surname = td.getElementsByClassName("scores_player_surname")[0]
+            ?.textContent;
+          const name = td
+            .getElementsByClassName("scores_player_name")[0]
+            ?.textContent?.toUpperCase();
           boxScore.name = `${name} ${surname}`;
         } else if (j === 2) {
           boxScore.minutes = Number(td?.textContent);
