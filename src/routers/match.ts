@@ -22,10 +22,14 @@ matchRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      ctx.body = await Match.find({ league: ctx.get("league") });
+      ctx.body = await Match.find({ league: ctx.get("league") }).exec();
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, "Errore imprevisto");
+      }
     }
   }
 );
@@ -40,7 +44,7 @@ matchRouter.get(
       const fixture = (await Fixture.findOne({
         _id: ctx.params.fixtureId,
         league: ctx.get("league"),
-      })) as IFixture;
+      }).exec()) as IFixture;
       for (let i = 0; i < fixture.matches.length; i++) {
         await fixture.populate(`matches.${i}`).execPopulate();
         await fixture
@@ -51,7 +55,11 @@ matchRouter.get(
       ctx.body = fixture.matches;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, "Errore imprevisto");
+      }
     }
   }
 );
@@ -66,7 +74,7 @@ matchRouter.post(
     try {
       const league: ILeague = (await League.findById(
         ctx.get("league")
-      )) as ILeague;
+      ).exec()) as ILeague;
       const newMatch: IMatch = ctx.request.body;
       newMatch.league = league._id;
       ctx.body = await Match.create(newMatch);
@@ -74,7 +82,11 @@ matchRouter.post(
       console.log(ctx.body);
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, "Errore imprevisto");
+      }
     }
   }
 );
@@ -88,11 +100,11 @@ matchRouter.post(
     try {
       const league: ILeague = (await League.findById(
         ctx.get("league")
-      )) as ILeague;
+      ).exec()) as ILeague;
       const match: IMatch = (await Match.findOne({
         _id: ctx.params.id,
         league: ctx.get("league"),
-      })) as IMatch;
+      }).exec()) as IMatch;
       if (match == null) {
         ctx.throw(400, "Match non trovato");
       }
@@ -142,7 +154,7 @@ matchRouter.post(
       const round: IRound = (await Round.findOne({
         _id: ctx.params.roundId,
         league: ctx.get("league"),
-      })) as IRound;
+      }).exec()) as IRound;
       // tie is allowed if round is not of type round robin and has an even number of matches
       const tieAllowed = !round.roundRobin && round.fixtures.length % 2 === 0;
       let previousPerformances: IPerformance[] = [];
@@ -152,17 +164,18 @@ matchRouter.post(
       );
       const allRealFixtures: IRealFixture[] = await RealFixture.find({
         league: ctx.get("league"),
-      }).sort({ order: 1 });
+      })
+        .sort({ order: 1 })
+        .exec();
       const index = allRealFixtures.findIndex((rf) =>
         rf._id.equals(realFixture._id)
       );
       if (index > 0) {
         const previousRealFixture = allRealFixtures[index - 1];
-        await previousRealFixture.populate("performances").execPopulate();
-        previousPerformances = previousRealFixture.get("performances");
-        await Performance.populate(previousPerformances, {
-          path: "realFixture",
-        });
+        previousPerformances = await Performance.find({
+          realFixture: previousRealFixture,
+          league: ctx.get("league"),
+        }).exec();
       }
       const resultWithGrade =
         league.parameters.find(
@@ -196,7 +209,7 @@ matchRouter.post(
       );
       const fixture: IFixture = (await Fixture.findById(
         ctx.params.fixtureId
-      )) as IFixture;
+      ).exec()) as IFixture;
       await fixture.populate("matches").execPopulate();
       const completedMatches = (fixture.matches as IMatch[]).filter(
         (m: IMatch) => m.completed
@@ -220,7 +233,11 @@ matchRouter.post(
       ctx.body = match;
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, "Errore imprevisto");
+      }
     }
   }
 );
@@ -235,11 +252,11 @@ matchRouter.patch(
     try {
       const league: ILeague = (await League.findById(
         ctx.get("league")
-      )) as ILeague;
+      ).exec()) as ILeague;
       const fixture: IFixture = (await Fixture.findOne({
         _id: ctx.params.id,
         league: league._id,
-      })) as IFixture;
+      }).exec()) as IFixture;
       if (fixture == null) {
         ctx.throw(404, "Giornata non trovata");
       }
@@ -250,7 +267,7 @@ matchRouter.patch(
         const matchToUpdate = await Match.findOne({
           _id: updatedMatch._id,
           league: league._id,
-        });
+        }).exec();
         if (matchToUpdate == null) {
           ctx.throw(404, "Match non trovato");
         }
@@ -285,7 +302,11 @@ matchRouter.patch(
       ctx.body = returnedMatches;
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, "Errore imprevisto");
+      }
     }
   }
 );
@@ -300,12 +321,12 @@ matchRouter.patch(
     try {
       const league: ILeague = (await League.findById(
         ctx.get("league")
-      )) as ILeague;
+      ).exec()) as ILeague;
       const updatedMatch: IMatch = ctx.request.body;
       const matchToUpdate: IMatch = (await Match.findOne({
         _id: ctx.params.id,
         league: league._id,
-      })) as IMatch;
+      }).exec()) as IMatch;
       if (matchToUpdate == null) {
         ctx.throw(400, "Match non trovato");
       }
@@ -313,7 +334,11 @@ matchRouter.patch(
       ctx.body = await matchToUpdate.save();
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, "Errore imprevisto");
+      }
     }
   }
 );
@@ -328,18 +353,22 @@ matchRouter.delete(
     try {
       const league: ILeague = (await League.findById(
         ctx.get("league")
-      )) as ILeague;
+      ).exec()) as ILeague;
       const match = (await Match.findOneAndDelete({
         _id: ctx.params.id,
         league: league._id,
-      })) as IMatch;
+      }).exec()) as IMatch;
       if (match == null) {
         ctx.status = 404;
       }
       ctx.body = match;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, "Errore imprevisto");
+      }
     }
   }
 );

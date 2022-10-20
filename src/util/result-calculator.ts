@@ -514,7 +514,7 @@ const grade = (lineup: ILineup[], previousPerformances: IPerformance[]): number 
             // elenco squadre che hanno riposato la giornata precedente.
             const teamsWithNoGamePP = realFixturePP.teamsWithNoGame as ObjectId[];
             // controllo per vedere se il giocatore fa parte di una squadra che non ha giocato il turno precedente
-            const playerTeamHasNoGamePP = teamsWithNoGamePP.find((team) => team.equals(playerTeamId)) != null;
+            const playerTeamHasNoGamePP = teamsWithNoGamePP?.find((team) => team.equals(playerTeamId)) != null;
             if (prevPerf.minutes != null || playerTeamHasNoGamePP) {
               // il giocatore è andato a referto la giornata precedente
               // oppure fa parte di una squadra che ha riposato il turno precedente => voto extra
