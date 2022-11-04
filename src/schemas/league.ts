@@ -284,6 +284,7 @@ schema.methods.nextRealFixture = async function () {
 };
 
 schema.methods.progress = async function (realFixture: IRealFixture) {
+  console.info("[PROGRESS] ------------------------------------ START ------------------------------------");
   console.info("[PROGRESS] ", new Date().toUTCString());
   console.info("[PROGRESS] realFixture", realFixture.id);
   const league = this;
@@ -403,6 +404,7 @@ schema.methods.progress = async function (realFixture: IRealFixture) {
     nextRealFixture.prepared = true;
     await nextRealFixture.save();
     console.info("[PROGRESS] nextRealFixture.save()", nextRealFixture.id);
+    console.info("[PROGRESS] ------------------------------------ STOP ------------------------------------");
   }
 };
 

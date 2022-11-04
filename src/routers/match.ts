@@ -8,6 +8,7 @@ import { IMatch, Match } from "../schemas/match";
 import { IPerformance, Performance } from "../schemas/performance";
 import { IRealFixture, RealFixture } from "../schemas/real-fixture";
 import { IRound, Round } from "../schemas/round";
+import { IUser } from "../schemas/user";
 import { admin, auth, parseToken } from "../util/auth";
 import { notifyFixtureCompleted } from "../util/push-notification";
 import { computeResult } from "../util/result-calculator";
@@ -221,6 +222,8 @@ matchRouter.post(
         // update realFixture with fixture completed
         await realFixture.populate("fixtures").execPopulate();
         // progress league
+        const user: IUser = ctx.state.user;
+        console.info("[PROGRESS] user", user.name);
         await league.progress(realFixture);
         // push notification
         const switchOffNotifications =
@@ -290,6 +293,8 @@ matchRouter.patch(
           ctx.get("league"),
           fixture._id
         );
+        const user: IUser = ctx.state.user;
+        console.info("[PROGRESS] user", user.name);
         await league.progress(realFixture);
         // push notification
         const switchOffNotifications =
