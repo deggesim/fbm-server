@@ -8,10 +8,14 @@ const competitionRouter: Router = new Router<ICompetition>();
 
 competitionRouter.get('/competitions', auth(), parseToken(), tenant(), async (ctx: Router.IRouterContext, next: Koa.Next) => {
   try {
-    ctx.body = await Competition.find({ league: ctx.get('league') });
+    ctx.body = await Competition.find({ league: ctx.get('league') }).exec();
   } catch (error) {
     console.log(error);
-    ctx.throw(500, error.message);
+    if (error instanceof Error) {
+      ctx.throw(500, error.message);
+    } else {
+      ctx.throw(500, 'Si è verificato un errore imprevisto');
+    }
   }
 });
 
