@@ -62,4 +62,11 @@ schema.virtual('round', {
   justOne: true,
 });
 
+schema.virtual('realFixture', {
+  ref: 'RealFixture',
+  localField: '_id',
+  foreignField: 'fixtures',
+  justOne: true,
+});
+
 export const Fixture = model<IFixture, IFixtureModel>('Fixture', schema);

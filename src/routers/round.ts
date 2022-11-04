@@ -53,10 +53,13 @@ roundRouter.get(
         { path: "fantasyTeams", populate: { path: "owners" } },
         {
           path: "fixtures",
-          populate: {
-            path: "matches",
-            populate: [{ path: "homeTeam" }, { path: "awayTeam" }],
-          },
+          populate: [
+            {
+              path: "matches",
+              populate: [{ path: "homeTeam" }, { path: "awayTeam" }],
+            },
+            { path: "realFixture" },
+          ],
         },
       ]);
       ctx.body = round;
