@@ -2,9 +2,9 @@ import * as Koa from "koa";
 import * as Router from "koa-router";
 import { FantasyRoster, IFantasyRoster } from "../schemas/fantasy-roster";
 import { IFantasyTeam } from "../schemas/fantasy-team";
-import { ILeague, League } from "../schemas/league";
+import { ILeague } from "../schemas/league";
 import { ILineup, Lineup } from "../schemas/lineup";
-import { IPerformance, Performance } from "../schemas/performance";
+import { Performance } from "../schemas/performance";
 import { IPlayer, Player } from "../schemas/player";
 import { IRealFixture, RealFixture } from "../schemas/real-fixture";
 import { IRoster } from "../schemas/roster";
@@ -176,10 +176,10 @@ lineupRouter.patch(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
       const updatedLineup: ILineup = ctx.request.body;
-      const lineupToUpdate: ILineup = (await Lineup.findOne({
+      const lineupToUpdate = await Lineup.findOne({
         _id: ctx.params.id,
         league: ctx.get("league"),
-      })) as ILineup;
+      }).exec();
       if (lineupToUpdate == null) {
         ctx.throw(404, "Giornata non trovata");
       }
@@ -203,15 +203,16 @@ lineupRouter.delete(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const lineup = (await Lineup.findOneAndDelete({
-        _id: ctx.params.id,
+      const lineup = await Lineup.findOneAndDelete({
+        id: ctx.params.id,
         league: ctx.get("league"),
-      })) as ILineup;
+      }).exec();
       console.log(lineup);
       if (lineup == null) {
         ctx.status = 404;
+      } else {
+        ctx.body = lineup;
       }
-      ctx.body = lineup;
     } catch (error) {
       console.log(error);
       if (error instanceof Error) {
@@ -247,13 +248,13 @@ lineupRouter.delete(
         league: leagueId,
         fantasyTeam: ctx.params.fantasyTeamId,
         realFixture: realFixture._id,
-      });
+      }).exec();
       const fantasyRostersId: string[] = fantasyRosters.map((fr) => fr._id);
       await Lineup.deleteMany({
         league: leagueId,
         fixture: ctx.params.fixtureId,
         fantasyRoster: { $in: fantasyRostersId },
-      });
+      }).exec();
       ctx.status = 204;
     } catch (error) {
       console.log(error);

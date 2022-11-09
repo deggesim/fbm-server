@@ -2,7 +2,7 @@ import * as Koa from "koa";
 import * as Router from "koa-router";
 import { ObjectId } from "mongodb";
 import { Fixture, IFixture } from "../schemas/fixture";
-import { ILeague, League } from "../schemas/league";
+import { ILeague } from "../schemas/league";
 import { ILineup, Lineup } from "../schemas/lineup";
 import { IMatch, Match } from "../schemas/match";
 import { IPerformance, Performance } from "../schemas/performance";
@@ -10,6 +10,8 @@ import { IRealFixture, RealFixture } from "../schemas/real-fixture";
 import { IRound, Round } from "../schemas/round";
 import { IUser } from "../schemas/user";
 import { admin, auth, parseToken } from "../util/auth";
+import { getLeague } from "../util/functions";
+import { erroreImprevisto } from "../util/globals";
 import { notifyFixtureCompleted } from "../util/push-notification";
 import { computeResult } from "../util/result-calculator";
 import { tenant } from "../util/tenant";
@@ -29,7 +31,7 @@ matchRouter.get(
       if (error instanceof Error) {
         ctx.throw(500, error.message);
       } else {
-        ctx.throw(500, "Errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }
@@ -59,7 +61,7 @@ matchRouter.get(
       if (error instanceof Error) {
         ctx.throw(500, error.message);
       } else {
-        ctx.throw(500, "Errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }
@@ -73,9 +75,7 @@ matchRouter.post(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      ).exec()) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       const newMatch: IMatch = ctx.request.body;
       newMatch.league = league._id;
       ctx.body = await Match.create(newMatch);
@@ -86,7 +86,7 @@ matchRouter.post(
       if (error instanceof Error) {
         ctx.throw(400, error.message);
       } else {
-        ctx.throw(500, "Errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }
@@ -99,9 +99,7 @@ matchRouter.post(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      ).exec()) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       const match: IMatch = (await Match.findOne({
         _id: ctx.params.id,
         league: ctx.get("league"),
@@ -239,7 +237,7 @@ matchRouter.post(
       if (error instanceof Error) {
         ctx.throw(400, error.message);
       } else {
-        ctx.throw(500, "Errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }
@@ -253,9 +251,7 @@ matchRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      ).exec()) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       const fixture: IFixture = (await Fixture.findOne({
         _id: ctx.params.id,
         league: league._id,
@@ -310,7 +306,7 @@ matchRouter.patch(
       if (error instanceof Error) {
         ctx.throw(400, error.message);
       } else {
-        ctx.throw(500, "Errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }
@@ -324,9 +320,7 @@ matchRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      ).exec()) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       const updatedMatch: IMatch = ctx.request.body;
       const matchToUpdate: IMatch = (await Match.findOne({
         _id: ctx.params.id,
@@ -342,7 +336,7 @@ matchRouter.patch(
       if (error instanceof Error) {
         ctx.throw(400, error.message);
       } else {
-        ctx.throw(500, "Errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }
@@ -356,9 +350,7 @@ matchRouter.delete(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      ).exec()) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       const match = (await Match.findOneAndDelete({
         _id: ctx.params.id,
         league: league._id,
@@ -372,7 +364,7 @@ matchRouter.delete(
       if (error instanceof Error) {
         ctx.throw(500, error.message);
       } else {
-        ctx.throw(500, "Errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }

@@ -1,11 +1,12 @@
 import * as Koa from "koa";
 import * as Router from "koa-router";
-import { ILeague, League } from "../schemas/league";
+import { ILeague } from "../schemas/league";
 import { IPlayer, Player } from "../schemas/player";
 import { admin, auth, parseToken } from "../util/auth";
+import { getLeague } from "../util/functions";
 import { parseCsv } from "../util/parse";
-import { tenant } from "../util/tenant";
 import { playersUploadLineError } from "../util/player-upload-validation";
+import { tenant } from "../util/tenant";
 
 const playerRouter: Router = new Router<IPlayer>();
 
@@ -16,10 +17,14 @@ playerRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      ctx.body = await Player.find({ league: ctx.get("league") });
+      ctx.body = await Player.find({ league: ctx.get("league") }).exec();
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, "Si è verificato un errore imprevisto");
+      }
     }
   }
 );
@@ -32,9 +37,7 @@ playerRouter.post(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       const newPlayer: IPlayer = ctx.request.body;
       newPlayer.league = league._id;
       ctx.body = await Player.create(newPlayer);
@@ -42,7 +45,11 @@ playerRouter.post(
       console.log(ctx.body);
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, "Si è verificato un errore imprevisto");
+      }
     }
   }
 );
@@ -77,15 +84,17 @@ playerRouter.post(
         );
       }
       const playersLength = players.length;
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       Player.insertPlayers(players, league);
       ctx.body = playersLength;
       ctx.status = 201;
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, "Si è verificato un errore imprevisto");
+      }
     }
   }
 );
@@ -98,13 +107,15 @@ playerRouter.get(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       ctx.body = Player.uploadPercentage(league.id);
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, "Si è verificato un errore imprevisto");
+      }
     }
   }
 );
@@ -117,14 +128,12 @@ playerRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       const updatedPlayer: IPlayer = ctx.request.body;
-      const playerToUpdate: IPlayer = (await Player.findOne({
+      const playerToUpdate = await Player.findOne({
         _id: ctx.params.id,
         league: league._id,
-      })) as IPlayer;
+      }).exec();
       if (playerToUpdate == null) {
         ctx.throw(400, "Giocatore non trovato");
       }
@@ -132,7 +141,11 @@ playerRouter.patch(
       ctx.body = await playerToUpdate.save();
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, "Si è verificato un errore imprevisto");
+      }
     }
   }
 );
@@ -145,20 +158,23 @@ playerRouter.delete(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
-      const player = (await Player.findOneAndDelete({
+      const league: ILeague = await getLeague(ctx);
+      const player = await Player.findOneAndDelete({
         _id: ctx.params.id,
         league: league._id,
-      })) as IPlayer;
+      }).exec();
       if (player == null) {
         ctx.status = 404;
+      } else {
+        ctx.body = player;
       }
-      ctx.body = player;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, "Si è verificato un errore imprevisto");
+      }
     }
   }
 );
