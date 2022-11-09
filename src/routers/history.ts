@@ -2,6 +2,7 @@ import * as Koa from "koa";
 import * as Router from "koa-router";
 import { History, IHistory } from "../schemas/history";
 import { auth, parseToken } from "../util/auth";
+import { erroreImprevisto } from "../util/globals";
 import { tenant } from "../util/tenant";
 
 const historyRouter: Router = new Router<IHistory>();
@@ -16,7 +17,7 @@ historyRouter.get(
       const historyList: IHistory[] = await History.find({
         league: ctx.get("league"),
         fantasyTeam: ctx.params.id,
-      });
+      }).exec();
       for (const history of historyList) {
         await history.populate("fantasyTeam").execPopulate();
         await history.populate("realFixture").execPopulate();
@@ -25,7 +26,11 @@ historyRouter.get(
       ctx.body = historyList;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
