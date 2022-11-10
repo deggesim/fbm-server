@@ -18,21 +18,7 @@ roundRouter.get(
         league: ctx.get("league"),
       }).exec();
       await populateAll(rounds);
-      ctx.body = [...rounds].sort((r1, r2) => {
-        if (!r1 || !r2) {
-          return 0;
-        } else {
-          if (r1.competition && r2.competition) {
-            if (r1.competition.id !== r2.competition.id) {
-              return r1.competition.id.localeCompare(r2.competition.id);
-            } else {
-              return r1.id.localeCompare(r2.id);
-            }
-          } else {
-            return 0;
-          }
-        }
-      });
+      ctx.body = sortRounds(rounds);
     } catch (error) {
       console.log(error);
       if (error instanceof Error) {
@@ -122,7 +108,25 @@ roundRouter.post(
   }
 );
 
-async function populateAll(rounds: IRound[]) {
+const sortRounds = (rounds: IRound[]) => {
+  return [...rounds].sort((r1, r2) => {
+    if (!r1 || !r2) {
+      return 0;
+    } else {
+      if (r1.competition && r2.competition) {
+        if (r1.competition.id !== r2.competition.id) {
+          return r1.competition.id.localeCompare(r2.competition.id);
+        } else {
+          return r1.id.localeCompare(r2.id);
+        }
+      } else {
+        return 0;
+      }
+    }
+  });
+};
+
+const populateAll = async (rounds: IRound[]) => {
   await Round.populate(rounds, [
     { path: "competition" },
     { path: "fantasyTeams", populate: { path: "owners" } },
@@ -134,6 +138,6 @@ async function populateAll(rounds: IRound[]) {
       },
     },
   ]);
-}
+};
 
 export default roundRouter;

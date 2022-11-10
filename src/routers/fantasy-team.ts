@@ -170,7 +170,7 @@ fantasyTeamRouter.patch(
         const { outgo, initialBalance, balancePenalty } = fantasyTeamToUpdate;
         fantasyTeamToUpdate.set(updatedFantasyTeam);
         const fantasyTeam = await fantasyTeamToUpdate.save();
-        const allUsers = await User.find();
+        const allUsers = await User.find().exec();
         await User.populate(allUsers, [
           {
             path: "fantasyTeams",
@@ -180,26 +180,7 @@ fantasyTeamRouter.patch(
         ]);
 
         // remove fantasyTeam and league from users
-        for (const user of allUsers) {
-          const indexOfFantasyTeam = (user.fantasyTeams as IFantasyTeam[])
-            .map((ft) => ft._id)
-            .indexOf(fantasyTeamToUpdate._id);
-          if (!isNil(indexOfFantasyTeam) && indexOfFantasyTeam >= 0) {
-            user.fantasyTeams.splice(indexOfFantasyTeam, 1);
-            const foundOtherFantasyTeamSameLeague = (
-              user.fantasyTeams as IFantasyTeam[]
-            ).find((ft) => (ft.league as ILeague)._id.equals(league._id));
-            if (!foundOtherFantasyTeamSameLeague) {
-              const indexOfLeague = (user.leagues as ILeague[])
-                .map((l) => l._id)
-                .indexOf(league._id);
-              if (!isNil(indexOfLeague) && indexOfLeague >= 0) {
-                user.leagues.splice(indexOfLeague, 1);
-              }
-            }
-            await user.save();
-          }
-        }
+        await removeFromUsers(allUsers, fantasyTeamToUpdate, league);
 
         await FantasyTeam.populate(fantasyTeam, {
           path: "owners",
@@ -282,4 +263,32 @@ fantasyTeamRouter.delete(
     }
   }
 );
+
+const removeFromUsers = async (
+  allUsers: IUser[],
+  fantasyTeamToUpdate: IFantasyTeam,
+  league: ILeague
+) => {
+  for (const user of allUsers) {
+    const indexOfFantasyTeam = (user.fantasyTeams as IFantasyTeam[])
+      .map((ft) => ft._id)
+      .indexOf(fantasyTeamToUpdate._id);
+    if (!isNil(indexOfFantasyTeam) && indexOfFantasyTeam >= 0) {
+      user.fantasyTeams.splice(indexOfFantasyTeam, 1);
+      const foundOtherFantasyTeamSameLeague = (
+        user.fantasyTeams as IFantasyTeam[]
+      ).find((ft) => (ft.league as ILeague)._id.equals(league._id));
+      if (!foundOtherFantasyTeamSameLeague) {
+        const indexOfLeague = (user.leagues as ILeague[])
+          .map((l) => l._id)
+          .indexOf(league._id);
+        if (!isNil(indexOfLeague) && indexOfLeague >= 0) {
+          user.leagues.splice(indexOfLeague, 1);
+        }
+      }
+      await user.save();
+    }
+  }
+};
+
 export default fantasyTeamRouter;

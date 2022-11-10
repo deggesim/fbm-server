@@ -105,28 +105,7 @@ schema.statics.insertFantasyTeams = async (
 ) => {
   try {
     const ret: IFantasyTeam[] = [];
-    for (const newFantasyTeam of fantasyTeams) {
-      newFantasyTeam.league = league._id;
-      const fantasyTeam = await FantasyTeam.create(newFantasyTeam);
-      for (const owner of fantasyTeam.owners) {
-        const user = await User.findById(owner).exec();
-        if (user == null) {
-          throw new Error("Utente non trovato");
-        }
-        // aggiunta lega all'utente (se non già presente)
-        const leagueFound = user.leagues.find((managedLeague) =>
-          managedLeague.equals(league._id)
-        );
-        if (!leagueFound) {
-          user.leagues.push(league._id);
-        }
-        // aggiunta squadra all'utente
-        user.fantasyTeams.push(fantasyTeam._id);
-        // salvataggio
-        await user.save();
-      }
-      ret.push(fantasyTeam);
-    }
+    await saveFantasyTeams(fantasyTeams, league, ret);
 
     // aggiunta della lega ai superAdmin (se non già presente)
     const superAdmins: IUser[] = await User.allSuperAdmins();
@@ -148,6 +127,35 @@ schema.statics.insertFantasyTeams = async (
     } else {
       return Promise.reject(erroreImprevisto);
     }
+  }
+};
+
+const saveFantasyTeams = async (
+  fantasyTeams: IFantasyTeam[],
+  league: ILeague,
+  ret: IFantasyTeam[]
+) => {
+  for (const newFantasyTeam of fantasyTeams) {
+    newFantasyTeam.league = league._id;
+    const fantasyTeam = await FantasyTeam.create(newFantasyTeam);
+    for (const owner of fantasyTeam.owners) {
+      const user = await User.findById(owner).exec();
+      if (user == null) {
+        throw new Error("Utente non trovato");
+      }
+      // aggiunta lega all'utente (se non già presente)
+      const leagueFound = user.leagues.find((managedLeague) =>
+        managedLeague.equals(league._id)
+      );
+      if (!leagueFound) {
+        user.leagues.push(league._id);
+      }
+      // aggiunta squadra all'utente
+      user.fantasyTeams.push(fantasyTeam._id);
+      // salvataggio
+      await user.save();
+    }
+    ret.push(fantasyTeam);
   }
 };
 

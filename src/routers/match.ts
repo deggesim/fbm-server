@@ -108,13 +108,13 @@ matchRouter.post(
         ctx.throw(400, "Match non trovato");
       }
 
-      const homeLinup: ILineup[] =
+      const homeLineup: ILineup[] =
         await Lineup.getLineupByFantasyTeamAndFixture(
           league._id,
           match.homeTeam as ObjectId,
           ctx.params.fixtureId
         );
-      for (const player of homeLinup) {
+      for (const player of homeLineup) {
         await player
           .populate("fantasyRoster")
           .populate("fixture")
@@ -129,13 +129,13 @@ matchRouter.post(
           .populate("fantasyRoster.roster.team")
           .execPopulate();
       }
-      const awayLinup: ILineup[] =
+      const awayLineup: ILineup[] =
         await Lineup.getLineupByFantasyTeamAndFixture(
           league._id,
           match.awayTeam as ObjectId,
           ctx.params.fixtureId
         );
-      for (const player of awayLinup) {
+      for (const player of awayLineup) {
         await player
           .populate("fantasyRoster")
           .populate("fixture")
@@ -155,7 +155,7 @@ matchRouter.post(
         league: ctx.get("league"),
       }).exec()) as IRound;
       // tie is allowed if round is not of type round robin and has an even number of matches
-      const tieAllowed = !round.roundRobin && round.fixtures.length % 2 === 0;
+      const drawAllowed = !round.roundRobin && round.fixtures.length % 2 === 0;
       let previousPerformances: IPerformance[] = [];
       const realFixture: IRealFixture = await RealFixture.findByFixture(
         ctx.get("league"),
@@ -195,17 +195,17 @@ matchRouter.post(
       if (match.homeFactor == null) {
         match.homeFactor = round.homeFactor != null ? round.homeFactor : 0;
       }
-      await computeResult(
+      await computeResult({
         match,
-        homeLinup,
-        awayLinup,
-        tieAllowed,
+        homeLineup,
+        awayLineup,
+        drawAllowed,
         previousPerformances,
         resultWithGrade,
         resultWithOer,
         resultWithPlusMinus,
-        resultDivisor
-      );
+        resultDivisor,
+      });
       const fixture: IFixture = (await Fixture.findById(
         ctx.params.fixtureId
       ).exec()) as IFixture;

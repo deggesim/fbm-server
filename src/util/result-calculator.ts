@@ -1,26 +1,39 @@
-import { ObjectId } from 'mongodb';
-import { IFantasyRoster } from '../schemas/fantasy-roster';
-import { ILineup } from '../schemas/lineup';
-import { IMatch } from '../schemas/match';
-import { IPerformance } from '../schemas/performance';
-import { IPlayer } from '../schemas/player';
-import { IRealFixture } from '../schemas/real-fixture';
-import { IRoster } from '../schemas/roster';
-import { ITeam } from '../schemas/team';
-import { halfDownRound } from './functions';
-import { AppConfig, isEmpty } from './globals';
+import { ObjectId } from "mongodb";
+import { IFantasyRoster } from "../schemas/fantasy-roster";
+import { ILineup } from "../schemas/lineup";
+import { IMatch } from "../schemas/match";
+import { IPerformance } from "../schemas/performance";
+import { IPlayer } from "../schemas/player";
+import { IRealFixture } from "../schemas/real-fixture";
+import { IRoster } from "../schemas/roster";
+import { ITeam } from "../schemas/team";
+import { halfDownRound } from "./functions";
+import { AppConfig, isEmpty } from "./globals";
 
-export const computeResult = async (
-  match: IMatch,
-  homeLineup: ILineup[],
-  awayLineup: ILineup[],
-  drawAllowed: boolean,
-  previousPerformances: IPerformance[],
-  resultWithGrade: boolean,
-  resultWithOer: boolean,
-  resultWithPlusMinus: boolean,
-  resultDivisor: number) => {
+export interface Result {
+  match: IMatch;
+  homeLineup: ILineup[];
+  awayLineup: ILineup[];
+  drawAllowed: boolean;
+  previousPerformances: IPerformance[];
+  resultWithGrade: boolean;
+  resultWithOer: boolean;
+  resultWithPlusMinus: boolean;
+  resultDivisor: number;
+}
 
+export const computeResult = async (result: Result) => {
+  const {
+    match,
+    homeLineup,
+    awayLineup,
+    drawAllowed,
+    previousPerformances,
+    resultWithGrade,
+    resultWithOer,
+    resultWithPlusMinus,
+    resultDivisor,
+  } = result;
   const minutesNeeded: Map<number, number> = new Map<number, number>();
 
   // HOME
@@ -44,7 +57,12 @@ export const computeResult = async (
     homeGrade = grade(homeLineup, previousPerformances);
   }
 
-  homePartialResult = homeRanking + (match.homeFactor as number) + homeOer + homePlusMinus + homeGrade;
+  homePartialResult =
+    homeRanking +
+    (match.homeFactor as number) +
+    homeOer +
+    homePlusMinus +
+    homeGrade;
   let homeFinalResult = getFinalResult(homePartialResult, resultDivisor);
 
   // AWAY
@@ -73,7 +91,7 @@ export const computeResult = async (
 
   // OT
   let overtime = 0;
-  if ((!drawAllowed && (homeFinalResult === awayFinalResult))) {
+  if (!drawAllowed && homeFinalResult === awayFinalResult) {
     // overtime needed. Store both match reports to show partial performances
     match.homeRanking40Min = homeRanking;
     match.awayRanking40Min = awayRanking;
@@ -85,9 +103,8 @@ export const computeResult = async (
     for (const player of awayLineup) {
       player.matchReport.realRanking40Min = player.matchReport.realRanking;
     }
-
   }
-  while (!drawAllowed && (homeFinalResult === awayFinalResult)) {
+  while (!drawAllowed && homeFinalResult === awayFinalResult) {
     overtime++;
     // il pareggio non è consentito, calcolo i supplementari
 
@@ -99,7 +116,8 @@ export const computeResult = async (
     otBenchMinutes(homeLineup, minutesNeeded);
     homeRanking = ranking(homeLineup);
     if (resultWithGrade) {
-      homePartialResult = homeRanking + (match.homeFactor as number) + homeGrade;
+      homePartialResult =
+        homeRanking + (match.homeFactor as number) + homeGrade;
     } else {
       homePartialResult = homeRanking + (match.homeFactor as number);
     }
@@ -115,7 +133,10 @@ export const computeResult = async (
     }
     awayFinalResult = getFinalResult(awayPartialResult, resultDivisor);
 
-    if (prevHomeFinalResult === homeFinalResult && prevAwayFinalResult === awayFinalResult) {
+    if (
+      prevHomeFinalResult === homeFinalResult &&
+      prevAwayFinalResult === awayFinalResult
+    ) {
       // usiamo il tie-breaker
       const homeWinner = otTieBreak(homeLineup, awayLineup);
       if (homeWinner) {
@@ -151,7 +172,10 @@ export const computeResult = async (
 // FUNZIONI DI SUPPORTO
 // **************************************************************************************************************************************************
 
-const startersMinutes = (lineup: ILineup[], minutesNeeded: Map<number, number>) => {
+const startersMinutes = (
+  lineup: ILineup[],
+  minutesNeeded: Map<number, number>
+) => {
   const starters = lineup.slice(0, AppConfig.Starters);
 
   // itero solo i titolari
@@ -175,7 +199,10 @@ const startersMinutes = (lineup: ILineup[], minutesNeeded: Map<number, number>) 
   }
 };
 
-const benchMinutes = (lineup: ILineup[], minutesNeeded: Map<number, number>) => {
+const benchMinutes = (
+  lineup: ILineup[],
+  minutesNeeded: Map<number, number>
+) => {
   const matchReportSize = lineup.length;
   const benchPlayers = lineup.slice(AppConfig.Starters, matchReportSize);
   if (!completedWithStarters(minutesNeeded)) {
@@ -254,7 +281,10 @@ const benchMinutes = (lineup: ILineup[], minutesNeeded: Map<number, number>) => 
   }
 };
 
-const otStartersMinutes = (lineup: ILineup[], minutesNeeded: Map<number, number>) => {
+const otStartersMinutes = (
+  lineup: ILineup[],
+  minutesNeeded: Map<number, number>
+) => {
   minutesNeeded.clear();
   const starters = lineup.slice(0, AppConfig.Starters);
   // itero solo i titolari
@@ -287,8 +317,10 @@ const otStartersMinutes = (lineup: ILineup[], minutesNeeded: Map<number, number>
   }
 };
 
-const otBenchMinutes = (lineup: ILineup[], minutesNeeded: Map<number, number>) => {
-
+const otBenchMinutes = (
+  lineup: ILineup[],
+  minutesNeeded: Map<number, number>
+) => {
   // mappa per memorizzare i "minuti OT" di ciascun panchianro
   const otMinutesUsed: Map<number, number> = new Map<number, number>();
   if (!completedWithStarters(minutesNeeded)) {
@@ -352,7 +384,8 @@ const otBenchMinutes = (lineup: ILineup[], minutesNeeded: Map<number, number>) =
               if (minutesNeededValue > 0) {
                 // il ruolo ha bisogno di altri minuti
                 // "minuti OT" rimanenti
-                const benchPlayerOtMinutesRemaining = 5 - benchPlayerOtMinutesUsed;
+                const benchPlayerOtMinutesRemaining =
+                  5 - benchPlayerOtMinutesUsed;
                 if (benchPlayerOtMinutesRemaining > 0) {
                   // il giocatore pu� ancora contribuire all'OT
                   if (minutesRemaining <= benchPlayerOtMinutesRemaining) {
@@ -411,15 +444,21 @@ const ranking = (lineup: ILineup[]): number => {
   for (const player of lineup) {
     const performance = player.performance as IPerformance;
     // pondero la valutazione sui 40 minuti
-    const playerRanking = (performance?.ranking != null ? performance.ranking : 0);
-    const playerMinutes = (performance?.minutes != null ? performance.minutes : 0);
+    const playerRanking =
+      performance?.ranking != null ? performance.ranking : 0;
+    const playerMinutes =
+      performance?.minutes != null ? performance.minutes : 0;
     const playerMinutesUsed = player.matchReport.minutesUsed;
     if (playerMinutesUsed > 0) {
       let roundedRanking = 0;
       if (playerMinutes === playerMinutesUsed) {
         roundedRanking = playerRanking;
       } else {
-        roundedRanking = computeRoundedRanking(playerMinutesUsed, playerRanking, playerMinutes);
+        roundedRanking = computeRoundedRanking(
+          playerMinutesUsed,
+          playerRanking,
+          playerMinutes
+        );
       }
       player.matchReport.realRanking = roundedRanking;
       ret += roundedRanking;
@@ -434,7 +473,7 @@ const oer = (lineup: ILineup[]): number => {
   let ret = 0;
   for (const player of lineup) {
     const performance = player.performance as IPerformance;
-    const playerOer = (performance?.oer != null ? performance.oer : 0);
+    const playerOer = performance?.oer != null ? performance.oer : 0;
     ret += playerOer;
   }
   return ret;
@@ -444,16 +483,23 @@ const plusMinus = (lineup: ILineup[]): number => {
   let ret = 0;
   for (const player of lineup) {
     const performance = player.performance as IPerformance;
-    const playerPlusMinus = (performance?.plusMinus != null ? performance.plusMinus : 0);
+    const playerPlusMinus =
+      performance?.plusMinus != null ? performance.plusMinus : 0;
     ret += playerPlusMinus;
   }
   return ret;
 };
 
-const grade = (lineup: ILineup[], previousPerformances: IPerformance[]): number => {
+const grade = (
+  lineup: ILineup[],
+  previousPerformances: IPerformance[]
+): number => {
   let ret = 0;
   let lowestGrade = 10;
-  const upperBound = AppConfig.NecessaryGrades > lineup.length ? lineup.length : AppConfig.NecessaryGrades;
+  const upperBound =
+    AppConfig.NecessaryGrades > lineup.length
+      ? lineup.length
+      : AppConfig.NecessaryGrades;
 
   // memorizzo le performance oltre la decima per eventuali giocatori non a referto che devono prendere comunque il voto
   const extraPlayers: ILineup[] = [];
@@ -466,7 +512,8 @@ const grade = (lineup: ILineup[], previousPerformances: IPerformance[]): number 
   // prima ciclata per determinare il voto più basso
   for (let i = 0; i < upperBound; i++) {
     const player = lineup[i];
-    const performance = player != null ? player.performance as IPerformance : null;
+    const performance =
+      player != null ? (player.performance as IPerformance) : null;
     if (performance != null && performance.grade != null) {
       if (lowestGrade > performance.grade) {
         lowestGrade = performance.grade;
@@ -477,15 +524,22 @@ const grade = (lineup: ILineup[], previousPerformances: IPerformance[]): number 
   for (let i = 0; i < upperBound; i++) {
     const player = lineup[i];
     if (player != null) {
-      const playerId = (((player.fantasyRoster as IFantasyRoster).roster as IRoster).player as IPlayer)._id;
+      const playerId = (
+        ((player.fantasyRoster as IFantasyRoster).roster as IRoster)
+          .player as IPlayer
+      )._id;
       const performance = player.performance as IPerformance;
 
       const realFixture = performance.realFixture as IRealFixture;
-      const playerTeamId = (((player.fantasyRoster as IFantasyRoster).roster as IRoster).team as ITeam)._id;
+      const playerTeamId = (
+        ((player.fantasyRoster as IFantasyRoster).roster as IRoster)
+          .team as ITeam
+      )._id;
       // elenco squadre che hanno riposato
       const teamsWithNoGame = realFixture.teamsWithNoGame as ObjectId[];
       // controllo per vedere se il giocatore fa parte di una squadra che non ha giocato
-      const playerTeamHasNoGame = teamsWithNoGame.find((team) => team.equals(playerTeamId)) != null;
+      const playerTeamHasNoGame =
+        teamsWithNoGame.find((team) => team.equals(playerTeamId)) != null;
 
       if (performance.grade != null || playerTeamHasNoGame) {
         // il giocatore ha preso un voto oppure fa parte di una squadra che non ha giocato
@@ -509,12 +563,17 @@ const grade = (lineup: ILineup[], previousPerformances: IPerformance[]): number 
           // il giocatore non è andato a referto: controlliamo la performance precedente
           if (previousPerformances != null && !isEmpty(previousPerformances)) {
             // esiste una giornata precedente => cerchiamo la performance del giocatore nella giornata precedente
-            const prevPerf = previousPerformances.find((perf: IPerformance) => (perf.player as IPlayer).equals(playerId)) as IPerformance;
+            const prevPerf = previousPerformances.find((perf: IPerformance) =>
+              (perf.player as IPlayer).equals(playerId)
+            ) as IPerformance;
             const realFixturePP = prevPerf.realFixture as IRealFixture;
             // elenco squadre che hanno riposato la giornata precedente.
-            const teamsWithNoGamePP = realFixturePP.teamsWithNoGame as ObjectId[];
+            const teamsWithNoGamePP =
+              realFixturePP.teamsWithNoGame as ObjectId[];
             // controllo per vedere se il giocatore fa parte di una squadra che non ha giocato il turno precedente
-            const playerTeamHasNoGamePP = teamsWithNoGamePP?.find((team) => team.equals(playerTeamId)) != null;
+            const playerTeamHasNoGamePP =
+              teamsWithNoGamePP?.find((team) => team.equals(playerTeamId)) !=
+              null;
             if (prevPerf.minutes != null || playerTeamHasNoGamePP) {
               // il giocatore è andato a referto la giornata precedente
               // oppure fa parte di una squadra che ha riposato il turno precedente => voto extra
@@ -575,12 +634,18 @@ const grade = (lineup: ILineup[], previousPerformances: IPerformance[]): number 
   return ret;
 };
 
-const getFinalResult = (partialResult: number, resultDivisor: number): number => {
+const getFinalResult = (
+  partialResult: number,
+  resultDivisor: number
+): number => {
   // arrotondamento n,5 = n + 1
   return Math.round(partialResult / resultDivisor);
 };
 
-const otTieBreak = (homeMatchReport: ILineup[], awayMatchReport: ILineup[]): boolean => {
+const otTieBreak = (
+  homeMatchReport: ILineup[],
+  awayMatchReport: ILineup[]
+): boolean => {
   const ret = false;
 
   // tie-breaker per gli OT senza risultato: ritorna true per la vittoria casalinga, false per quella in trasferta
@@ -637,23 +702,33 @@ const otTieBreak = (homeMatchReport: ILineup[], awayMatchReport: ILineup[]): boo
   // Caso 3
   let homeMinPlayersInFormationRanking = 0;
   // somma delle valutazioni dei primi dieci giocatori della squadra di casa
-  const homeMinPlayersInLineup = homeMatchReport.slice(0, AppConfig.MinPlayersInLineup);
+  const homeMinPlayersInLineup = homeMatchReport.slice(
+    0,
+    AppConfig.MinPlayersInLineup
+  );
   for (const player of homeMinPlayersInLineup) {
     const performance = player.performance as IPerformance;
-    homeMinPlayersInFormationRanking += performance.ranking != null ? performance.ranking : 0;
+    homeMinPlayersInFormationRanking +=
+      performance.ranking != null ? performance.ranking : 0;
   }
 
   let awayMinPlayersInFormationRanking = 0;
   // somma delle valutazioni dei primi dieci giocatori della squadra in trasferta
-  const awayMinPlayersInLineup = awayMatchReport.slice(0, AppConfig.MinPlayersInLineup);
+  const awayMinPlayersInLineup = awayMatchReport.slice(
+    0,
+    AppConfig.MinPlayersInLineup
+  );
   for (const player of awayMinPlayersInLineup) {
     const performance = player.performance as IPerformance;
-    awayMinPlayersInFormationRanking += performance.ranking != null ? performance.ranking : 0;
+    awayMinPlayersInFormationRanking +=
+      performance.ranking != null ? performance.ranking : 0;
   }
 
   if (homeMinPlayersInFormationRanking > awayMinPlayersInFormationRanking) {
     return true;
-  } else if (homeMinPlayersInFormationRanking < awayMinPlayersInFormationRanking) {
+  } else if (
+    homeMinPlayersInFormationRanking < awayMinPlayersInFormationRanking
+  ) {
     return false;
   } else {
     // il vincitore viene stabilito dal caso
@@ -664,7 +739,7 @@ const otTieBreak = (homeMatchReport: ILineup[], awayMatchReport: ILineup[]): boo
 const completedWithStarters = (minutesNeeded: Map<number, number>): boolean => {
   let reportCompleted = true;
   for (let i = 1; i <= AppConfig.Starters; i++) {
-    if (minutesNeeded.get(i) as number > 0) {
+    if ((minutesNeeded.get(i) as number) > 0) {
       reportCompleted = false;
       break;
     }
@@ -672,10 +747,13 @@ const completedWithStarters = (minutesNeeded: Map<number, number>): boolean => {
   return reportCompleted;
 };
 
-const completedWithBench = (benchPlayers: ILineup[], minutesNeeded: Map<number, number>): boolean => {
+const completedWithBench = (
+  benchPlayers: ILineup[],
+  minutesNeeded: Map<number, number>
+): boolean => {
   let reportCompleted = true;
   for (let i = 1; i <= AppConfig.PlayersInBench; i++) {
-    if (minutesNeeded.get(i) as number > 0) {
+    if ((minutesNeeded.get(i) as number) > 0) {
       reportCompleted = false;
       break;
     }
@@ -697,15 +775,21 @@ const completedWithBench = (benchPlayers: ILineup[], minutesNeeded: Map<number, 
   }
 };
 
-const computeRoundedRanking = (totalMinutes: number, rank: number, minutes: number): number => {
+const computeRoundedRanking = (
+  totalMinutes: number,
+  rank: number,
+  minutes: number
+): number => {
   const multiply = totalMinutes * rank;
   // arrotondamento n,5 = n
   return halfDownRound(multiply, minutes);
 };
 
 const benchOrderComparator = (a: ILineup, b: ILineup): number => {
-  const o1BenchOrder = a.benchOrder != null ? a.benchOrder : Number.MAX_SAFE_INTEGER;
-  const o2BenchOrder = b.benchOrder != null ? b.benchOrder : Number.MAX_SAFE_INTEGER;
+  const o1BenchOrder =
+    a.benchOrder != null ? a.benchOrder : Number.MAX_SAFE_INTEGER;
+  const o2BenchOrder =
+    b.benchOrder != null ? b.benchOrder : Number.MAX_SAFE_INTEGER;
   if (o1BenchOrder === o2BenchOrder) {
     return a.spot - b.spot;
   } else {
