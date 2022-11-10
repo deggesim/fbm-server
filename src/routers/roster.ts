@@ -1,13 +1,13 @@
 import * as Koa from "koa";
 import * as Router from "koa-router";
-import { PaginateResult } from "mongoose";
-import { ILeague, League } from "../schemas/league";
+import { ILeague } from "../schemas/league";
 import { Performance } from "../schemas/performance";
 import { IPlayer, Player } from "../schemas/player";
 import { IRealFixture, RealFixture } from "../schemas/real-fixture";
 import { IRoster, Roster } from "../schemas/roster";
 import { admin, auth, parseToken } from "../util/auth";
-import { buildParameters } from "../util/roster";
+import { getLeague } from "../util/functions";
+import { erroreImprevisto } from "../util/globals";
 import { tenant } from "../util/tenant";
 
 const rosterRouter: Router = new Router<IRoster>();
@@ -19,9 +19,7 @@ rosterRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const { page, limit, filter } = ctx.query;
 
@@ -86,7 +84,11 @@ rosterRouter.get(
       ctx.body = result.docs;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -98,9 +100,7 @@ rosterRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const { page, limit, filter } = ctx.query;
 
@@ -166,7 +166,11 @@ rosterRouter.get(
       ctx.body = result.docs;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -179,15 +183,15 @@ rosterRouter.post(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       const newRoster: IRoster = ctx.request.body;
       newRoster.league = league._id;
       const rosterRealFixture = newRoster.realFixture as IRealFixture;
-      const realFixtures = await RealFixture.find({ league: league._id }).sort({
-        order: 1,
-      });
+      const realFixtures = await RealFixture.find({ league: league._id })
+        .sort({
+          order: 1,
+        })
+        .exec();
       const indexOfRosterRealFixture = realFixtures.findIndex((rf) =>
         rf._id.equals(rosterRealFixture._id)
       );
@@ -220,7 +224,7 @@ rosterRouter.post(
       for (const realFixture of performanceRealFixtures) {
         await Performance.create({
           player: (newRoster.player as IPlayer)._id,
-          realFixture: (realFixture as IRealFixture)._id,
+          realFixture: realFixture._id,
           league: league._id,
         });
       }
@@ -228,7 +232,11 @@ rosterRouter.post(
       ctx.status = 201;
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -241,14 +249,12 @@ rosterRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       const updatedRoster: IRoster = ctx.request.body;
-      const rosterToUpdate: IRoster = (await Roster.findOne({
+      const rosterToUpdate = await Roster.findOne({
         _id: ctx.params.id,
         league: league._id,
-      })) as IRoster;
+      }).exec();
       if (rosterToUpdate == null) {
         ctx.throw(400, "Giocatore non trovato");
       }
@@ -261,7 +267,11 @@ rosterRouter.patch(
       ctx.body = roster;
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -274,20 +284,19 @@ rosterRouter.delete(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
-
-      const roster = (await Roster.findOne({
+      const league: ILeague = await getLeague(ctx);
+      const roster = await Roster.findOne({
         _id: ctx.params.id,
         league: league._id,
-      })) as IRoster;
+      }).exec();
 
       if (roster == null) {
         ctx.status = 404;
       } else {
         let canDelete = true;
-        const rostersRelated = await Roster.find({ player: roster.player });
+        const rostersRelated = await Roster.find({
+          player: roster.player,
+        }).exec();
         for (const rosterRelated of rostersRelated) {
           if (rosterRelated.fantasyRoster) {
             canDelete = false;
@@ -300,9 +309,9 @@ rosterRouter.delete(
           const rostersId: string[] = rostersRelated.map(
             (rosterRelated: IRoster) => rosterRelated._id
           );
-          await Roster.deleteMany({ _id: { $in: rostersId } });
-          await Performance.deleteMany({ player: roster.player });
-          await Player.deleteOne({ _id: roster.player });
+          await Roster.deleteMany({ _id: { $in: rostersId } }).exec();
+          await Performance.deleteMany({ player: roster.player }).exec();
+          await Player.deleteOne({ _id: roster.player }).exec();
           ctx.body = roster;
         } else {
           ctx.status = 400;
@@ -311,7 +320,11 @@ rosterRouter.delete(
       }
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );

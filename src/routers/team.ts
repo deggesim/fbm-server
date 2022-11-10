@@ -1,8 +1,10 @@
 import * as Koa from "koa";
 import * as Router from "koa-router";
-import { ILeague, League } from "../schemas/league";
+import { ILeague } from "../schemas/league";
 import { ITeam, Team } from "../schemas/team";
 import { admin, auth, parseToken } from "../util/auth";
+import { getLeague } from "../util/functions";
+import { erroreImprevisto } from "../util/globals";
 import { parseCsv } from "../util/parse";
 import { tenant } from "../util/tenant";
 
@@ -15,12 +17,18 @@ teamRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      ctx.body = await Team.find({ league: ctx.get("league") }).sort({
-        name: 1,
-      });
+      ctx.body = await Team.find({ league: ctx.get("league") })
+        .sort({
+          name: 1,
+        })
+        .exec();
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -35,14 +43,19 @@ teamRouter.get(
       const team = await Team.findOne({
         _id: ctx.params.id,
         league: ctx.get("league"),
-      });
+      }).exec();
       if (team == null) {
-        ctx.throw(404, "Squadra non trovata");
+        ctx.status = 404;
+      } else {
+        ctx.body = team;
       }
-      ctx.body = team;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -56,15 +69,17 @@ teamRouter.post(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
       const newTeam: ITeam = ctx.request.body;
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       newTeam.league = league._id;
       ctx.body = await Team.create(newTeam);
       ctx.status = 201;
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -89,14 +104,16 @@ teamRouter.post(
         "city",
         "abbreviation",
       ]);
-      await Team.deleteMany({ league: ctx.get("league") });
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
+      await Team.deleteMany({ league: ctx.get("league") }).exec();
+      const league: ILeague = await getLeague(ctx);
       ctx.body = await Team.insertTeams(teams, league);
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -110,10 +127,10 @@ teamRouter.patch(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
       const updatedTeam: ITeam = ctx.request.body;
-      const teamToUpdate: ITeam = (await Team.findOne({
+      const teamToUpdate = await Team.findOne({
         _id: ctx.params.id,
         league: ctx.get("league"),
-      })) as ITeam;
+      }).exec();
       if (teamToUpdate == null) {
         ctx.throw(404, "Squadra non trovata");
       }
@@ -121,7 +138,11 @@ teamRouter.patch(
       ctx.body = await teamToUpdate.save();
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -134,18 +155,21 @@ teamRouter.delete(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const team = (await Team.findOneAndDelete({
+      const team = await Team.findOneAndDelete({
         _id: ctx.params.id,
         league: ctx.get("league"),
-      })) as ITeam;
-      console.log(team);
+      }).exec();
       if (team == null) {
-        ctx.status = 404;
+        ctx.throw(404, "Squadra non trovata");
       }
       ctx.body = team;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );

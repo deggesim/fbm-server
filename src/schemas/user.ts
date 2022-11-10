@@ -128,7 +128,7 @@ schema.methods.isSuperAdmin = function () {
 };
 
 schema.statics.findByCredentials = async (email: string, password: string) => {
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).exec();
   if (!user) {
     throw new Error("Email o password errate");
   }
@@ -140,8 +140,9 @@ schema.statics.findByCredentials = async (email: string, password: string) => {
   return user;
 };
 
-schema.statics.allSuperAdmins = async () => {
-  return await User.find({ role: "SuperAdmin" });
+schema.statics.allSuperAdmins = async function () {
+  const user = await User.find({ role: "SuperAdmin" }).exec();
+  return user;
 };
 
 // Hash the plain text password before saving

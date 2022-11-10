@@ -4,6 +4,7 @@ import { ILeague } from "../schemas/league";
 import { IPlayer, Player } from "../schemas/player";
 import { admin, auth, parseToken } from "../util/auth";
 import { getLeague } from "../util/functions";
+import { erroreImprevisto } from "../util/globals";
 import { parseCsv } from "../util/parse";
 import { playersUploadLineError } from "../util/player-upload-validation";
 import { tenant } from "../util/tenant";
@@ -23,7 +24,7 @@ playerRouter.get(
       if (error instanceof Error) {
         ctx.throw(500, error.message);
       } else {
-        ctx.throw(500, "Si è verificato un errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }
@@ -48,7 +49,7 @@ playerRouter.post(
       if (error instanceof Error) {
         ctx.throw(400, error.message);
       } else {
-        ctx.throw(500, "Si è verificato un errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }
@@ -93,7 +94,7 @@ playerRouter.post(
       if (error instanceof Error) {
         ctx.throw(400, error.message);
       } else {
-        ctx.throw(500, "Si è verificato un errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }
@@ -114,7 +115,7 @@ playerRouter.get(
       if (error instanceof Error) {
         ctx.throw(500, error.message);
       } else {
-        ctx.throw(500, "Si è verificato un errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }
@@ -144,7 +145,7 @@ playerRouter.patch(
       if (error instanceof Error) {
         ctx.throw(400, error.message);
       } else {
-        ctx.throw(500, "Si è verificato un errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }
@@ -173,7 +174,7 @@ playerRouter.delete(
       if (error instanceof Error) {
         ctx.throw(500, error.message);
       } else {
-        ctx.throw(500, "Si è verificato un errore imprevisto");
+        ctx.throw(500, erroreImprevisto);
       }
     }
   }

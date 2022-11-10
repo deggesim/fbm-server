@@ -111,14 +111,14 @@ schema.statics.insertPlayers = async (
 
     const ret: IPlayer[] = [];
     // pulizia tabelle correlate
-    await Performance.deleteMany({ league: league._id });
-    await Roster.deleteMany({ league: league._id });
-    await FantasyRoster.deleteMany({ league: league._id });
-    await Player.deleteMany({ league: league._id });
+    await Performance.deleteMany({ league: league._id }).exec();
+    await Roster.deleteMany({ league: league._id }).exec();
+    await FantasyRoster.deleteMany({ league: league._id }).exec();
+    await Player.deleteMany({ league: league._id }).exec();
 
     const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find({
       league: league._id,
-    });
+    }).exec();
     for (const fantasyTeam of fantasyTeams) {
       fantasyTeam.outgo = 0;
       fantasyTeam.extraPlayers = 0;
@@ -129,11 +129,13 @@ schema.statics.insertPlayers = async (
 
     const teams: ITeam[] = await Team.find({
       league: league._id,
-    });
+    }).exec();
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
     const allRealFixtures: IRealFixture[] = await RealFixture.find({
       league: league._id,
-    }).sort({ order: 1 });
+    })
+      .sort({ order: 1 })
+      .exec();
     let index = 1;
     for (const uploadedPlayer of uploadedPlayers) {
       const { name, role, nationality, number, yearBirth, height, weight } =

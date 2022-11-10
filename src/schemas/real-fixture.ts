@@ -75,16 +75,19 @@ schema.statics.findByFixture = async (
   leagueId: string | ObjectId,
   fixtureId: string | ObjectId
 ): Promise<IRealFixture> => {
-  const fixture = (await Fixture.findOne({
+  const fixture = await Fixture.findOne({
     league: leagueId,
     _id: fixtureId,
-  })) as IFixture;
-  const realFixture = (await RealFixture.findOne({
+  }).exec();
+  if (fixture == null) {
+    throw new Error(entityNotFound("Giornata", leagueId, fixtureId));
+  }
+  const realFixture = await RealFixture.findOne({
     league: leagueId,
     fixtures: fixture._id,
-  })) as IRealFixture;
+  }).exec();
   if (realFixture == null) {
-    throw new Error(entityNotFound(realFixture, leagueId, fixtureId));
+    throw new Error(entityNotFound("Giornata reale", leagueId, fixtureId));
   }
   await realFixture.populate("fixtures").execPopulate();
   return realFixture;

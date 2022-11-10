@@ -1,6 +1,7 @@
 import Router = require("koa-router");
 import * as Koa from "koa";
 import { auth, parseToken } from "../util/auth";
+import { erroreImprevisto } from "../util/globals";
 import { PlayerStatistic, statistics } from "../util/statistics";
 import { tenant } from "../util/tenant";
 
@@ -27,7 +28,11 @@ statisticsRouter.get(
       ctx.body = playerStatisticList.playerStatistics;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );

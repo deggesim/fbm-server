@@ -1,8 +1,9 @@
 import { ObjectId } from "bson";
-import { ILeague, League } from "../schemas/league";
+import { League } from "../schemas/league";
 import { IPerformance } from "../schemas/performance";
 import { IPlayer } from "../schemas/player";
 import { Roster } from "../schemas/roster";
+import { entityNotFound } from "./functions";
 
 export interface PlayerStatistic {
   player: IPlayer;
@@ -31,7 +32,10 @@ export const statistics = async (
   freePlayers?: boolean
 ): Promise<PlayerStatisticList> => {
   const playerStatistics: PlayerStatistic[] = [];
-  const league: ILeague = (await League.findById(idLeague)) as ILeague;
+  const league = await League.findById(idLeague).exec();
+  if (league == null) {
+    throw new Error(entityNotFound("Lega", idLeague));
+  }
 
   const aggregate = Roster.aggregate();
   aggregate.match({ league: league._id });

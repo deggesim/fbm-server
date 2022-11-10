@@ -1,4 +1,4 @@
-import { Competition, ICompetition } from "../schemas/competition";
+import { Competition } from "../schemas/competition";
 import { IFantasyTeam } from "../schemas/fantasy-team";
 import { Fixture, IFixture } from "../schemas/fixture";
 import { PlayoffFormat } from "../schemas/formats/playoff-format";
@@ -8,19 +8,20 @@ import { Performance } from "../schemas/performance";
 import { Player } from "../schemas/player";
 import { IRealFixture, RealFixture } from "../schemas/real-fixture";
 import { Roster } from "../schemas/roster";
-import { Round } from "../schemas/round";
+import { IRound, Round } from "../schemas/round";
 import { Team } from "../schemas/team";
+import { entityNotFound } from "./functions";
 
 export const cleanLeague = async (league: ILeague) => {
-  await Competition.deleteMany({ league: league._id });
-  await Fixture.deleteMany({ league: league._id });
-  await Match.deleteMany({ league: league._id });
-  await Performance.deleteMany({ league: league._id });
-  await Player.deleteMany({ league: league._id });
-  await RealFixture.deleteMany({ league: league._id });
-  await Roster.deleteMany({ league: league._id });
-  await Round.deleteMany({ league: league._id });
-  await Team.deleteMany({ league: league._id });
+  await Competition.deleteMany({ league: league._id }).exec();
+  await Fixture.deleteMany({ league: league._id }).exec();
+  await Match.deleteMany({ league: league._id }).exec();
+  await Performance.deleteMany({ league: league._id }).exec();
+  await Player.deleteMany({ league: league._id }).exec();
+  await RealFixture.deleteMany({ league: league._id }).exec();
+  await Roster.deleteMany({ league: league._id }).exec();
+  await Round.deleteMany({ league: league._id }).exec();
+  await Team.deleteMany({ league: league._id }).exec();
 };
 
 export const populateCompetition = async (league: ILeague) => {
@@ -64,10 +65,13 @@ export const createRegularSeason = async (
   realFixtures: IRealFixture[],
   fantasyTeams: IFantasyTeam[]
 ) => {
-  const competition: ICompetition = (await Competition.findOne({
+  const competition = await Competition.findOne({
     league: league._id,
     name: "Campionato",
-  })) as ICompetition;
+  }).exec();
+  if (competition == null) {
+    throw new Error(entityNotFound("Competizione", league._id));
+  }
   // creazione round 'Stagione regolare'
   const round = {
     name: "Stagione Regolare",
@@ -92,30 +96,20 @@ export const createRegularSeason = async (
       1 +
       (numTeams - 1) * league.regularSeasonFormat.value.rounds
   );
-  for (let i = 0; i < realFixturesSubList.length; i++) {
-    const fixture = {
-      name: `Giornata #${i + 1}`,
-      unnecessary: false,
-      completed: false,
-      matches: [],
-      league: league._id,
-    };
-    const newFixture: IFixture = (await Fixture.create(fixture)) as IFixture;
-    realFixturesSubList[i].fixtures.push(newFixture);
-    await realFixturesSubList[i].save();
-    newRound.fixtures.push(newFixture);
-  }
-  await newRound.save();
+  await createFixtures(realFixturesSubList, league, newRound, 'Giornata');
 };
 
 export const createPlayoff = async (
   league: ILeague,
   realFixtures: IRealFixture[]
 ) => {
-  const competition: ICompetition = (await Competition.findOne({
+  const competition = await Competition.findOne({
     league: league._id,
     name: "Campionato",
-  })) as ICompetition;
+  }).exec();
+  if (competition == null) {
+    throw new Error(entityNotFound("Competizione", league._id));
+  }
   let firstRealFixture = league.playoffFirstRealFixture;
 
   if (league.playoffFormat.value.qfGames) {
@@ -146,20 +140,7 @@ export const createPlayoff = async (
       firstRealFixture - 1,
       firstRealFixture - 1 + league.playoffFormat.value.qfGames
     );
-    for (let i = 0; i < realFixturesSubList.length; i++) {
-      const fixture = {
-        name: `Gara #${i + 1}`,
-        unnecessary: false,
-        completed: false,
-        matches: [],
-        league: league._id,
-      };
-      const newFixture = await Fixture.create(fixture);
-      realFixturesSubList[i].fixtures.push(newFixture);
-      await realFixturesSubList[i].save();
-      newRound.fixtures.push(newFixture);
-    }
-    await newRound.save();
+    await createFixtures(realFixturesSubList, league, newRound, 'Gara');
     firstRealFixture += league.playoffFormat.value.qfGames;
   }
 
@@ -185,20 +166,7 @@ export const createPlayoff = async (
       firstRealFixture - 1,
       firstRealFixture - 1 + league.playoffFormat.value.sfGames
     );
-    for (let i = 0; i < realFixturesSubList.length; i++) {
-      const fixture = {
-        name: `Gara #${i + 1}`,
-        unnecessary: false,
-        completed: false,
-        matches: [],
-        league: league._id,
-      };
-      const newFixture = await Fixture.create(fixture);
-      realFixturesSubList[i].fixtures.push(newFixture);
-      await realFixturesSubList[i].save();
-      newRound.fixtures.push(newFixture);
-    }
-    await newRound.save();
+    await createFixtures(realFixturesSubList, league, newRound, 'Gara');
     firstRealFixture += league.playoffFormat.value.sfGames;
   }
 
@@ -224,20 +192,7 @@ export const createPlayoff = async (
       firstRealFixture - 1,
       firstRealFixture - 1 + league.playoffFormat.value.fGames
     );
-    for (let i = 0; i < realFixturesSubList.length; i++) {
-      const fixture = {
-        name: `Gara #${i + 1}`,
-        unnecessary: false,
-        completed: false,
-        matches: [],
-        league: league._id,
-      };
-      const newFixture = await Fixture.create(fixture);
-      realFixturesSubList[i].fixtures.push(newFixture);
-      await realFixturesSubList[i].save();
-      newRound.fixtures.push(newFixture);
-    }
-    await newRound.save();
+    await createFixtures(realFixturesSubList, league, newRound, 'Gara');
   }
 
   await competition.save();
@@ -247,10 +202,13 @@ export const createPlayout = async (
   league: ILeague,
   realFixtures: IRealFixture[]
 ) => {
-  const competition: ICompetition = (await Competition.findOne({
+  const competition = await Competition.findOne({
     league: league._id,
     name: "Campionato",
-  })) as ICompetition;
+  }).exec();
+  if (competition == null) {
+    throw new Error(entityNotFound("Competizione", league._id));
+  }
   let firstRealFixture = league.playoutFirstRealFixture;
 
   if (league.playoutFormat.value.rounds) {
@@ -279,20 +237,7 @@ export const createPlayout = async (
         1 +
         (numTeams - 1) * league.regularSeasonFormat.value.rounds
     );
-    for (let i = 0; i < realFixturesSubList.length; i++) {
-      const fixture = {
-        name: `Giornata #${i + 1}`,
-        unnecessary: false,
-        completed: false,
-        matches: [],
-        league: league._id,
-      };
-      const newFixture: IFixture = (await Fixture.create(fixture)) as IFixture;
-      realFixturesSubList[i].fixtures.push(newFixture);
-      await realFixturesSubList[i].save();
-      newRound.fixtures.push(newFixture);
-    }
-    await newRound.save();
+    await createFixtures(realFixturesSubList, league, newRound, 'Giornata');
     firstRealFixture += (numTeams - 1) * league.playoutFormat.value.rounds;
   }
 
@@ -318,20 +263,7 @@ export const createPlayout = async (
       firstRealFixture - 1,
       firstRealFixture - 1 + league.playoffFormat.value.sfGames
     );
-    for (let i = 0; i < realFixturesSubList.length; i++) {
-      const fixture = {
-        name: `Gara #${i + 1}`,
-        unnecessary: false,
-        completed: false,
-        matches: [],
-        league: league._id,
-      };
-      const newFixture = await Fixture.create(fixture);
-      realFixturesSubList[i].fixtures.push(newFixture);
-      await realFixturesSubList[i].save();
-      newRound.fixtures.push(newFixture);
-    }
-    await newRound.save();
+    await createFixtures(realFixturesSubList, league, newRound, 'Gara');
     firstRealFixture += league.playoffFormat.value.sfGames;
   }
 
@@ -357,20 +289,7 @@ export const createPlayout = async (
       firstRealFixture - 1,
       firstRealFixture - 1 + league.playoffFormat.value.fGames
     );
-    for (let i = 0; i < realFixturesSubList.length; i++) {
-      const fixture = {
-        name: `Gara #${i + 1}`,
-        unnecessary: false,
-        completed: false,
-        matches: [],
-        league: league._id,
-      };
-      const newFixture = await Fixture.create(fixture);
-      realFixturesSubList[i].fixtures.push(newFixture);
-      await realFixturesSubList[i].save();
-      newRound.fixtures.push(newFixture);
-    }
-    await newRound.save();
+    await createFixtures(realFixturesSubList, league, newRound, 'Gara');
   }
 
   await competition.save();
@@ -380,10 +299,13 @@ export const createCup = async (
   league: ILeague,
   realFixtures: IRealFixture[]
 ) => {
-  const competition: ICompetition = (await Competition.findOne({
+  const competition = await Competition.findOne({
     league: league._id,
     name: "Coppa",
-  })) as ICompetition;
+  }).exec();
+  if (competition == null) {
+    throw new Error(entityNotFound("Competizione", league._id));
+  }
   let firstRealFixture = league.cupFirstRealFixture;
   let lastRealFixture = league.cupFormat.value.qfRoundTrip
     ? firstRealFixture + 1
@@ -404,6 +326,80 @@ export const createCup = async (
   competition.rounds.push(newRound);
 
   // creazione giornate
+  await createCupFixtures(
+    realFixtures,
+    firstRealFixture,
+    lastRealFixture,
+    league,
+    newRound
+  );
+  await newRound.save();
+  firstRealFixture = lastRealFixture + 1;
+  lastRealFixture = league.cupFormat.value.sfRoundTrip
+    ? firstRealFixture + 1
+    : firstRealFixture;
+
+  // creazione round 'Semifinale'
+  round = {
+    name: "Semifinale",
+    completed: false,
+    homeFactor: league.cupFormat.value.sfRoundTrip ? 10 : 0,
+    teams: 4,
+    roundRobin: false,
+    fantasyTeams: [],
+    fixtures: [],
+    league: league._id,
+  };
+  newRound = await Round.create(round);
+  competition.rounds.push(newRound);
+
+  // creazione giornate
+  await createCupFixtures(
+    realFixtures,
+    firstRealFixture,
+    lastRealFixture,
+    league,
+    newRound
+  );
+  await newRound.save();
+  firstRealFixture = lastRealFixture + 1;
+  lastRealFixture = league.cupFormat.value.fRoundTrip
+    ? firstRealFixture + 1
+    : firstRealFixture;
+
+  // creazione round 'Finale'
+  round = {
+    name: "Finale",
+    completed: false,
+    homeFactor: league.cupFormat.value.fRoundTrip ? 10 : 0,
+    teams: 2,
+    roundRobin: false,
+    fantasyTeams: [],
+    fixtures: [],
+    league: league._id,
+  };
+  newRound = await Round.create(round);
+  competition.rounds.push(newRound);
+
+  // creazione giornate
+  await createCupFixtures(
+    realFixtures,
+    firstRealFixture,
+    lastRealFixture,
+    league,
+    newRound
+  );
+  await newRound.save();
+  await competition.save();
+};
+
+const createCupFixtures = async (
+  realFixtures: IRealFixture[],
+  firstRealFixture: number,
+  lastRealFixture: number,
+  league: ILeague,
+  newRound: IRound
+) => {
   let realFixturesSubList = realFixtures.slice(
     firstRealFixture - 1,
     lastRealFixture
@@ -435,110 +431,27 @@ export const createCup = async (
       newRound.fixtures.push(newFixture);
     }
   }
-  await newRound.save();
-  firstRealFixture = lastRealFixture + 1;
-  lastRealFixture = league.cupFormat.value.sfRoundTrip
-    ? firstRealFixture + 1
-    : firstRealFixture;
+  return realFixturesSubList;
+};
 
-  // creazione round 'Semifinale'
-  round = {
-    name: "Semifinale",
-    completed: false,
-    homeFactor: league.cupFormat.value.sfRoundTrip ? 10 : 0,
-    teams: 4,
-    roundRobin: false,
-    fantasyTeams: [],
-    fixtures: [],
-    league: league._id,
-  };
-  newRound = await Round.create(round);
-  competition.rounds.push(newRound);
-
-  // creazione giornate
-  realFixturesSubList = realFixtures.slice(
-    firstRealFixture - 1,
-    lastRealFixture
-  );
-  if (realFixturesSubList.length === 1) {
+const createFixtures = async (
+  realFixturesSubList: IRealFixture[],
+  league: ILeague,
+  newRound: IRound,
+  namePattern: string
+) => {
+  for (let i = 0; i < realFixturesSubList.length; i++) {
     const fixture = {
-      name: `Gara unica`,
+      name: `${namePattern} #${i + 1}`,
       unnecessary: false,
       completed: false,
       matches: [],
       league: league._id,
     };
     const newFixture = await Fixture.create(fixture);
-    realFixturesSubList[0].fixtures.push(newFixture);
-    await realFixturesSubList[0].save();
+    realFixturesSubList[i].fixtures.push(newFixture);
+    await realFixturesSubList[i].save();
     newRound.fixtures.push(newFixture);
-  } else {
-    for (let i = 0; i < realFixturesSubList.length; i++) {
-      const fixture = {
-        name: `Gara #${i + 1}`,
-        unnecessary: false,
-        completed: false,
-        matches: [],
-        league: league._id,
-      };
-      const newFixture = await Fixture.create(fixture);
-      realFixturesSubList[i].fixtures.push(newFixture);
-      await realFixturesSubList[i].save();
-      newRound.fixtures.push(newFixture);
-    }
   }
   await newRound.save();
-  firstRealFixture = lastRealFixture + 1;
-  lastRealFixture = league.cupFormat.value.fRoundTrip
-    ? firstRealFixture + 1
-    : firstRealFixture;
-
-  // creazione round 'Finale'
-  round = {
-    name: "Finale",
-    completed: false,
-    homeFactor: league.cupFormat.value.fRoundTrip ? 10 : 0,
-    teams: 2,
-    roundRobin: false,
-    fantasyTeams: [],
-    fixtures: [],
-    league: league._id,
-  };
-  newRound = await Round.create(round);
-  competition.rounds.push(newRound);
-
-  // creazione giornate
-  realFixturesSubList = realFixtures.slice(
-    firstRealFixture - 1,
-    lastRealFixture
-  );
-  if (realFixturesSubList.length === 1) {
-    const fixture = {
-      name: `Gara unica`,
-      unnecessary: false,
-      completed: false,
-      matches: [],
-      league: league._id,
-    };
-    const newFixture = await Fixture.create(fixture);
-    realFixturesSubList[0].fixtures.push(newFixture);
-    await realFixturesSubList[0].save();
-    newRound.fixtures.push(newFixture);
-  } else {
-    for (let i = 0; i < realFixturesSubList.length; i++) {
-      const fixture = {
-        name: `Gara #${i + 1}`,
-        unnecessary: false,
-        completed: false,
-        matches: [],
-        league: league._id,
-      };
-      const newFixture = await Fixture.create(fixture);
-      realFixturesSubList[i].fixtures.push(newFixture);
-      await realFixturesSubList[i].save();
-      newRound.fixtures.push(newFixture);
-    }
-  }
-  await newRound.save();
-  await competition.save();
 };

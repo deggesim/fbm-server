@@ -11,7 +11,7 @@ import {
 import { IRoster } from "../schemas/roster";
 import { IRound } from "../schemas/round";
 import { IUser } from "../schemas/user";
-import { halfDownRound } from "../util/functions";
+import { entityNotFound, halfDownRound } from "../util/functions";
 
 const vapidKeys = {
   publicKey: process.env.VAPID_PUBLIC_KEY ? process.env.VAPID_PUBLIC_KEY : "",
@@ -59,12 +59,16 @@ export const notifyLineup = async (
   fixtureId: string
 ) => {
   const email = user.email;
-  const fantasyTeam: IFantasyTeam = (await FantasyTeam.findById(
-    fantasyTeamId
-  )) as IFantasyTeam;
-  const fixture: IFixture = (await Fixture.findById(fixtureId)) as IFixture;
-  await fixture?.populate("round").execPopulate();
-  const round: IRound = fixture?.get("round");
+  const fantasyTeam = await FantasyTeam.findById(fantasyTeamId).exec();
+  if (fantasyTeam == null) {
+    throw new Error(entityNotFound("Fantasquadra", league._id, fantasyTeamId));
+  }
+  const fixture = await Fixture.findById(fixtureId).exec();
+  if (fixture == null) {
+    throw new Error(entityNotFound("Giornata", fixtureId));
+  }
+  await fixture.populate("round").execPopulate();
+  const round: IRound = fixture.get("round");
   await round.populate("competition").execPopulate();
   const competition = round.get("competition");
   const subscriptions = await getAllSubscriptions(league);
@@ -118,12 +122,9 @@ export const notifyTransaction = async (
       body = `L'ingaggio del giocatore ${player?.name} da parte della squadra ${fantasyTeam?.name} è stato modificato`;
       break;
     case "release":
-      body = `La squadra ${
-        fantasyTeam?.name
-      } ha rilasciato il giocatore ${player?.name} recuperando ${halfDownRound(
-        fantasyRoster.contract,
-        2
-      )} crediti`;
+      body = `La squadra ${fantasyTeam?.name} ha rilasciato il giocatore ${
+        player?.name
+      } recuperando ${halfDownRound(fantasyRoster.contract, 2)} crediti`;
       break;
     case "remove":
       body = `La squadra ${fantasyTeam?.name} ha rimosso il giocatore ${player?.name} recuperando ${fantasyRoster?.contract} crediti`;

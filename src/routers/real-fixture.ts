@@ -3,6 +3,8 @@ import * as Router from "koa-router";
 import { ILeague, League } from "../schemas/league";
 import { IRealFixture, RealFixture } from "../schemas/real-fixture";
 import { admin, auth, parseToken } from "../util/auth";
+import { getLeague } from "../util/functions";
+import { erroreImprevisto } from "../util/globals";
 import { tenant } from "../util/tenant";
 
 const realFixtureRouter: Router = new Router<IRealFixture>();
@@ -19,9 +21,11 @@ realFixtureRouter.get(
       if (prepared) {
         conditions.prepared = true;
       }
-      const realFixtures = await RealFixture.find(conditions).sort({
-        order: 1,
-      });
+      const realFixtures = await RealFixture.find(conditions)
+        .sort({
+          order: 1,
+        })
+        .exec();
       await RealFixture.populate(realFixtures, [
         {
           path: "fixtures",
@@ -35,7 +39,11 @@ realFixtureRouter.get(
       ctx.body = realFixtures;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -57,7 +65,11 @@ realFixtureRouter.get(
       ctx.body = realFixture;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -71,15 +83,17 @@ realFixtureRouter.post(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
       const newRealFixture: IRealFixture = ctx.request.body;
-      const league: ILeague = (await League.findById(
-        ctx.get("league")
-      )) as ILeague;
+      const league: ILeague = await getLeague(ctx);
       newRealFixture.league = league._id;
       ctx.body = await RealFixture.create(newRealFixture);
       ctx.status = 201;
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -90,11 +104,13 @@ realFixtureRouter.patch(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
       const ret = [];
-      const leagues = await League.find();
+      const leagues = await League.find().exec();
       for (const league of leagues) {
         const allRealFixtures: IRealFixture[] = await RealFixture.find({
           league,
-        }).sort({ _id: 1 });
+        })
+          .sort({ _id: 1 })
+          .exec();
         let index = 1;
         for (const rf of allRealFixtures) {
           rf.order = index++;
@@ -106,7 +122,11 @@ realFixtureRouter.patch(
       ctx.body = ret;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -120,10 +140,10 @@ realFixtureRouter.patch(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
       const updatedRealFixture: IRealFixture = ctx.request.body;
-      const realFixtureToUpdate: IRealFixture = (await RealFixture.findOne({
+      const realFixtureToUpdate = await RealFixture.findOne({
         _id: ctx.params.id,
         league: ctx.get("league"),
-      })) as IRealFixture;
+      }).exec();
       if (realFixtureToUpdate == null) {
         ctx.throw(404, "Giornata non trovata");
       }
@@ -131,7 +151,11 @@ realFixtureRouter.patch(
       ctx.body = await realFixtureToUpdate.save();
     } catch (error) {
       console.log(error);
-      ctx.throw(400, error.message);
+      if (error instanceof Error) {
+        ctx.throw(400, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
@@ -144,18 +168,21 @@ realFixtureRouter.delete(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const realFixture = (await RealFixture.findOneAndDelete({
+      const realFixture = await RealFixture.findOneAndDelete({
         _id: ctx.params.id,
         league: ctx.get("league"),
-      })) as IRealFixture;
-      console.log(realFixture);
+      }).exec();
       if (realFixture == null) {
         ctx.status = 404;
       }
       ctx.body = realFixture;
     } catch (error) {
       console.log(error);
-      ctx.throw(500, error.message);
+      if (error instanceof Error) {
+        ctx.throw(500, error.message);
+      } else {
+        ctx.throw(500, erroreImprevisto);
+      }
     }
   }
 );
