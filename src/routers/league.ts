@@ -34,7 +34,7 @@ leagueRouter.get(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.params.id);
       ctx.body = league;
     } catch (error) {
       console.log(error);
@@ -53,7 +53,7 @@ leagueRouter.get(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.params.id);
       ctx.body = await league.isPreseason();
     } catch (error) {
       console.log(error);
@@ -72,7 +72,7 @@ leagueRouter.get(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.params.id);
       ctx.body = await league.isOffseason();
     } catch (error) {
       console.log(error);
@@ -91,7 +91,7 @@ leagueRouter.get(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.params.id);
       ctx.body = await league.isPostseason();
     } catch (error) {
       console.log(error);
@@ -110,7 +110,7 @@ leagueRouter.get(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.params.id);
       ctx.body = await league.nextFixture();
     } catch (error) {
       console.log(error);
@@ -129,7 +129,7 @@ leagueRouter.get(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.params.id);
       const realFixture: IRealFixture = await league.nextRealFixture();
       await Fixture.populate(realFixture.fixtures, { path: "round" });
       const fixtures = realFixture.fixtures as IFixture[];
@@ -173,7 +173,7 @@ leagueRouter.post(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.params.id);
       ctx.body = await league.populateLeague();
     } catch (error) {
       console.log(error);
@@ -192,7 +192,7 @@ leagueRouter.post(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.params.id);
       ctx.body = await league.setParameters(ctx.request.body);
     } catch (error) {
       console.log(error);
@@ -211,7 +211,7 @@ leagueRouter.post(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.params.id);
       ctx.body = await league.setRoles(ctx.request.body);
     } catch (error) {
       console.log(error);
@@ -230,7 +230,7 @@ leagueRouter.post(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.params.id);
       ctx.body = await league.completePreseason();
     } catch (error) {
       console.log(error);
@@ -250,7 +250,7 @@ leagueRouter.patch(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
       const updatedLeague: ILeague = ctx.request.body;
-      const leagueToUpdate: ILeague = await getLeague(ctx);
+      const leagueToUpdate: ILeague = await getLeague(ctx.params.id);
       leagueToUpdate.set(updatedLeague);
       await leagueToUpdate.save();
       ctx.body = await leagueToUpdate.populateLeague();

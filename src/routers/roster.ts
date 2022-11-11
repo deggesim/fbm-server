@@ -19,7 +19,7 @@ rosterRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const { page, limit, filter } = ctx.query;
 
@@ -100,7 +100,7 @@ rosterRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const { page, limit, filter } = ctx.query;
 
@@ -183,7 +183,7 @@ rosterRouter.post(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const newRoster: IRoster = ctx.request.body;
       newRoster.league = league._id;
       const rosterRealFixture = newRoster.realFixture as IRealFixture;
@@ -249,7 +249,7 @@ rosterRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const updatedRoster: IRoster = ctx.request.body;
       const rosterToUpdate = await Roster.findOne({
         _id: ctx.params.id,
@@ -284,7 +284,7 @@ rosterRouter.delete(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const roster = await Roster.findOne({
         _id: ctx.params.id,
         league: league._id,

@@ -2,14 +2,12 @@ import * as Koa from "koa";
 import * as Router from "koa-router";
 import { League } from "../schemas/league";
 import { IUser } from "../schemas/user";
+import { getLeague } from "./functions";
 import { Role } from "./globals";
 
 export const tenant = () => {
   return async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const league = await League.findById(ctx.request.header.league).exec();
-    if (league == null) {
-      ctx.throw(400, "Lega non trovata");
-    }
+    const league = await getLeague(ctx.request.header.league);
     // verifica che la lega sia tra quelle abilitate
     const user: IUser = ctx.state.user;
     const userLeague = user.leagues.find((leagueId) =>

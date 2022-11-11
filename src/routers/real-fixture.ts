@@ -83,7 +83,7 @@ realFixtureRouter.post(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
       const newRealFixture: IRealFixture = ctx.request.body;
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       newRealFixture.league = league._id;
       ctx.body = await RealFixture.create(newRealFixture);
       ctx.status = 201;

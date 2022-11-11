@@ -63,7 +63,7 @@ fixtureRouter.post(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
       const newFixture: IFixture = ctx.request.body;
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       newFixture.league = league._id;
       ctx.body = await Fixture.create(newFixture);
       ctx.status = 201;

@@ -20,7 +20,7 @@ fantasyTeamRouter.post(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.params.id);
       const fantasyTeams: IFantasyTeam[] = ctx.request.body;
       ctx.body = FantasyTeam.insertFantasyTeams(fantasyTeams, league);
       ctx.status = 201;
@@ -42,7 +42,7 @@ fantasyTeamRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const conditions: any = { league: league._id };
       const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find(conditions)
@@ -78,7 +78,7 @@ fantasyTeamRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const conditions: any = { league: league._id };
       const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find(conditions)
@@ -118,7 +118,7 @@ fantasyTeamRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const fantasyTeam = await FantasyTeam.findOne({
         _id: ctx.params.id,
@@ -157,7 +157,7 @@ fantasyTeamRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
       const updatedFantasyTeam: IFantasyTeam = ctx.request.body;
       const fantasyTeamToUpdate = await FantasyTeam.findOne({

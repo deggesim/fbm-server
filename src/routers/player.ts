@@ -38,7 +38,7 @@ playerRouter.post(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const newPlayer: IPlayer = ctx.request.body;
       newPlayer.league = league._id;
       ctx.body = await Player.create(newPlayer);
@@ -85,7 +85,7 @@ playerRouter.post(
         );
       }
       const playersLength = players.length;
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       Player.insertPlayers(players, league);
       ctx.body = playersLength;
       ctx.status = 201;
@@ -108,7 +108,7 @@ playerRouter.get(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       ctx.body = Player.uploadPercentage(league.id);
     } catch (error) {
       console.log(error);
@@ -129,7 +129,7 @@ playerRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const updatedPlayer: IPlayer = ctx.request.body;
       const playerToUpdate = await Player.findOne({
         _id: ctx.params.id,
@@ -159,7 +159,7 @@ playerRouter.delete(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const player = await Player.findOneAndDelete({
         _id: ctx.params.id,
         league: league._id,

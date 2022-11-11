@@ -70,7 +70,7 @@ lineupRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const lineup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(
         league._id,
         ctx.params.fantasyTeamId,
@@ -108,7 +108,7 @@ lineupRouter.post(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const league: ILeague = await getLeague(ctx);
+    const league: ILeague = await getLeague(ctx.get("league"));
     const user: IUser = ctx.state.user;
     const teamManagedByLoggedUser =
       (user.fantasyTeams as IFantasyTeam[]).find((ft: IFantasyTeam) =>

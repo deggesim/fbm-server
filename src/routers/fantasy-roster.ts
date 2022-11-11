@@ -81,7 +81,7 @@ fantasyRosterRouter.post(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const newFantasyRoster: IFantasyRoster = ctx.request.body;
       newFantasyRoster.league = league._id;
       const nextRealFixture: IRealFixture = await league.nextRealFixture();
@@ -141,7 +141,7 @@ fantasyRosterRouter.patch(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const fantasyRosterToUpdate = await FantasyRoster.findOne({
         _id: ctx.params.id,
         league,
@@ -213,7 +213,7 @@ fantasyRosterRouter.patch(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const fantasyRosterToUpdate = await FantasyRoster.findOne({
         _id: ctx.params.id,
         league,
@@ -283,7 +283,7 @@ fantasyRosterRouter.delete(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const fantasyRoster = await FantasyRoster.findOneAndDelete({
         _id: ctx.params.id,
         league,
@@ -337,7 +337,7 @@ fantasyRosterRouter.delete(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const fantasyRoster = await FantasyRoster.findOneAndDelete({
         _id: ctx.params.id,
         league,

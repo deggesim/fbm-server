@@ -69,7 +69,7 @@ teamRouter.post(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
       const newTeam: ITeam = ctx.request.body;
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       newTeam.league = league._id;
       ctx.body = await Team.create(newTeam);
       ctx.status = 201;
@@ -105,7 +105,7 @@ teamRouter.post(
         "abbreviation",
       ]);
       await Team.deleteMany({ league: ctx.get("league") }).exec();
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       ctx.body = await Team.insertTeams(teams, league);
     } catch (error) {
       console.log(error);

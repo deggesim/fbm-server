@@ -75,7 +75,7 @@ matchRouter.post(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const newMatch: IMatch = ctx.request.body;
       newMatch.league = league._id;
       ctx.body = await Match.create(newMatch);
@@ -99,7 +99,7 @@ matchRouter.post(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const match: IMatch = (await Match.findOne({
         _id: ctx.params.id,
         league: ctx.get("league"),
@@ -114,42 +114,14 @@ matchRouter.post(
           match.homeTeam as ObjectId,
           ctx.params.fixtureId
         );
-      for (const player of homeLineup) {
-        await player
-          .populate("fantasyRoster")
-          .populate("fixture")
-          .populate("performance")
-          .execPopulate();
-        await player
-          .populate("fantasyRoster.roster")
-          .populate("performance.realFixture")
-          .execPopulate();
-        await player
-          .populate("fantasyRoster.roster.player")
-          .populate("fantasyRoster.roster.team")
-          .execPopulate();
-      }
+      await populateLineup(homeLineup);
       const awayLineup: ILineup[] =
         await Lineup.getLineupByFantasyTeamAndFixture(
           league._id,
           match.awayTeam as ObjectId,
           ctx.params.fixtureId
         );
-      for (const player of awayLineup) {
-        await player
-          .populate("fantasyRoster")
-          .populate("fixture")
-          .populate("performance")
-          .execPopulate();
-        await player
-          .populate("fantasyRoster.roster")
-          .populate("performance.realFixture")
-          .execPopulate();
-        await player
-          .populate("fantasyRoster.roster.player")
-          .populate("fantasyRoster.roster.team")
-          .execPopulate();
-      }
+      await populateLineup(awayLineup);
       const round: IRound = (await Round.findOne({
         _id: ctx.params.roundId,
         league: ctx.get("league"),
@@ -251,7 +223,7 @@ matchRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const fixture: IFixture = (await Fixture.findOne({
         _id: ctx.params.id,
         league: league._id,
@@ -320,7 +292,7 @@ matchRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const updatedMatch: IMatch = ctx.request.body;
       const matchToUpdate: IMatch = (await Match.findOne({
         _id: ctx.params.id,
@@ -350,7 +322,7 @@ matchRouter.delete(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     try {
-      const league: ILeague = await getLeague(ctx);
+      const league: ILeague = await getLeague(ctx.get("league"));
       const match = (await Match.findOneAndDelete({
         _id: ctx.params.id,
         league: league._id,
@@ -369,5 +341,23 @@ matchRouter.delete(
     }
   }
 );
+
+const populateLineup = async (lineup: ILineup[]) => {
+  for (const player of lineup) {
+    await player
+      .populate("fantasyRoster")
+      .populate("fixture")
+      .populate("performance")
+      .execPopulate();
+    await player
+      .populate("fantasyRoster.roster")
+      .populate("performance.realFixture")
+      .execPopulate();
+    await player
+      .populate("fantasyRoster.roster.player")
+      .populate("fantasyRoster.roster.team")
+      .execPopulate();
+  }
+};
 
 export default matchRouter;
