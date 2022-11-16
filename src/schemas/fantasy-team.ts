@@ -1,6 +1,5 @@
 import { ObjectId } from "mongodb";
 import { Model, model, Schema } from "mongoose";
-import { erroreImprevisto } from "../util/globals";
 import { ILeague, ITenant } from "./league";
 import { IUser, User } from "./user";
 
@@ -28,7 +27,10 @@ export interface IFantasyTeam extends IFantasyTeamDocument {
  */
 export interface IFantasyTeamModel extends Model<IFantasyTeam> {
   // metodi statici
-  insertFantasyTeams: (fantasyTeams: IFantasyTeam[], league: ILeague) => null;
+  insertFantasyTeams: (
+    fantasyTeams: IFantasyTeam[],
+    league: ILeague
+  ) => Promise<IFantasyTeam[]>;
 }
 
 const schema = new Schema<IFantasyTeam>(
@@ -103,38 +105,26 @@ schema.statics.insertFantasyTeams = async (
   fantasyTeams: IFantasyTeam[],
   league: ILeague
 ) => {
-  try {
-    const ret: IFantasyTeam[] = [];
-    await saveFantasyTeams(fantasyTeams, league, ret);
-
-    // aggiunta della lega ai superAdmin (se non già presente)
-    const superAdmins: IUser[] = await User.allSuperAdmins();
-    for (const superAdmin of superAdmins) {
-      const found = superAdmin.leagues.find(
-        (managedLeague: ILeague | ObjectId) =>
-          (managedLeague as ObjectId).equals(league._id)
-      );
-      if (!found) {
-        superAdmin.leagues.push(league);
-        await superAdmin.save();
-      }
-    }
-
-    return Promise.resolve(ret);
-  } catch (error) {
-    if (error instanceof Error) {
-      return Promise.reject(error.message);
-    } else {
-      return Promise.reject(erroreImprevisto);
+  const ret = await saveFantasyTeams(fantasyTeams, league);
+  // aggiunta della lega ai superAdmin (se non già presente)
+  const superAdmins: IUser[] = await User.allSuperAdmins();
+  for (const superAdmin of superAdmins) {
+    const found = superAdmin.leagues.find((managedLeague: ILeague | ObjectId) =>
+      (managedLeague as ObjectId).equals(league._id)
+    );
+    if (!found) {
+      superAdmin.leagues.push(league);
+      await superAdmin.save();
     }
   }
+  return ret;
 };
 
 const saveFantasyTeams = async (
   fantasyTeams: IFantasyTeam[],
-  league: ILeague,
-  ret: IFantasyTeam[]
+  league: ILeague
 ) => {
+  const ret: IFantasyTeam[] = [];
   for (const newFantasyTeam of fantasyTeams) {
     newFantasyTeam.league = league._id;
     const fantasyTeam = await FantasyTeam.create(newFantasyTeam);
@@ -157,6 +147,7 @@ const saveFantasyTeams = async (
     }
     ret.push(fantasyTeam);
   }
+  return Promise.resolve(ret);
 };
 
 export const FantasyTeam = model<IFantasyTeam, IFantasyTeamModel>(

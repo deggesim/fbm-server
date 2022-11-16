@@ -6,7 +6,6 @@ import {
 } from "../schemas/push-subscription";
 import { IUser } from "../schemas/user";
 import { auth, parseToken } from "../util/auth";
-import { erroreImprevisto } from "../util/globals";
 
 const pushSbscription: Router = new Router<IPushSubscription>();
 
@@ -15,22 +14,13 @@ pushSbscription.post(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const newPushSubscription: IPushSubscription = ctx.request.body;
-      const user: IUser = ctx.state.user;
-      const leagues = user.leagues;
-      for (const league of leagues) {
-        newPushSubscription.email = user.email;
-        newPushSubscription.league = league;
-        ctx.body = await PushSubscription.create(newPushSubscription);
-      }
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
+    const newPushSubscription: IPushSubscription = ctx.request.body;
+    const user: IUser = ctx.state.user;
+    const leagues = user.leagues;
+    for (const league of leagues) {
+      newPushSubscription.email = user.email;
+      newPushSubscription.league = league;
+      ctx.body = await PushSubscription.create(newPushSubscription);
     }
   }
 );

@@ -5,8 +5,7 @@ import { ILeague, League } from "../schemas/league";
 import { IRealFixture } from "../schemas/real-fixture";
 import { Round } from "../schemas/round";
 import { auth, parseToken } from "../util/auth";
-import { getLeague } from "../util/functions";
-import { erroreImprevisto } from "../util/globals";
+import { entityNotFound, getLeague } from "../util/functions";
 
 const leagueRouter: Router = new Router<ILeague>();
 
@@ -15,16 +14,7 @@ leagueRouter.get(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      ctx.body = await League.find().sort({ name: 1 }).exec();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    ctx.body = await League.find().sort({ name: 1 }).exec();
   }
 );
 
@@ -33,17 +23,8 @@ leagueRouter.get(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league: ILeague = await getLeague(ctx.params.id);
-      ctx.body = league;
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const league: ILeague = await getLeague(ctx.params.id);
+    ctx.body = league;
   }
 );
 
@@ -52,17 +33,8 @@ leagueRouter.get(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league: ILeague = await getLeague(ctx.params.id);
-      ctx.body = await league.isPreseason();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const league: ILeague = await getLeague(ctx.params.id);
+    ctx.body = await league.isPreseason();
   }
 );
 
@@ -71,17 +43,8 @@ leagueRouter.get(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league: ILeague = await getLeague(ctx.params.id);
-      ctx.body = await league.isOffseason();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const league: ILeague = await getLeague(ctx.params.id);
+    ctx.body = await league.isOffseason();
   }
 );
 
@@ -90,17 +53,8 @@ leagueRouter.get(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league: ILeague = await getLeague(ctx.params.id);
-      ctx.body = await league.isPostseason();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const league: ILeague = await getLeague(ctx.params.id);
+    ctx.body = await league.isPostseason();
   }
 );
 
@@ -109,17 +63,8 @@ leagueRouter.get(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league: ILeague = await getLeague(ctx.params.id);
-      ctx.body = await league.nextFixture();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const league: ILeague = await getLeague(ctx.params.id);
+    ctx.body = await league.nextFixture();
   }
 );
 
@@ -128,23 +73,14 @@ leagueRouter.get(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league: ILeague = await getLeague(ctx.params.id);
-      const realFixture: IRealFixture = await league.nextRealFixture();
-      await Fixture.populate(realFixture.fixtures, { path: "round" });
-      const fixtures = realFixture.fixtures as IFixture[];
-      for (const fixture of fixtures) {
-        await Round.populate(fixture.get("round"), { path: "competition" });
-      }
-      ctx.body = realFixture;
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
+    const league: ILeague = await getLeague(ctx.params.id);
+    const realFixture: IRealFixture = await league.nextRealFixture();
+    await Fixture.populate(realFixture.fixtures, { path: "round" });
+    const fixtures = realFixture.fixtures as IFixture[];
+    for (const fixture of fixtures) {
+      await Round.populate(fixture.get("round"), { path: "competition" });
     }
+    ctx.body = realFixture;
   }
 );
 
@@ -153,17 +89,8 @@ leagueRouter.post(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const newLeague: ILeague = ctx.request.body;
-      ctx.body = await League.create(newLeague);
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(400, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const newLeague: ILeague = ctx.request.body;
+    ctx.body = await League.create(newLeague);
   }
 );
 
@@ -172,17 +99,8 @@ leagueRouter.post(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league: ILeague = await getLeague(ctx.params.id);
-      ctx.body = await league.populateLeague();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(400, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const league: ILeague = await getLeague(ctx.params.id);
+    ctx.body = await league.populateLeague();
   }
 );
 
@@ -191,17 +109,8 @@ leagueRouter.post(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league: ILeague = await getLeague(ctx.params.id);
-      ctx.body = await league.setParameters(ctx.request.body);
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(400, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const league: ILeague = await getLeague(ctx.params.id);
+    ctx.body = await league.setParameters(ctx.request.body);
   }
 );
 
@@ -210,17 +119,8 @@ leagueRouter.post(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league: ILeague = await getLeague(ctx.params.id);
-      ctx.body = await league.setRoles(ctx.request.body);
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(400, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const league: ILeague = await getLeague(ctx.params.id);
+    ctx.body = await league.setRoles(ctx.request.body);
   }
 );
 
@@ -229,17 +129,8 @@ leagueRouter.post(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league: ILeague = await getLeague(ctx.params.id);
-      ctx.body = await league.completePreseason();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(400, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const league: ILeague = await getLeague(ctx.params.id);
+    ctx.body = await league.completePreseason();
   }
 );
 
@@ -248,20 +139,11 @@ leagueRouter.patch(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const updatedLeague: ILeague = ctx.request.body;
-      const leagueToUpdate: ILeague = await getLeague(ctx.params.id);
-      leagueToUpdate.set(updatedLeague);
-      await leagueToUpdate.save();
-      ctx.body = await leagueToUpdate.populateLeague();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(400, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const updatedLeague: ILeague = ctx.request.body;
+    const leagueToUpdate: ILeague = await getLeague(ctx.params.id);
+    leagueToUpdate.set(updatedLeague);
+    await leagueToUpdate.save();
+    ctx.body = await leagueToUpdate.populateLeague();
   }
 );
 
@@ -270,22 +152,13 @@ leagueRouter.delete(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league = await League.findOneAndDelete({
-        _id: ctx.params.id,
-      }).exec();
-      if (league == null) {
-        ctx.throw(404, "Lega non trovata");
-      } else {
-        ctx.body = league;
-      }
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
+    const league = await League.findOneAndDelete({
+      _id: ctx.params.id,
+    }).exec();
+    if (league == null) {
+      ctx.throw(entityNotFound("League", ctx.params.id), 404);
+    } else {
+      ctx.body = league;
     }
   }
 );

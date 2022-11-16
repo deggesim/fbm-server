@@ -3,8 +3,7 @@ import * as Router from "koa-router";
 import { ILeague } from "../schemas/league";
 import { ITeam, Team } from "../schemas/team";
 import { admin, auth, parseToken } from "../util/auth";
-import { getLeague } from "../util/functions";
-import { erroreImprevisto } from "../util/globals";
+import { entityNotFound, getLeague } from "../util/functions";
 import { parseCsv } from "../util/parse";
 import { tenant } from "../util/tenant";
 
@@ -16,20 +15,11 @@ teamRouter.get(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      ctx.body = await Team.find({ league: ctx.get("league") })
-        .sort({
-          name: 1,
-        })
-        .exec();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    ctx.body = await Team.find({ league: ctx.get("league") })
+      .sort({
+        name: 1,
+      })
+      .exec();
   }
 );
 
@@ -39,24 +29,14 @@ teamRouter.get(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const team = await Team.findOne({
-        _id: ctx.params.id,
-        league: ctx.get("league"),
-      }).exec();
-      if (team == null) {
-        ctx.status = 404;
-      } else {
-        ctx.body = team;
-      }
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
+    const team = await Team.findOne({
+      _id: ctx.params.id,
+      league: ctx.get("league"),
+    }).exec();
+    if (team == null) {
+      ctx.throw(entityNotFound("Team", ctx.params.id, ctx.get("league")), 404);
     }
+    ctx.body = team;
   }
 );
 
@@ -67,20 +47,11 @@ teamRouter.post(
   tenant(),
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const newTeam: ITeam = ctx.request.body;
-      const league: ILeague = await getLeague(ctx.get("league"));
-      newTeam.league = league._id;
-      ctx.body = await Team.create(newTeam);
-      ctx.status = 201;
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(400, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const newTeam: ITeam = ctx.request.body;
+    const league: ILeague = await getLeague(ctx.get("league"));
+    newTeam.league = league._id;
+    ctx.body = await Team.create(newTeam);
+    ctx.status = 201;
   }
 );
 
@@ -96,25 +67,16 @@ teamRouter.post(
   admin(),
   upload.single("teams"),
   async (ctx: Router.IRouterContext) => {
-    try {
-      const teams = parseCsv(ctx.request.body.teams.toString(), [
-        "fullName",
-        "sponsor",
-        "name",
-        "city",
-        "abbreviation",
-      ]);
-      await Team.deleteMany({ league: ctx.get("league") }).exec();
-      const league: ILeague = await getLeague(ctx.get("league"));
-      ctx.body = await Team.insertTeams(teams, league);
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(400, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const teams = parseCsv(ctx.request.body.teams.toString(), [
+      "fullName",
+      "sponsor",
+      "name",
+      "city",
+      "abbreviation",
+    ]);
+    await Team.deleteMany({ league: ctx.get("league") }).exec();
+    const league: ILeague = await getLeague(ctx.get("league"));
+    ctx.body = await Team.insertTeams(teams, league);
   }
 );
 
@@ -125,25 +87,16 @@ teamRouter.patch(
   tenant(),
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const updatedTeam: ITeam = ctx.request.body;
-      const teamToUpdate = await Team.findOne({
-        _id: ctx.params.id,
-        league: ctx.get("league"),
-      }).exec();
-      if (teamToUpdate == null) {
-        ctx.throw(404, "Squadra non trovata");
-      }
-      teamToUpdate.set(updatedTeam);
-      ctx.body = await teamToUpdate.save();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(400, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
+    const updatedTeam: ITeam = ctx.request.body;
+    const teamToUpdate = await Team.findOne({
+      _id: ctx.params.id,
+      league: ctx.get("league"),
+    }).exec();
+    if (teamToUpdate == null) {
+      ctx.throw(entityNotFound("Team", ctx.params.id, ctx.get("league")), 404);
     }
+    teamToUpdate.set(updatedTeam);
+    ctx.body = await teamToUpdate.save();
   }
 );
 
@@ -154,23 +107,14 @@ teamRouter.delete(
   tenant(),
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const team = await Team.findOneAndDelete({
-        _id: ctx.params.id,
-        league: ctx.get("league"),
-      }).exec();
-      if (team == null) {
-        ctx.throw(404, "Squadra non trovata");
-      }
-      ctx.body = team;
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
+    const team = await Team.findOneAndDelete({
+      _id: ctx.params.id,
+      league: ctx.get("league"),
+    }).exec();
+    if (team == null) {
+      ctx.throw(entityNotFound("Team", ctx.params.id, ctx.get("league")), 404);
     }
+    ctx.body = team;
   }
 );
 

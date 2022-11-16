@@ -1,6 +1,5 @@
 import * as Koa from "koa";
 import * as Router from "koa-router";
-import { League } from "../schemas/league";
 import { IUser } from "../schemas/user";
 import { getLeague } from "./functions";
 import { Role } from "./globals";
@@ -18,8 +17,8 @@ export const tenant = () => {
       await next();
     } else {
       ctx.throw(
-        403,
-        `Utente non autorizzato ad operare sulla lega ${league.name}`
+        `Utente non autorizzato ad operare sulla lega ${league.name}`,
+        403
       );
     }
   };

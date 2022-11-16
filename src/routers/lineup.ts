@@ -11,7 +11,6 @@ import { IRoster } from "../schemas/roster";
 import { IUser } from "../schemas/user";
 import { auth, parseToken } from "../util/auth";
 import { entityNotFound, getLeague } from "../util/functions";
-import { erroreImprevisto } from "../util/globals";
 import { notifyLineup } from "../util/push-notification";
 import { tenant } from "../util/tenant";
 
@@ -23,16 +22,7 @@ lineupRouter.get(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      ctx.body = await Lineup.find({ league: ctx.get("league") }).exec();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    ctx.body = await Lineup.find({ league: ctx.get("league") }).exec();
   }
 );
 
@@ -42,23 +32,17 @@ lineupRouter.get(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const lineup = await Lineup.findOne({
-        _id: ctx.params.id,
-        league: ctx.get("league"),
-      }).exec();
-      if (lineup == null) {
-        ctx.throw(404, "Giornata non trovata");
-      } else {
-        ctx.body = lineup;
-      }
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
+    const lineup = await Lineup.findOne({
+      _id: ctx.params.id,
+      league: ctx.get("league"),
+    }).exec();
+    if (lineup == null) {
+      ctx.throw(
+        entityNotFound("Lineup", ctx.params.id, ctx.get("league")),
+        404
+      );
+    } else {
+      ctx.body = lineup;
     }
   }
 );
@@ -69,36 +53,27 @@ lineupRouter.get(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const league: ILeague = await getLeague(ctx.get("league"));
-      const lineup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(
-        league._id,
-        ctx.params.fantasyTeamId,
-        ctx.params.fixtureId
-      );
-      await Lineup.populate(lineup, [
-        {
-          path: "fantasyRoster",
-          populate: [
-            { path: "fantasyTeam" },
-            {
-              path: "roster",
-              populate: [{ path: "player" }, { path: "team" }],
-            },
-          ],
-        },
-        { path: "fixture" },
-        { path: "performance" },
-      ]);
-      ctx.body = lineup;
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
-    }
+    const league: ILeague = await getLeague(ctx.get("league"));
+    const lineup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(
+      league._id,
+      ctx.params.fantasyTeamId,
+      ctx.params.fixtureId
+    );
+    await Lineup.populate(lineup, [
+      {
+        path: "fantasyRoster",
+        populate: [
+          { path: "fantasyTeam" },
+          {
+            path: "roster",
+            populate: [{ path: "player" }, { path: "team" }],
+          },
+        ],
+      },
+      { path: "fixture" },
+      { path: "performance" },
+    ]);
+    ctx.body = lineup;
   }
 );
 
@@ -115,7 +90,7 @@ lineupRouter.post(
         ft._id.equals(ctx.params.fantasyTeamId)
       ) != null;
     if (user.isUser() && !teamManagedByLoggedUser) {
-      ctx.throw(403, "Utente non autorizzato all'operazione richiesta");
+      ctx.throw("Utente non autorizzato all'operazione richiesta", 403);
     }
     // delete old items
     const oldLineup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(
@@ -174,25 +149,19 @@ lineupRouter.patch(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const updatedLineup: ILineup = ctx.request.body;
-      const lineupToUpdate = await Lineup.findOne({
-        _id: ctx.params.id,
-        league: ctx.get("league"),
-      }).exec();
-      if (lineupToUpdate == null) {
-        ctx.throw(404, "Giornata non trovata");
-      }
-      lineupToUpdate.set(updatedLineup);
-      ctx.body = await lineupToUpdate.save();
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(400, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
+    const updatedLineup: ILineup = ctx.request.body;
+    const lineupToUpdate = await Lineup.findOne({
+      _id: ctx.params.id,
+      league: ctx.get("league"),
+    }).exec();
+    if (lineupToUpdate == null) {
+      ctx.throw(
+        entityNotFound("Lineup", ctx.params.id, ctx.get("league")),
+        404
+      );
     }
+    lineupToUpdate.set(updatedLineup);
+    ctx.body = await lineupToUpdate.save();
   }
 );
 
@@ -202,25 +171,18 @@ lineupRouter.delete(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const lineup = await Lineup.findOneAndDelete({
-        id: ctx.params.id,
-        league: ctx.get("league"),
-      }).exec();
-      console.log(lineup);
-      if (lineup == null) {
-        ctx.status = 404;
-      } else {
-        ctx.body = lineup;
-      }
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
+    const lineup = await Lineup.findOneAndDelete({
+      id: ctx.params.id,
+      league: ctx.get("league"),
+    }).exec();
+    console.log(lineup);
+    if (lineup == null) {
+      ctx.throw(
+        entityNotFound("Lineup", ctx.params.id, ctx.get("league")),
+        404
+      );
     }
+    ctx.body = lineup;
   }
 );
 
@@ -230,40 +192,31 @@ lineupRouter.delete(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const leagueId = ctx.get("league");
-      const user: IUser = ctx.state.user;
-      const teamManagedByLoggedUser =
-        (user.fantasyTeams as IFantasyTeam[]).find((ft: IFantasyTeam) =>
-          ft._id.equals(ctx.params.fantasyTeamId)
-        ) != null;
-      if (user.isUser() && !teamManagedByLoggedUser) {
-        ctx.throw(403, "Utente non autorizzato all'operazione richiesta");
-      }
-      const realFixture: IRealFixture = await RealFixture.findByFixture(
-        leagueId,
-        ctx.params.fixtureId
-      );
-      const fantasyRosters: IFantasyRoster[] = await FantasyRoster.find({
-        league: leagueId,
-        fantasyTeam: ctx.params.fantasyTeamId,
-        realFixture: realFixture._id,
-      }).exec();
-      const fantasyRostersId: string[] = fantasyRosters.map((fr) => fr._id);
-      await Lineup.deleteMany({
-        league: leagueId,
-        fixture: ctx.params.fixtureId,
-        fantasyRoster: { $in: fantasyRostersId },
-      }).exec();
-      ctx.status = 204;
-    } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        ctx.throw(500, error.message);
-      } else {
-        ctx.throw(500, erroreImprevisto);
-      }
+    const leagueId = ctx.get("league");
+    const user: IUser = ctx.state.user;
+    const teamManagedByLoggedUser =
+      (user.fantasyTeams as IFantasyTeam[]).find((ft: IFantasyTeam) =>
+        ft._id.equals(ctx.params.fantasyTeamId)
+      ) != null;
+    if (user.isUser() && !teamManagedByLoggedUser) {
+      ctx.throw("Utente non autorizzato all'operazione richiesta", 403);
     }
+    const realFixture: IRealFixture = await RealFixture.findByFixture(
+      leagueId,
+      ctx.params.fixtureId
+    );
+    const fantasyRosters: IFantasyRoster[] = await FantasyRoster.find({
+      league: leagueId,
+      fantasyTeam: ctx.params.fantasyTeamId,
+      realFixture: realFixture._id,
+    }).exec();
+    const fantasyRostersId: string[] = fantasyRosters.map((fr) => fr._id);
+    await Lineup.deleteMany({
+      league: leagueId,
+      fixture: ctx.params.fixtureId,
+      fantasyRoster: { $in: fantasyRostersId },
+    }).exec();
+    ctx.status = 204;
   }
 );
 

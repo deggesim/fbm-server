@@ -11,7 +11,7 @@ export const parseToken = () => {
   return async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const user: IUser = ctx.state.user;
     if (user == null) {
-      ctx.throw(401, "Utente non autenticato");
+      ctx.throw("Utente non autenticato", 401);
     }
     const id = user._id;
     const userDb = await User.findById(id).exec();
@@ -29,7 +29,7 @@ export const admin = () => {
   return async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const user: IUser = ctx.state.user;
     if (user == null || user.isUser()) {
-      ctx.throw(403, "Utente non autorizzato all'operazione richiesta");
+      ctx.throw("Utente non autorizzato all'operazione richiesta", 403);
     }
     await next();
   };
@@ -39,7 +39,7 @@ export const superAdmin = () => {
   return async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const user: IUser = ctx.state.user;
     if (user == null || !user.isSuperAdmin()) {
-      ctx.throw(403, "Utente non autorizzato all'operazione richiesta");
+      ctx.throw("Utente non autorizzato all'operazione richiesta", 403);
     }
     await next();
   };

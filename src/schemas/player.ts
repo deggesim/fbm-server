@@ -105,80 +105,75 @@ schema.statics.insertPlayers = async (
   uploadedPlayers: any[],
   league: ILeague
 ) => {
-  try {
-    uploadPercentage.set(league.id, 0);
-    const uploadedPlayersLength = uploadedPlayers.length;
+  uploadPercentage.set(league.id, 0);
+  const uploadedPlayersLength = uploadedPlayers.length;
 
-    const ret: IPlayer[] = [];
-    // pulizia tabelle correlate
-    await Performance.deleteMany({ league: league._id }).exec();
-    await Roster.deleteMany({ league: league._id }).exec();
-    await FantasyRoster.deleteMany({ league: league._id }).exec();
-    await Player.deleteMany({ league: league._id }).exec();
+  const ret: IPlayer[] = [];
+  // pulizia tabelle correlate
+  await Performance.deleteMany({ league: league._id }).exec();
+  await Roster.deleteMany({ league: league._id }).exec();
+  await FantasyRoster.deleteMany({ league: league._id }).exec();
+  await Player.deleteMany({ league: league._id }).exec();
 
-    const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find({
-      league: league._id,
-    }).exec();
-    for (const fantasyTeam of fantasyTeams) {
-      fantasyTeam.outgo = 0;
-      fantasyTeam.extraPlayers = 0;
-      fantasyTeam.playersInRoster = 0;
-      fantasyTeam.totalContracts = 0;
-      await fantasyTeam.save();
-    }
-
-    const teams: ITeam[] = await Team.find({
-      league: league._id,
-    }).exec();
-    const nextRealFixture: IRealFixture = await league.nextRealFixture();
-    const allRealFixtures: IRealFixture[] = await RealFixture.find({
-      league: league._id,
-    })
-      .sort({ order: 1 })
-      .exec();
-    let index = 1;
-    for (const uploadedPlayer of uploadedPlayers) {
-      const { name, role, nationality, number, yearBirth, height, weight } =
-        uploadedPlayer;
-      const playerTeam = uploadedPlayer.team;
-      const newPlayer = {
-        name,
-        role,
-        nationality,
-        number,
-        yearBirth,
-        height,
-        weight,
-        league: league._id,
-      };
-      const player = await Player.create(newPlayer);
-      ret.push(player);
-
-      const team: ITeam = teams.find((t: ITeam) => {
-        return t.fullName === String(playerTeam);
-      }) as ITeam;
-      const roster = {
-        player: player._id,
-        team: team._id,
-        realFixture: nextRealFixture._id,
-        league: league._id,
-      };
-      await Roster.create(roster);
-      for (const realFixture of allRealFixtures) {
-        await Performance.create({
-          player: player._id,
-          realFixture: realFixture._id,
-          league: league._id,
-        });
-      }
-
-      uploadPercentage.set(league.id, (index++ / uploadedPlayersLength) * 100);
-    }
-    return ret;
-  } catch (error) {
-    console.log(error);
-    throw error;
+  const fantasyTeams: IFantasyTeam[] = await FantasyTeam.find({
+    league: league._id,
+  }).exec();
+  for (const fantasyTeam of fantasyTeams) {
+    fantasyTeam.outgo = 0;
+    fantasyTeam.extraPlayers = 0;
+    fantasyTeam.playersInRoster = 0;
+    fantasyTeam.totalContracts = 0;
+    await fantasyTeam.save();
   }
+
+  const teams: ITeam[] = await Team.find({
+    league: league._id,
+  }).exec();
+  const nextRealFixture: IRealFixture = await league.nextRealFixture();
+  const allRealFixtures: IRealFixture[] = await RealFixture.find({
+    league: league._id,
+  })
+    .sort({ order: 1 })
+    .exec();
+  let index = 1;
+  for (const uploadedPlayer of uploadedPlayers) {
+    const { name, role, nationality, number, yearBirth, height, weight } =
+      uploadedPlayer;
+    const playerTeam = uploadedPlayer.team;
+    const newPlayer = {
+      name,
+      role,
+      nationality,
+      number,
+      yearBirth,
+      height,
+      weight,
+      league: league._id,
+    };
+    const player = await Player.create(newPlayer);
+    ret.push(player);
+
+    const team: ITeam = teams.find((t: ITeam) => {
+      return t.fullName === String(playerTeam);
+    }) as ITeam;
+    const roster = {
+      player: player._id,
+      team: team._id,
+      realFixture: nextRealFixture._id,
+      league: league._id,
+    };
+    await Roster.create(roster);
+    for (const realFixture of allRealFixtures) {
+      await Performance.create({
+        player: player._id,
+        realFixture: realFixture._id,
+        league: league._id,
+      });
+    }
+
+    uploadPercentage.set(league.id, (index++ / uploadedPlayersLength) * 100);
+  }
+  return ret;
 };
 
 schema.statics.uploadPercentage = (leagueId: string) => {

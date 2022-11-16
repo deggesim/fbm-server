@@ -1,7 +1,6 @@
-import Router = require("koa-router");
 import { ObjectId } from "mongodb";
 import { League } from "../schemas/league";
-import { erroreImprevisto } from "./globals";
+import { isEmpty } from "./globals";
 
 export const halfDownRound = (firstOperand: number, secondOperand: number) => {
   let half = firstOperand / secondOperand;
@@ -18,7 +17,9 @@ export const entityNotFound = (
   entity: string,
   ...params: Array<string | ObjectId>
 ): string => {
-  return `${entity} inesistente per la chiave di ricerca '${params}'`;
+  return params != null && !isEmpty(params)
+    ? `${entity} inesistente per la chiave di ricerca '${params}'`
+    : `${entity} inesistente`;
 };
 
 export const getLeague = async (leagueId: string | ObjectId) => {
@@ -27,18 +28,5 @@ export const getLeague = async (leagueId: string | ObjectId) => {
     throw new Error(entityNotFound("Lega", leagueId));
   } else {
     return league;
-  }
-};
-
-export const handleError = (
-  error: unknown,
-  ctx: Router.IRouterContext,
-  status: number
-) => {
-  console.log(error);
-  if (error instanceof Error) {
-    ctx.throw(status, error.message);
-  } else {
-    ctx.throw(500, erroreImprevisto);
   }
 };

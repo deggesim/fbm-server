@@ -129,18 +129,36 @@ export const roundRobinMatchList = async (
   fantasyTeams: IFantasyTeam[]
 ): Promise<IMatch[]> => {
   const ret: IMatch[] = [];
-  try {
-    const numTeams = fantasyTeams.length;
-    // get static calendar
-    const teamsSlots = games.get(numTeams);
-    for (let g = 0; g < teamsSlots.length; g++) {
-      // andata
-      const fixture = fixtures[g];
+  const numTeams = fantasyTeams.length;
+  // get static calendar
+  const teamsSlots = games.get(numTeams);
+  for (let g = 0; g < teamsSlots.length; g++) {
+    // andata
+    const fixture = fixtures[g];
+    fixture.matches = [];
+    for (let i = 0; i < teamsSlots[g].length; i += 2) {
+      const match = {
+        homeTeam: fantasyTeams[teamsSlots[g][i]],
+        awayTeam: fantasyTeams[teamsSlots[g][i + 1]],
+        league: idLeague,
+        completed: false,
+      };
+      const newMatch: IMatch = await Match.create(match);
+      fixture.matches.push(newMatch);
+      ret.push(newMatch);
+    }
+    await fixture.save();
+  }
+
+  if (rounds > 1) {
+    // ritorno
+    for (let g = 0, gg = teamsSlots.length; g < teamsSlots.length; g++, gg++) {
+      const fixture = fixtures[gg];
       fixture.matches = [];
       for (let i = 0; i < teamsSlots[g].length; i += 2) {
         const match = {
-          homeTeam: fantasyTeams[teamsSlots[g][i]],
-          awayTeam: fantasyTeams[teamsSlots[g][i + 1]],
+          homeTeam: fantasyTeams[teamsSlots[g][i + 1]],
+          awayTeam: fantasyTeams[teamsSlots[g][i]],
           league: idLeague,
           completed: false,
         };
@@ -150,34 +168,7 @@ export const roundRobinMatchList = async (
       }
       await fixture.save();
     }
-
-    if (rounds > 1) {
-      // ritorno
-      for (
-        let g = 0, gg = teamsSlots.length;
-        g < teamsSlots.length;
-        g++, gg++
-      ) {
-        const fixture = fixtures[gg];
-        fixture.matches = [];
-        for (let i = 0; i < teamsSlots[g].length; i += 2) {
-          const match = {
-            homeTeam: fantasyTeams[teamsSlots[g][i + 1]],
-            awayTeam: fantasyTeams[teamsSlots[g][i]],
-            league: idLeague,
-            completed: false,
-          };
-          const newMatch: IMatch = await Match.create(match);
-          fixture.matches.push(newMatch);
-          ret.push(newMatch);
-        }
-        await fixture.save();
-      }
-    }
-  } catch (error) {
-    console.log(error);
   }
-
   return ret;
 };
 
