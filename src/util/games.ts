@@ -1,7 +1,7 @@
-import { ObjectId } from 'mongodb';
-import { IFantasyTeam } from '../schemas/fantasy-team';
-import { IFixture } from '../schemas/fixture';
-import { IMatch, Match } from '../schemas/match';
+import { ObjectId } from "mongodb";
+import { IFantasyTeam } from "../schemas/fantasy-team";
+import { IFixture } from "../schemas/fixture";
+import { IMatch, Match } from "../schemas/match";
 
 export const games = new Map();
 games.set(4, [
@@ -122,20 +122,43 @@ games.set(20, [
   [0, 15, 18, 3, 16, 19, 5, 1, 11, 17, 12, 6, 10, 9, 8, 13, 4, 14, 2, 7],
 ]);
 
-export const roundRobinMatchList = async (idLeague: ObjectId, rounds: number, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
+export const roundRobinMatchList = async (
+  idLeague: ObjectId,
+  rounds: number,
+  fixtures: IFixture[],
+  fantasyTeams: IFantasyTeam[]
+): Promise<IMatch[]> => {
   const ret: IMatch[] = [];
-  try {
-    const numTeams = fantasyTeams.length;
-    // get static calendar
-    const teamsSlots = games.get(numTeams);
-    for (let g = 0; g < teamsSlots.length; g++) {
-      // andata
-      const fixture = fixtures[g];
+  const numTeams = fantasyTeams.length;
+  // get static calendar
+  const teamsSlots = games.get(numTeams);
+  for (let g = 0; g < teamsSlots.length; g++) {
+    // andata
+    const fixture = fixtures[g];
+    fixture.matches = [];
+    for (let i = 0; i < teamsSlots[g].length; i += 2) {
+      const match = {
+        homeTeam: fantasyTeams[teamsSlots[g][i]],
+        awayTeam: fantasyTeams[teamsSlots[g][i + 1]],
+        league: idLeague,
+        completed: false,
+      };
+      const newMatch: IMatch = await Match.create(match);
+      fixture.matches.push(newMatch);
+      ret.push(newMatch);
+    }
+    await fixture.save();
+  }
+
+  if (rounds > 1) {
+    // ritorno
+    for (let g = 0, gg = teamsSlots.length; g < teamsSlots.length; g++, gg++) {
+      const fixture = fixtures[gg];
       fixture.matches = [];
       for (let i = 0; i < teamsSlots[g].length; i += 2) {
         const match = {
-          homeTeam: fantasyTeams[teamsSlots[g][i]],
-          awayTeam: fantasyTeams[teamsSlots[g][i + 1]],
+          homeTeam: fantasyTeams[teamsSlots[g][i + 1]],
+          awayTeam: fantasyTeams[teamsSlots[g][i]],
           league: idLeague,
           completed: false,
         };
@@ -145,34 +168,15 @@ export const roundRobinMatchList = async (idLeague: ObjectId, rounds: number, fi
       }
       await fixture.save();
     }
-
-    if (rounds > 1) {
-      // ritorno
-      for (let g = 0, gg = teamsSlots.length; g < teamsSlots.length; g++, gg++) {
-        const fixture = fixtures[gg];
-        fixture.matches = [];
-        for (let i = 0; i < teamsSlots[g].length; i += 2) {
-          const match = {
-            homeTeam: fantasyTeams[teamsSlots[g][i + 1]],
-            awayTeam: fantasyTeams[teamsSlots[g][i]],
-            league: idLeague,
-            completed: false,
-          };
-          const newMatch: IMatch = await Match.create(match);
-          fixture.matches.push(newMatch);
-          ret.push(newMatch);
-        }
-        await fixture.save();
-      }
-    }
-  } catch (error) {
-    console.log(error);
   }
-
   return ret;
 };
 
-export const playoffMatchList = async (idLeague: ObjectId, fixtures: IFixture[], fantasyTeams: IFantasyTeam[]): Promise<IMatch[]> => {
+export const playoffMatchList = async (
+  idLeague: ObjectId,
+  fixtures: IFixture[],
+  fantasyTeams: IFantasyTeam[]
+): Promise<IMatch[]> => {
   const ret: IMatch[] = [];
   const size = fantasyTeams.length;
   const upperSublist = fantasyTeams.slice(0, size / 2);

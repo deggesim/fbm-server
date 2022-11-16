@@ -12,23 +12,18 @@ statisticsRouter.get(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    try {
-      const { page, limit, team, fantasyTeam, role, freePlayers } = ctx.query;
-      const playerStatisticList = await statistics(
-        ctx.get("league"),
-        page,
-        limit,
-        team,
-        fantasyTeam,
-        role,
-        freePlayers
-      );
-      ctx.set("X-Total-Count", String(playerStatisticList.total));
-      ctx.body = playerStatisticList.playerStatistics;
-    } catch (error) {
-      console.log(error);
-      ctx.throw(500, error.message);
-    }
+    const { page, limit, team, fantasyTeam, role, freePlayers } = ctx.query;
+    const playerStatisticList = await statistics(
+      ctx.get("league"),
+      page,
+      limit,
+      team,
+      fantasyTeam,
+      role,
+      freePlayers
+    );
+    ctx.set("X-Total-Count", String(playerStatisticList.total));
+    ctx.body = playerStatisticList.playerStatistics;
   }
 );
 

@@ -20,11 +20,20 @@ import roundRouter from "./routers/round";
 import statisticsRouter from "./routers/statistics";
 import teamRouter from "./routers/team";
 import userRouter from "./routers/user";
+import { erroreImprevisto } from "./util/globals";
 
 const app: Koa = new Koa();
 const router: Router = new Router();
 
 const cors = require("@koa/cors");
+app.use(async (ctx, next) => {
+  try {
+    await next();
+  } catch (err) {
+    ctx.status = (err as any).statusCode || (err as any).status || 500;
+    ctx.body = (err as any).message || erroreImprevisto;
+  }
+});
 app.use(cors({ exposeHeaders: "X-Total-Count" }));
 
 app.use(logger());

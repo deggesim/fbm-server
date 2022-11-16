@@ -53,7 +53,7 @@ const schema = new Schema<IHistory>(
         "RELEASE",
         "TRADE_OUT",
         "TRADE_IN",
-        "UPDATE_BALANCE"
+        "UPDATE_BALANCE",
       ],
     },
     realFixture: {
@@ -141,7 +141,7 @@ const schema = new Schema<IHistory>(
     },
   },
   {
-    collection: 'history',
+    collection: "history",
     timestamps: true,
     toObject: { virtuals: true },
     toJSON: { virtuals: true },
