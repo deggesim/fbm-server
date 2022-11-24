@@ -1,9 +1,8 @@
 import { ObjectId } from "bson";
-import { League } from "../schemas/league";
 import { IPerformance } from "../schemas/performance";
 import { IPlayer } from "../schemas/player";
 import { Roster } from "../schemas/roster";
-import { entityNotFound, getLeague } from "./functions";
+import { getLeague } from "./functions";
 
 export interface PlayerStatistic {
   player: IPlayer;
@@ -44,9 +43,6 @@ export const statistics = async (
       as: "player",
     })
     .unwind("$player");
-  if (role) {
-    aggregate.match({ "player.role": role });
-  }
 
   aggregate
     .lookup({
@@ -56,9 +52,6 @@ export const statistics = async (
       as: "team",
     })
     .unwind("$team");
-  if (team) {
-    aggregate.match({ "team._id": new ObjectId(team) });
-  }
 
   aggregate
     .lookup({
@@ -83,11 +76,6 @@ export const statistics = async (
       path: "$fantasyRoster.fantasyTeam",
       preserveNullAndEmptyArrays: true,
     });
-  if (fantasyTeam) {
-    aggregate.match({
-      "fantasyRoster.fantasyTeam._id": new ObjectId(fantasyTeam),
-    });
-  }
 
   aggregate
     .lookup({
@@ -116,6 +104,17 @@ export const statistics = async (
       rankingMinutesRatio: { $divide: ["$avgRanking", "$avgMinutes"] },
     });
 
+  if (role) {
+    aggregate.match({ "player.role": role });
+  }
+  if (team) {
+    aggregate.match({ "team._id": new ObjectId(team) });
+  }
+  if (fantasyTeam) {
+    aggregate.match({
+      "fantasyRoster.fantasyTeam._id": new ObjectId(fantasyTeam),
+    });
+  }
   if (freePlayers) {
     aggregate.match({ "fantasyRoster._id": { $exists: false } });
   }
