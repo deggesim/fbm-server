@@ -43,6 +43,7 @@ interface ILeagueDocument extends Document {
     role: string;
     spots: number[];
   }>;
+  preparingNextRealFixture: boolean;
 }
 
 export interface ITenant extends Document {
@@ -158,6 +159,10 @@ const schema = new Schema<ILeague>(
         ],
       },
     ],
+    preparingNextRealFixture: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -306,12 +311,28 @@ schema.methods.nextRealFixture = async function () {
 };
 
 schema.methods.progress = async function (realFixture: IRealFixture) {
+  const league = this;
+  if (league.preparingNextRealFixture) {
+    console.info(
+      "[PROGRESS] ------------------------------------ START ------------------------------------"
+    );
+    console.info(
+      `[PROGRESS] realFixture ${realFixture.id} already in progress`
+    );
+    console.info(
+      "[PROGRESS] ------------------------------------ STOP ------------------------------------"
+    );
+    return;
+  }
+
+  league.preparingNextRealFixture = true;
+  await league.save();
+
   console.info(
     "[PROGRESS] ------------------------------------ START ------------------------------------"
   );
   console.info("[PROGRESS] ", new Date().toUTCString());
   console.info("[PROGRESS] realFixture", realFixture.id);
-  const league = this;
 
   // check all rounds
   await checkAllRounds(league);
@@ -403,10 +424,12 @@ schema.methods.progress = async function (realFixture: IRealFixture) {
     nextRealFixture.prepared = true;
     await nextRealFixture.save();
     console.info("[PROGRESS] nextRealFixture.save()", nextRealFixture.id);
-    console.info(
-      "[PROGRESS] ------------------------------------ STOP ------------------------------------"
-    );
   }
+  console.info(
+    "[PROGRESS] ------------------------------------ STOP ------------------------------------"
+  );
+  league.preparingNextRealFixture = false;
+  await league.save();
 };
 
 export const League = model<ILeague, ILeagueModel>("League", schema);

@@ -1,0 +1,32 @@
+Procedura ripristino lega
+
+Estrarre l'id della realFixture da resettare
+db.getCollection('realfixtures').find({league: ObjectId("xxx")}).sort({order:1})
+
+Reset fantasyrosters
+db.getCollection('fantasyrosters').remove({league: ObjectId("xxx"), realFixture: ObjectId("yyy")})
+
+Reset rosters
+db.getCollection('rosters').remove({league: ObjectId("xxx"), realFixture: ObjectId("yyy")})
+
+Eliminare formazioni esistenti per la giornata:
+db.getCollection('lineups').remove({league: ObjectId("xxx"), fixture: ObjectId("abc")})
+
+Impostare completed a false alla realFixture estratta all'inizio:
+{
+    "_id" : ObjectId("yyy"),
+    "fixtures" : [ 
+        ObjectId("abc"), 
+        ObjectId("def")
+    ],
+    "teamsWithNoGame" : [],
+    "name" : "Giornata #12",
+    "prepared" : true ---> false
+    "order" : 12,
+    "league" : ObjectId("xxx"),
+    "createdAt" : ISODate("2022-09-12T14:53:01.017Z"),
+    "updatedAt" : ISODate("2022-12-18T21:20:01.491Z"),
+    "__v" : 2
+}
+
+
