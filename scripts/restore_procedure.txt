@@ -12,7 +12,7 @@ db.getCollection('rosters').remove({league: ObjectId("xxx"), realFixture: Object
 Eliminare formazioni esistenti per la giornata:
 db.getCollection('lineups').remove({league: ObjectId("xxx"), fixture: ObjectId("abc")})
 
-Impostare completed a false alla realFixture estratta all'inizio:
+Impostare prepared a false la realFixture estratta all'inizio:
 {
     "_id" : ObjectId("yyy"),
     "fixtures" : [ 
