@@ -7,13 +7,13 @@ import {
   PaginateResult,
   Schema,
 } from "mongoose";
-import * as mongoosePaginate from "mongoose-paginate";
+import * as mongoosePaginate from "mongoose-paginate-v2";
 import { IFantasyRoster } from "./fantasy-roster";
 import { ITenant } from "./league";
 import { IPlayer } from "./player";
 import { IRealFixture } from "./real-fixture";
 import { ITeam } from "./team";
-const mongooseAggregatePaginate = require("mongoose-aggregate-paginate");
+const mongooseAggregatePaginate = require("mongoose-aggregate-paginate-v2");
 
 interface IRosterDocument extends ITenant {
   player: IPlayer | ObjectId;

@@ -67,9 +67,9 @@ export const notifyLineup = async (
   if (fixture == null) {
     throw new Error(entityNotFound("Giornata", fixtureId));
   }
-  await fixture.populate("round").execPopulate();
+  await fixture.populate("round");
   const round: IRound = fixture.get("round");
-  await round.populate("competition").execPopulate();
+  await round.populate("competition");
   const competition = round.get("competition");
   const subscriptions = await getAllSubscriptions(league);
   const filteredSubscriptions = subscriptions.filter(
@@ -157,9 +157,9 @@ export const notifyFixtureCompleted = async (
   league: ILeague,
   fixture: IFixture
 ) => {
-  await fixture.populate("round").execPopulate();
+  await fixture.populate("round");
   const round: IRound = fixture.get("round");
-  await round.populate("competition").execPopulate();
+  await round.populate("competition");
   const competition = round.get("competition");
   const subscriptions = await getAllSubscriptions(league);
 

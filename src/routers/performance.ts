@@ -47,7 +47,10 @@ performanceRouter.get(
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const queryString = ctx.query;
-    const filter = parseInt(queryString?.filter, 0);
+    const filter = parseInt(
+      queryString && (queryString["filter"] as string),
+      0
+    );
     let rosters: IRoster[] = [];
     if (filter != null) {
       switch (filter) {
@@ -95,7 +98,7 @@ performanceRouter.get(
       player: { $in: playersId },
     }).exec();
     for (const performance of performances) {
-      await performance.populate("player").execPopulate();
+      await performance.populate("player");
     }
     ctx.body = performances;
   }
@@ -112,7 +115,7 @@ performanceRouter.get(
       player: ctx.params.playerId,
     }).exec();
     for (const performance of performances) {
-      await performance.populate("realFixture").execPopulate();
+      await performance.populate("realFixture");
     }
     ctx.body = performances;
   }
@@ -124,7 +127,7 @@ performanceRouter.post(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const performances: IPerformance[] = ctx.request.body;
+    const performances: IPerformance[] = ctx.request.body as IPerformance[];
     for (const updatedPerformance of performances) {
       const performanceToUpdate = await Performance.findOne({
         _id: updatedPerformance._id,
@@ -153,7 +156,7 @@ performanceRouter.post(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const url: string = ctx.request.body.url;
+    const url: string = (ctx.request.body as { url: string }).url;
     const rosters = await Roster.find({
       league: ctx.get("league"),
       team: ctx.params.teamId,
@@ -176,7 +179,7 @@ performanceRouter.patch(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const updatedPerformance: IPerformance = ctx.request.body;
+    const updatedPerformance: IPerformance = ctx.request.body as IPerformance;
     const performanceToUpdate = await Performance.findOne({
       _id: ctx.params.id,
       league: ctx.get("league"),

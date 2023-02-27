@@ -1,7 +1,7 @@
 import * as bcrypt from "bcrypt";
 import * as jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
-import { Document, HookNextFunction, model, Model, Schema } from "mongoose";
+import { Document, model, Model, Schema } from "mongoose";
 import validator from "validator";
 import { Role } from "../util/globals";
 import { IFantasyTeam } from "./fantasy-team";
@@ -146,7 +146,7 @@ schema.statics.allSuperAdmins = async function () {
 };
 
 // Hash the plain text password before saving
-schema.pre<IUser>("save", async function (next: HookNextFunction) {
+schema.pre<IUser>("save", async function (next) {
   const user = this;
   if (user.isModified("password")) {
     user.password = await bcrypt.hash(user.password, 8);

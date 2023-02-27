@@ -38,11 +38,12 @@ matchRouter.get(
       league: ctx.get("league"),
     }).exec()) as IFixture;
     for (let i = 0; i < fixture.matches.length; i++) {
-      await fixture.populate(`matches.${i}`).execPopulate();
-      await fixture
-        .populate(`matches.${i}.homeTeam`)
-        .populate(`matches.${i}.awayTeam`)
-        .execPopulate();
+      await fixture.populate({
+        path: `matches.${i}`,
+        populate: {
+          path: "homeTeam awayTeam",
+        },
+      });
     }
     ctx.body = fixture.matches;
   }
@@ -56,7 +57,7 @@ matchRouter.post(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await getLeague(ctx.get("league"));
-    const newMatch: IMatch = ctx.request.body;
+    const newMatch: IMatch = ctx.request.body as IMatch;
     newMatch.league = league._id;
     ctx.body = await Match.create(newMatch);
     ctx.status = 201;
@@ -131,7 +132,7 @@ matchRouter.post(
       (param) => param.parameter === "RESULT_DIVISOR"
     )?.value as number;
 
-    match.homeFactor = ctx.query.homeFactor ? ctx.query.homeFactor : null;
+    match.homeFactor = +ctx.query.homeFactor;
     if (match.homeFactor == null) {
       match.homeFactor = round.homeFactor != null ? round.homeFactor : 0;
     }
@@ -149,7 +150,7 @@ matchRouter.post(
     const fixture: IFixture = (await Fixture.findById(
       ctx.params.fixtureId
     ).exec()) as IFixture;
-    await fixture.populate("matches").execPopulate();
+    await fixture.populate("matches");
     const completedMatches = (fixture.matches as IMatch[]).filter(
       (m: IMatch) => m.completed
     ).length;
@@ -158,7 +159,7 @@ matchRouter.post(
       fixture.completed = true;
       await fixture.save();
       // update realFixture with fixture completed
-      await realFixture.populate("fixtures").execPopulate();
+      await realFixture.populate("fixtures");
       // progress league
       const user: IUser = ctx.state.user;
       console.info("[PROGRESS] user", user.name);
@@ -170,7 +171,7 @@ matchRouter.post(
         notifyFixtureCompleted(league, fixture);
       }
     }
-    await match.populate("homeTeam").populate("awayTeam").execPopulate();
+    await match.populate("homeTeam", "awayTeam");
     ctx.body = match;
   }
 );
@@ -190,7 +191,7 @@ matchRouter.patch(
     if (fixture == null) {
       ctx.throw(entityNotFound("Fixture", ctx.params.id, league._id), 404);
     }
-    const matches: IMatch[] = ctx.request.body;
+    const matches: IMatch[] = ctx.request.body as IMatch[];
     const returnedMatches: IMatch[] = [];
     let completedMatches = 0;
     for (const updatedMatch of matches) {
@@ -206,8 +207,7 @@ matchRouter.patch(
         completedMatches++;
       }
       const match = await matchToUpdate.save();
-      await match.populate("homeTeam").execPopulate();
-      await match.populate("awayTeam").execPopulate();
+      await match.populate("homeTeam awayTeam");
       returnedMatches.push(match);
     }
 
@@ -243,7 +243,7 @@ matchRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await getLeague(ctx.get("league"));
-    const updatedMatch: IMatch = ctx.request.body;
+    const updatedMatch: IMatch = ctx.request.body as IMatch;
     const matchToUpdate: IMatch = (await Match.findOne({
       _id: ctx.params.id,
       league: league._id,
@@ -276,21 +276,26 @@ matchRouter.delete(
 );
 
 const populateLineup = async (lineup: ILineup[]) => {
-  for (const player of lineup) {
-    await player
-      .populate("fantasyRoster")
-      .populate("fixture")
-      .populate("performance")
-      .execPopulate();
-    await player
-      .populate("fantasyRoster.roster")
-      .populate("performance.realFixture")
-      .execPopulate();
-    await player
-      .populate("fantasyRoster.roster.player")
-      .populate("fantasyRoster.roster.team")
-      .execPopulate();
-  }
+  await Lineup.populate(lineup, [
+    {
+      path: "fantasyRoster",
+      populate: {
+        path: "roster",
+        populate: {
+          path: "player team",
+        },
+      },
+    },
+    {
+      path: "fixture",
+    },
+    {
+      path: "performance",
+      populate: {
+        path: "realFixture",
+      },
+    },
+  ]);
 };
 
 export default matchRouter;

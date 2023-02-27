@@ -1,6 +1,6 @@
 import { Competition } from "../schemas/competition";
 import { IFantasyTeam } from "../schemas/fantasy-team";
-import { Fixture, IFixture } from "../schemas/fixture";
+import { Fixture } from "../schemas/fixture";
 import { PlayoffFormat } from "../schemas/formats/playoff-format";
 import { ILeague } from "../schemas/league";
 import { Match } from "../schemas/match";
@@ -96,7 +96,7 @@ export const createRegularSeason = async (
       1 +
       (numTeams - 1) * league.regularSeasonFormat.value.rounds
   );
-  await createFixtures(realFixturesSubList, league, newRound, 'Giornata');
+  await createFixtures(realFixturesSubList, league, newRound, "Giornata");
 };
 
 export const createPlayoff = async (
@@ -140,7 +140,7 @@ export const createPlayoff = async (
       firstRealFixture - 1,
       firstRealFixture - 1 + league.playoffFormat.value.qfGames
     );
-    await createFixtures(realFixturesSubList, league, newRound, 'Gara');
+    await createFixtures(realFixturesSubList, league, newRound, "Gara");
     firstRealFixture += league.playoffFormat.value.qfGames;
   }
 
@@ -166,7 +166,7 @@ export const createPlayoff = async (
       firstRealFixture - 1,
       firstRealFixture - 1 + league.playoffFormat.value.sfGames
     );
-    await createFixtures(realFixturesSubList, league, newRound, 'Gara');
+    await createFixtures(realFixturesSubList, league, newRound, "Gara");
     firstRealFixture += league.playoffFormat.value.sfGames;
   }
 
@@ -192,7 +192,7 @@ export const createPlayoff = async (
       firstRealFixture - 1,
       firstRealFixture - 1 + league.playoffFormat.value.fGames
     );
-    await createFixtures(realFixturesSubList, league, newRound, 'Gara');
+    await createFixtures(realFixturesSubList, league, newRound, "Gara");
   }
 
   await competition.save();
@@ -237,7 +237,7 @@ export const createPlayout = async (
         1 +
         (numTeams - 1) * league.regularSeasonFormat.value.rounds
     );
-    await createFixtures(realFixturesSubList, league, newRound, 'Giornata');
+    await createFixtures(realFixturesSubList, league, newRound, "Giornata");
     firstRealFixture += (numTeams - 1) * league.playoutFormat.value.rounds;
   }
 
@@ -263,7 +263,7 @@ export const createPlayout = async (
       firstRealFixture - 1,
       firstRealFixture - 1 + league.playoffFormat.value.sfGames
     );
-    await createFixtures(realFixturesSubList, league, newRound, 'Gara');
+    await createFixtures(realFixturesSubList, league, newRound, "Gara");
     firstRealFixture += league.playoffFormat.value.sfGames;
   }
 
@@ -289,7 +289,7 @@ export const createPlayout = async (
       firstRealFixture - 1,
       firstRealFixture - 1 + league.playoffFormat.value.fGames
     );
-    await createFixtures(realFixturesSubList, league, newRound, 'Gara');
+    await createFixtures(realFixturesSubList, league, newRound, "Gara");
   }
 
   await competition.save();

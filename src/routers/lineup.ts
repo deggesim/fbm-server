@@ -105,7 +105,7 @@ lineupRouter.post(
       league._id,
       ctx.params.fixtureId
     );
-    const newLineup: ILineup[] = ctx.request.body;
+    const newLineup: ILineup[] = ctx.request.body as ILineup[];
     for (const lineup of newLineup) {
       const playerId = (
         ((lineup.fantasyRoster as IFantasyRoster).roster as IRoster)
@@ -149,7 +149,7 @@ lineupRouter.patch(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const updatedLineup: ILineup = ctx.request.body;
+    const updatedLineup: ILineup = ctx.request.body as ILineup;
     const lineupToUpdate = await Lineup.findOne({
       _id: ctx.params.id,
       league: ctx.get("league"),

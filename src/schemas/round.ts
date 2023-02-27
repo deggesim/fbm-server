@@ -97,9 +97,9 @@ schema.virtual("competition", {
 });
 
 schema.methods.buildRoundRobinMatchList = async function (): Promise<void> {
-  const round: IRound = this;
+  const round: IRound = this as IRound;
   const leagueId = round.league as ObjectId;
-  await round.populate("fixtures").execPopulate();
+  await round.populate("fixtures");
   await roundRobinMatchList(
     leagueId,
     round.rounds as number,
@@ -109,9 +109,9 @@ schema.methods.buildRoundRobinMatchList = async function (): Promise<void> {
 };
 
 schema.methods.buildPlayoffMatchList = async function (): Promise<void> {
-  const round: IRound = this;
+  const round: IRound = this as IRound;
   const leagueId = round.league as ObjectId;
-  await round.populate("fixtures").execPopulate();
+  await round.populate("fixtures");
   await playoffMatchList(
     leagueId,
     round.fixtures as IFixture[],

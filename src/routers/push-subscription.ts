@@ -14,7 +14,8 @@ pushSbscription.post(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const newPushSubscription: IPushSubscription = ctx.request.body;
+    const newPushSubscription: IPushSubscription = ctx.request
+      .body as IPushSubscription;
     const user: IUser = ctx.state.user;
     const leagues = user.leagues;
     for (const league of leagues) {

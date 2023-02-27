@@ -25,8 +25,7 @@ userRouter.get(
     if (user == null) {
       ctx.throw(entityNotFound("User", id), 404);
     }
-    await user.populate("leagues").execPopulate();
-    await user.populate("fantasyTeams").execPopulate();
+    await user.populate("leagues fantasyTeams");
     const token = await user.generateAuthToken();
     user.tokens = user.tokens.concat(token);
     ctx.body = { user, token };
@@ -39,19 +38,20 @@ userRouter.post(
   parseToken(),
   superAdmin(),
   async (ctx: Router.IRouterContext) => {
-    const newUser: IUser = ctx.request.body;
+    const newUser: IUser = ctx.request.body as IUser;
     ctx.body = await User.create(newUser);
     ctx.status = 201;
   }
 );
 
 userRouter.post("/users/login", async (ctx: Router.IRouterContext) => {
-  const user: IUser = await User.findByCredentials(
-    ctx.request.body.email,
-    ctx.request.body.password
-  );
-  await user.populate("leagues").execPopulate();
-  await user.populate("fantasyTeams").execPopulate();
+  const { email, password } = ctx.request.body as {
+    email: string;
+    password: string;
+  };
+  const user: IUser = await User.findByCredentials(email, password);
+  await user.populate("leagues");
+  await user.populate("fantasyTeams");
   const token = await user.generateAuthToken();
   user.tokens = user.tokens.concat(token);
   ctx.body = { user, token };
@@ -87,7 +87,8 @@ userRouter.post(
   upload.single("users"),
   superAdmin(),
   async (ctx: Router.IRouterContext) => {
-    const users = parseCsv(ctx.request.body.users.toString(), [
+    const usersArray = (ctx.request.body as { users: string[] }).users;
+    const users = parseCsv(usersArray.toString(), [
       "name",
       "email",
       "password",
@@ -107,15 +108,15 @@ userRouter.patch(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext) => {
-    const updatedUser = ctx.request.body;
+    const updatedUser: IUser = ctx.request.body as IUser;
     const user = await User.findById(updatedUser._id).exec();
     if (!user) {
       ctx.throw(entityNotFound("User", updatedUser._id), 404);
     }
     user.set(updatedUser);
     await user.save();
-    await user.populate("leagues").execPopulate();
-    await user.populate("fantasyTeams").execPopulate();
+    await user.populate("leagues");
+    await user.populate("fantasyTeams");
     ctx.body = user;
   }
 );
@@ -126,7 +127,7 @@ userRouter.patch(
   parseToken(),
   superAdmin(),
   async (ctx: Router.IRouterContext) => {
-    const updatedUser = ctx.request.body;
+    const updatedUser: Partial<IUser> = ctx.request.body as IUser;
     const user = await User.findById(ctx.params.id).exec();
     if (!user) {
       ctx.throw(entityNotFound("User", ctx.params.id), 404);
@@ -136,8 +137,7 @@ userRouter.patch(
     }
     user.set(updatedUser);
     await user.save();
-    await user.populate("leagues").execPopulate();
-    await user.populate("fantasyTeams").execPopulate();
+    await user.populate("leagues fantasyTeams");
     ctx.body = user;
   }
 );

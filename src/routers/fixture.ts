@@ -45,7 +45,7 @@ fixtureRouter.post(
   tenant(),
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const newFixture: IFixture = ctx.request.body;
+    const newFixture: IFixture = ctx.request.body as IFixture;
     const league: ILeague = await getLeague(ctx.get("league"));
     newFixture.league = league._id;
     ctx.body = await Fixture.create(newFixture);
@@ -60,7 +60,7 @@ fixtureRouter.patch(
   tenant(),
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const updatedFixture: IFixture = ctx.request.body;
+    const updatedFixture: IFixture = ctx.request.body as IFixture;
     const fixtureToUpdate = await Fixture.findOne({
       _id: ctx.params.id,
       league: ctx.get("league"),

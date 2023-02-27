@@ -89,7 +89,7 @@ leagueRouter.post(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const newLeague: ILeague = ctx.request.body;
+    const newLeague: ILeague = ctx.request.body as ILeague;
     ctx.body = await League.create(newLeague);
   }
 );
@@ -110,7 +110,9 @@ leagueRouter.post(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await getLeague(ctx.params.id);
-    ctx.body = await league.setParameters(ctx.request.body);
+    ctx.body = await league.setParameters(
+      ctx.request.body as { parameter: string; value: number }[]
+    );
   }
 );
 
@@ -120,7 +122,9 @@ leagueRouter.post(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await getLeague(ctx.params.id);
-    ctx.body = await league.setRoles(ctx.request.body);
+    ctx.body = await league.setRoles(
+      ctx.request.body as { role: string; spots: number[] }[]
+    );
   }
 );
 
@@ -139,7 +143,7 @@ leagueRouter.patch(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const updatedLeague: ILeague = ctx.request.body;
+    const updatedLeague: ILeague = ctx.request.body as ILeague;
     const leagueToUpdate: ILeague = await getLeague(ctx.params.id);
     leagueToUpdate.set(updatedLeague);
     await leagueToUpdate.save();

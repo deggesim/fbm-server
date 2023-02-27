@@ -172,7 +172,7 @@ const schema = new Schema<ILeague>(
 );
 
 schema.methods.populateLeague = async function () {
-  const league = this;
+  const league = this as ILeague;
   await cleanLeague(league);
   await populateCompetition(league);
   const realFixtures = await populateRealFixture(league);
@@ -268,7 +268,7 @@ schema.methods.nextFixture = async function () {
   if (realFixture == null) {
     return Promise.reject("Giornata reale non trovata");
   }
-  await realFixture.populate("fixtures").execPopulate();
+  await realFixture.populate("fixtures");
   const fixtures = realFixture.fixtures as IFixture[];
   const allCompleted = fixtures.every((fixture) => fixture.completed);
   let nextFixture = null;
@@ -279,7 +279,7 @@ schema.methods.nextFixture = async function () {
       .filter((fixture) => !fixture.completed)
       .sort((a, b) => a._id - b._id)[0];
   }
-  await nextFixture.populate("round").execPopulate();
+  await nextFixture.populate("round");
   return nextFixture;
 };
 
@@ -304,14 +304,12 @@ schema.methods.nextRealFixture = async function () {
     return Promise.reject("Giornata reale non trovata");
   }
   await realFixture
-    .populate("fixtures")
-    .populate("teamsWithNoGame")
-    .execPopulate();
+    .populate("fixtures teamsWithNoGame");
   return realFixture;
 };
 
 schema.methods.progress = async function (realFixture: IRealFixture) {
-  const league = this;
+  const league = this as ILeague;
   if (league.preparingNextRealFixture) {
     console.info(
       "[PROGRESS] ------------------------------------ START ------------------------------------"
@@ -437,7 +435,7 @@ export const League = model<ILeague, ILeagueModel>("League", schema);
 const checkAllCompetitions = async (league: ILeague) => {
   const competitions = await Competition.find({ league: league._id }).exec();
   for (const competition of competitions) {
-    await competition.populate("rounds").execPopulate();
+    await competition.populate("rounds");
     let completedRounds = 0;
     for (const round of competition.rounds as IRound[]) {
       if (round.completed) {
@@ -455,7 +453,7 @@ const checkAllCompetitions = async (league: ILeague) => {
 const checkAllRounds = async (league: ILeague) => {
   const rounds = await Round.find({ league: league._id }).exec();
   for (const round of rounds) {
-    await round.populate("fixtures").execPopulate();
+    await round.populate("fixtures");
     let compltedRoundFixtures = 0;
     for (const fixture of round.fixtures as IFixture[]) {
       if (fixture.completed) {

@@ -17,9 +17,9 @@ historyRouter.get(
       fantasyTeam: ctx.params.id,
     }).exec();
     for (const history of historyList) {
-      await history.populate("fantasyTeam").execPopulate();
-      await history.populate("realFixture").execPopulate();
-      await history.populate("league").execPopulate();
+      await history.populate("fantasyTeam");
+      await history.populate("realFixture");
+      await history.populate("league");
     }
     ctx.body = historyList;
   }

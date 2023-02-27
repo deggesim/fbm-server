@@ -15,12 +15,12 @@ statisticsRouter.get(
     const { page, limit, team, fantasyTeam, role, freePlayers } = ctx.query;
     const playerStatisticList = await statistics(
       ctx.get("league"),
-      page,
-      limit,
-      team,
-      fantasyTeam,
-      role,
-      freePlayers
+      +(page as string),
+      +(limit as string),
+      team as string,
+      fantasyTeam as string,
+      role as string,
+      !!(freePlayers as string)
     );
     ctx.set("X-Total-Count", String(playerStatisticList.total));
     ctx.body = playerStatisticList.playerStatistics;
