@@ -1,19 +1,12 @@
 import { ObjectId } from "mongodb";
-import {
-  Aggregate,
-  Model,
-  model,
-  PaginateOptions,
-  PaginateResult,
-  Schema,
-} from "mongoose";
+import { AggregatePaginateModel, Model, model, Schema } from "mongoose";
 import * as mongoosePaginate from "mongoose-paginate-v2";
 import { IFantasyRoster } from "./fantasy-roster";
 import { ITenant } from "./league";
 import { IPlayer } from "./player";
 import { IRealFixture } from "./real-fixture";
 import { ITeam } from "./team";
-const mongooseAggregatePaginate = require("mongoose-aggregate-paginate-v2");
+import mongooseAggregatePaginate = require("mongoose-aggregate-paginate-v2");
 
 interface IRosterDocument extends ITenant {
   player: IPlayer | ObjectId;
@@ -33,22 +26,7 @@ export interface IRoster extends IRosterDocument {
  * Estensione del Model per l'aggiunta di metodi statici
  */
 export interface IRosterModel extends Model<IRoster> {
-  // metodi statici
-  paginate(
-    query?: Object,
-    options?: PaginateOptions,
-    callback?: (err: any, result: PaginateResult<IRoster>) => void
-  ): Promise<PaginateResult<IRoster>>;
-  aggregatePaginate(
-    aggregate: Aggregate<IRoster[]>,
-    options: any,
-    callback?: (
-      err: any,
-      res: IRoster[],
-      pages: number,
-      total: number
-    ) => Promise<any>
-  ): Promise<any>;
+  // // metodi statici
 }
 
 const schema = new Schema<IRoster>(
@@ -88,4 +66,7 @@ const schema = new Schema<IRoster>(
 schema.plugin(mongoosePaginate);
 schema.plugin(mongooseAggregatePaginate);
 
-export const Roster = model<IRoster, IRosterModel>("Roster", schema);
+export const Roster = model<IRoster, AggregatePaginateModel<IRoster>>(
+  "Roster",
+  schema
+);

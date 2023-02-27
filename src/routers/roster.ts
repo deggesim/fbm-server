@@ -80,7 +80,7 @@ rosterRouter.get(
       limit: Number(limit),
     });
 
-    ctx.set("X-Total-Count", String(result.total));
+    ctx.set("X-Total-Count", String(result.totalDocs));
     ctx.body = result.docs;
   }
 );
@@ -155,7 +155,7 @@ rosterRouter.get(
       limit: Number(limit),
     });
 
-    ctx.set("X-Total-Count", String(result.total));
+    ctx.set("X-Total-Count", String(result.totalDocs));
     ctx.body = result.docs;
   }
 );
