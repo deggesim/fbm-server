@@ -191,8 +191,13 @@ const sendToSubscribers = (
   subscriptions.forEach((sub: IPushSubscription) => {
     webpush
       .sendNotification(sub, JSON.stringify(payload))
+      .then((sub) => {
+        console.log(sub);
+      })
       .catch(function (err: any) {
         console.log(err);
+        console.log(err.endpoint);
+        console.log(err.statusCode);
         throw err;
       });
   });
