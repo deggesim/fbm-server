@@ -153,7 +153,7 @@ export const statistics = async (
   }
 
   return Promise.resolve({
-    total: result.total,
+    total: result.totalDocs,
     playerStatistics,
   });
 };

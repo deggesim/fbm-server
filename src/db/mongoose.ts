@@ -1,12 +1,6 @@
-import * as mongoose from 'mongoose';
+import * as mongoose from "mongoose";
 
-const PORT = String(process.env.MONGODB_URI);
-
-mongoose.connect(PORT, {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useFindAndModify: false,
-  useUnifiedTopology: true,
-});
-
-mongoose.set('debug', process.env.DEBUG_MODE === 'true');
+const URI = String(process.env.MONGODB_URI);
+mongoose.set("strictQuery", true);
+mongoose.set("debug", process.env.DEBUG_MODE === "true");
+mongoose.connect(URI);

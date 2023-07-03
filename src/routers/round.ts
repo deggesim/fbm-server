@@ -59,7 +59,7 @@ roundRouter.post(
   tenant(),
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const updatedRound: IRound = ctx.request.body;
+    const updatedRound: IRound = ctx.request.body as IRound;
     const roundToUpdate = await Round.findOne({
       _id: ctx.params.id,
       league: ctx.get("league"),

@@ -26,7 +26,7 @@ export const boxscore = async (performances: IPerformance[], url: string) => {
   const tabellinoTrasferta = calcolaBoxScore(vt_match_scores);
 
   for (const performance of performances) {
-    await performance.populate("player").execPopulate();
+    await performance.populate("player");
     const playerName = (performance.player as IPlayer).name.toUpperCase();
     const boxScoreC = tabellinoCasa.find(
       (bs: BoxScore) => bs.name === playerName

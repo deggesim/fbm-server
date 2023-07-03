@@ -70,7 +70,9 @@ rosterRouter.get(
         path: "$fantasyRoster.fantasyTeam",
         preserveNullAndEmptyArrays: true,
       });
-    aggregate.match({ "player.name": { $regex: new RegExp(filter, "i") } });
+    aggregate.match({
+      "player.name": { $regex: new RegExp(filter as string, "i") },
+    });
     aggregate.sort({ "player.name": 1 });
 
     let result = await Roster.aggregatePaginate(aggregate, {
@@ -78,7 +80,7 @@ rosterRouter.get(
       limit: Number(limit),
     });
 
-    ctx.set("X-Total-Count", String(result.total));
+    ctx.set("X-Total-Count", String(result.totalDocs));
     ctx.body = result.docs;
   }
 );
@@ -143,7 +145,9 @@ rosterRouter.get(
         preserveNullAndEmptyArrays: true,
       });
     aggregate.match({ "fantasyRoster._id": { $exists: false } });
-    aggregate.match({ "player.name": { $regex: new RegExp(filter, "i") } });
+    aggregate.match({
+      "player.name": { $regex: new RegExp(filter as string, "i") },
+    });
     aggregate.sort({ "player.name": 1 });
 
     let result = await Roster.aggregatePaginate(aggregate, {
@@ -151,7 +155,7 @@ rosterRouter.get(
       limit: Number(limit),
     });
 
-    ctx.set("X-Total-Count", String(result.total));
+    ctx.set("X-Total-Count", String(result.totalDocs));
     ctx.body = result.docs;
   }
 );
@@ -164,7 +168,7 @@ rosterRouter.post(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await getLeague(ctx.get("league"));
-    const newRoster: IRoster = ctx.request.body;
+    const newRoster: IRoster = ctx.request.body as IRoster;
     newRoster.league = league._id;
     const rosterRealFixture = newRoster.realFixture as IRealFixture;
     const realFixtures = await RealFixture.find({ league: league._id })
@@ -190,10 +194,10 @@ rosterRouter.post(
       for (const realFixture of preparedRealFixtures) {
         newRoster.realFixture = realFixture;
         const roster: IRoster = await Roster.create(newRoster);
-        await roster.populate("player").execPopulate();
-        await roster.populate("team").execPopulate();
-        await roster.populate("realFixture").execPopulate();
-        await roster.populate("fantasyRoster").execPopulate();
+        await roster.populate("player");
+        await roster.populate("team");
+        await roster.populate("realFixture");
+        await roster.populate("fantasyRoster");
         rosters.push(roster);
       }
     }
@@ -221,7 +225,7 @@ rosterRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await getLeague(ctx.get("league"));
-    const updatedRoster: IRoster = ctx.request.body;
+    const updatedRoster: IRoster = ctx.request.body as IRoster;
     const rosterToUpdate = await Roster.findOne({
       _id: ctx.params.id,
       league: league._id,
@@ -231,10 +235,7 @@ rosterRouter.patch(
     }
     rosterToUpdate.set(updatedRoster);
     const roster: IRoster = await rosterToUpdate.save();
-    await roster.populate("player").execPopulate();
-    await roster.populate("team").execPopulate();
-    await roster.populate("realFixture").execPopulate();
-    await roster.populate("fantasyRoster").execPopulate();
+    await roster.populate("player team realFixture fantasyRoster");
     ctx.body = roster;
   }
 );

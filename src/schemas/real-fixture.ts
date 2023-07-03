@@ -89,7 +89,7 @@ schema.statics.findByFixture = async (
   if (realFixture == null) {
     throw new Error(entityNotFound("Giornata reale", leagueId, fixtureId));
   }
-  await realFixture.populate("fixtures").execPopulate();
+  await realFixture.populate("fixtures");
   return realFixture;
 };
 

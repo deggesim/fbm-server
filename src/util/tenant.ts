@@ -6,7 +6,7 @@ import { Role } from "./globals";
 
 export const tenant = () => {
   return async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const league = await getLeague(ctx.request.header.league);
+    const league = await getLeague(ctx.request.header.league as string);
     // verifica che la lega sia tra quelle abilitate
     const user: IUser = ctx.state.user;
     const userLeague = user.leagues.find((leagueId) =>

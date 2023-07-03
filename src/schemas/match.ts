@@ -118,7 +118,7 @@ schema.statics.buildRoundRobinMatchList = async (
   round: IRound
 ): Promise<IMatch[]> => {
   const leagueId = round.league as ObjectId;
-  await round.populate("fixtures").execPopulate();
+  await round.populate("fixtures");
   return roundRobinMatchList(
     leagueId,
     round.rounds as number,
@@ -132,7 +132,7 @@ schema.statics.buildPlayoffMatchList = async (
   fantasyTeams: IFantasyTeam[]
 ): Promise<IMatch[]> => {
   const leagueId = round.league;
-  await round.populate("fixtures").execPopulate();
+  await round.populate("fixtures");
   return playoffMatchList(
     leagueId as ObjectId,
     round.fixtures as IFixture[],

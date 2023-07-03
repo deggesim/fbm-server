@@ -28,7 +28,7 @@ playerRouter.post(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await getLeague(ctx.get("league"));
-    const newPlayer: IPlayer = ctx.request.body;
+    const newPlayer: IPlayer = ctx.request.body as IPlayer;
     newPlayer.league = league._id;
     ctx.body = await Player.create(newPlayer);
     ctx.status = 201;
@@ -48,7 +48,8 @@ playerRouter.post(
   admin(),
   upload.single("players"),
   async (ctx: Router.IRouterContext) => {
-    const players = parseCsv(ctx.request.body.players.toString(), [
+    const playersArray = (ctx.request.body as { players: string[] }).players;
+    const players = parseCsv(playersArray.toString(), [
       "name",
       "role",
       "nationality",
@@ -92,7 +93,7 @@ playerRouter.patch(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await getLeague(ctx.get("league"));
-    const updatedPlayer: IPlayer = ctx.request.body;
+    const updatedPlayer: IPlayer = ctx.request.body as IPlayer;
     const playerToUpdate = await Player.findOne({
       _id: ctx.params.id,
       league: league._id,

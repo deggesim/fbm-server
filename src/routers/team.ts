@@ -47,7 +47,7 @@ teamRouter.post(
   tenant(),
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const newTeam: ITeam = ctx.request.body;
+    const newTeam: ITeam = ctx.request.body as ITeam;
     const league: ILeague = await getLeague(ctx.get("league"));
     newTeam.league = league._id;
     ctx.body = await Team.create(newTeam);
@@ -67,7 +67,8 @@ teamRouter.post(
   admin(),
   upload.single("teams"),
   async (ctx: Router.IRouterContext) => {
-    const teams = parseCsv(ctx.request.body.teams.toString(), [
+    const teamsArray = (ctx.request.body as { teams: string[] }).teams;
+    const teams = parseCsv(teamsArray.toString(), [
       "fullName",
       "sponsor",
       "name",
@@ -87,7 +88,7 @@ teamRouter.patch(
   tenant(),
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const updatedTeam: ITeam = ctx.request.body;
+    const updatedTeam: ITeam = ctx.request.body as ITeam;
     const teamToUpdate = await Team.findOne({
       _id: ctx.params.id,
       league: ctx.get("league"),

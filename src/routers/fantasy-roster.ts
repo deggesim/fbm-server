@@ -25,11 +25,11 @@ fantasyRosterRouter.get(
       realFixture: ctx.params.realFixtureId,
     }).exec();
     for (const fantasyRoster of fantasyRosters) {
-      await fantasyRoster.populate("roster").execPopulate();
-      await fantasyRoster.populate("roster.player").execPopulate();
-      await fantasyRoster.populate("roster.team").execPopulate();
-      await fantasyRoster.populate("fantasyTeam").execPopulate();
-      await fantasyRoster.populate("realFixture").execPopulate();
+      await fantasyRoster.populate("roster");
+      await fantasyRoster.populate("roster.player");
+      await fantasyRoster.populate("roster.team");
+      await fantasyRoster.populate("fantasyTeam");
+      await fantasyRoster.populate("realFixture");
     }
     ctx.body = fantasyRosters;
   }
@@ -51,9 +51,9 @@ fantasyRosterRouter.get(
         404
       );
     }
-    await fantasyRoster.populate("roster").execPopulate();
-    await fantasyRoster.populate("fantasyTeam").execPopulate();
-    await fantasyRoster.populate("realFixture").execPopulate();
+    await fantasyRoster.populate("roster");
+    await fantasyRoster.populate("fantasyTeam");
+    await fantasyRoster.populate("realFixture");
     ctx.body = fantasyRoster;
   }
 );
@@ -64,7 +64,7 @@ fantasyRosterRouter.post(
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await getLeague(ctx.get("league"));
-    const newFantasyRoster: IFantasyRoster = ctx.request.body;
+    const newFantasyRoster: IFantasyRoster = ctx.request.body as IFantasyRoster;
     newFantasyRoster.league = league._id;
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
     newFantasyRoster.realFixture = nextRealFixture._id;
@@ -77,9 +77,9 @@ fantasyRosterRouter.post(
     // gestione fantasyTeam
     await buy(fantasyRoster);
 
-    await fantasyRoster.populate("roster").execPopulate();
-    await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
-    await fantasyRoster.populate("realFixture").execPopulate();
+    await fantasyRoster.populate("roster");
+    await (fantasyRoster.roster as IRoster).populate("player");
+    await fantasyRoster.populate("realFixture");
 
     // history
     let operation = "";
@@ -125,11 +125,9 @@ fantasyRosterRouter.patch(
         404
       );
     }
-    await fantasyRosterToUpdate.populate("roster").execPopulate();
-    await (fantasyRosterToUpdate.roster as IRoster)
-      .populate("player")
-      .execPopulate();
-    await fantasyRosterToUpdate.populate("fantasyTeam").execPopulate();
+    await fantasyRosterToUpdate.populate("roster");
+    await (fantasyRosterToUpdate.roster as IRoster).populate("player");
+    await fantasyRosterToUpdate.populate("fantasyTeam");
 
     // gestione fantasyTeam
     await remove(fantasyRosterToUpdate);
@@ -148,10 +146,10 @@ fantasyRosterRouter.patch(
     // gestione fantasyTeam
     await buy(fantasyRoster);
 
-    await fantasyRoster.populate("roster").execPopulate();
-    await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
-    await fantasyRoster.populate("fantasyTeam").execPopulate();
-    await fantasyRoster.populate("realFixture").execPopulate();
+    await fantasyRoster.populate("roster");
+    await (fantasyRoster.roster as IRoster).populate("player");
+    await fantasyRoster.populate("fantasyTeam");
+    await fantasyRoster.populate("realFixture");
 
     // history (buy)
     await historyBuy(
@@ -188,11 +186,9 @@ fantasyRosterRouter.patch(
         404
       );
     }
-    await fantasyRosterToUpdate.populate("roster").execPopulate();
-    await (fantasyRosterToUpdate.roster as IRoster)
-      .populate("player")
-      .execPopulate();
-    await fantasyRosterToUpdate.populate("fantasyTeam").execPopulate();
+    await fantasyRosterToUpdate.populate("roster");
+    await (fantasyRosterToUpdate.roster as IRoster).populate("player");
+    await fantasyRosterToUpdate.populate("fantasyTeam");
 
     // history (trade out)
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
@@ -205,7 +201,7 @@ fantasyRosterRouter.patch(
       fantasyRosterToUpdate
     );
 
-    const values = ctx.request.body;
+    const values = ctx.request.body as IFantasyRoster;
     const { fantasyTeam } = values;
     const updatedFantasyRoster = {
       fantasyTeam,
@@ -213,10 +209,10 @@ fantasyRosterRouter.patch(
     };
     fantasyRosterToUpdate.set(updatedFantasyRoster);
     const fantasyRoster = await fantasyRosterToUpdate.save();
-    await fantasyRoster.populate("roster").execPopulate();
-    await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
-    await fantasyRoster.populate("fantasyTeam").execPopulate();
-    await fantasyRoster.populate("realFixture").execPopulate();
+    await fantasyRoster.populate("roster");
+    await (fantasyRoster.roster as IRoster).populate("player");
+    await fantasyRoster.populate("fantasyTeam");
+    await fantasyRoster.populate("realFixture");
 
     // history (trade in)
     await writeHistory(
@@ -252,10 +248,10 @@ fantasyRosterRouter.delete(
     // gestione fantasyTeam
     await release(fantasyRoster);
 
-    await fantasyRoster.populate("roster").execPopulate();
-    await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
-    await fantasyRoster.populate("fantasyTeam").execPopulate();
-    await fantasyRoster.populate("realFixture").execPopulate();
+    await fantasyRoster.populate("roster");
+    await (fantasyRoster.roster as IRoster).populate("player");
+    await fantasyRoster.populate("fantasyTeam");
+    await fantasyRoster.populate("realFixture");
 
     // history (release)
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
@@ -296,10 +292,10 @@ fantasyRosterRouter.delete(
     // gestione fantasyTeam
     await remove(fantasyRoster);
 
-    await fantasyRoster.populate("roster").execPopulate();
-    await (fantasyRoster.roster as IRoster).populate("player").execPopulate();
-    await fantasyRoster.populate("fantasyTeam").execPopulate();
-    await fantasyRoster.populate("realFixture").execPopulate();
+    await fantasyRoster.populate("roster");
+    await (fantasyRoster.roster as IRoster).populate("player");
+    await fantasyRoster.populate("fantasyTeam");
+    await fantasyRoster.populate("realFixture");
 
     // history (remove)
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
@@ -329,7 +325,7 @@ const buy = async (fantasyRoster: IFantasyRoster) => {
     fantasyRoster: fantasyRoster._id,
   }).exec();
   // agiornamento dati fantasyTeam
-  await fantasyRoster.populate("fantasyTeam").execPopulate();
+  await fantasyRoster.populate("fantasyTeam");
   const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam as IFantasyTeam;
   if (!fantasyRoster.draft) {
     fantasyTeam.outgo += fantasyRoster.contract;
@@ -348,7 +344,7 @@ const release = async (fantasyRoster: IFantasyRoster) => {
     $unset: { fantasyRoster: "" },
   }).exec();
   // agiornamento dati fantasyTeam
-  await fantasyRoster.populate("fantasyTeam").execPopulate();
+  await fantasyRoster.populate("fantasyTeam");
   const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam as IFantasyTeam;
   if (!fantasyRoster.draft) {
     fantasyTeam.outgo -= halfDownRound(fantasyRoster.contract, 2);
@@ -363,7 +359,7 @@ const remove = async (fantasyRoster: IFantasyRoster) => {
     $unset: { fantasyRoster: "" },
   }).exec();
   // agiornamento dati fantasyTeam
-  await fantasyRoster.populate("fantasyTeam").execPopulate();
+  await fantasyRoster.populate("fantasyTeam");
   const fantasyTeam: IFantasyTeam = fantasyRoster.fantasyTeam as IFantasyTeam;
   if (!fantasyRoster.draft) {
     fantasyTeam.outgo -= fantasyRoster.contract;
@@ -415,7 +411,7 @@ const historyRemove = async (
     fantasyRosterToUpdate
   );
 
-  const values = ctx.request.body;
+  const values = ctx.request.body as IFantasyRoster;
   const { fantasyTeam, status, draft, contract, yearContract } = values;
   const updatedFantasyRoster = {
     fantasyTeam,
@@ -425,10 +421,7 @@ const historyRemove = async (
     yearContract,
   };
   if (fantasyRosterToUpdate == null) {
-    ctx.throw(
-      entityNotFound("FantasyRoster"),
-      404
-    );
+    ctx.throw(entityNotFound("FantasyRoster"), 404);
   }
   fantasyRosterToUpdate.set(updatedFantasyRoster);
 

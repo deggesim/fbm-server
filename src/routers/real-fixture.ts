@@ -65,7 +65,7 @@ realFixtureRouter.post(
   tenant(),
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const newRealFixture: IRealFixture = ctx.request.body;
+    const newRealFixture: IRealFixture = ctx.request.body as IRealFixture;
     const league: ILeague = await getLeague(ctx.get("league"));
     newRealFixture.league = league._id;
     ctx.body = await RealFixture.create(newRealFixture);
@@ -104,7 +104,7 @@ realFixtureRouter.patch(
   tenant(),
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    const updatedRealFixture: IRealFixture = ctx.request.body;
+    const updatedRealFixture: IRealFixture = ctx.request.body as IRealFixture;
     const realFixtureToUpdate = await RealFixture.findOne({
       _id: ctx.params.id,
       league: ctx.get("league"),

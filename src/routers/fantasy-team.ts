@@ -19,7 +19,7 @@ fantasyTeamRouter.post(
   admin(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await getLeague(ctx.params.id);
-    const fantasyTeams: IFantasyTeam[] = ctx.request.body;
+    const fantasyTeams: IFantasyTeam[] = ctx.request.body as IFantasyTeam[];
     ctx.body = await FantasyTeam.insertFantasyTeams(fantasyTeams, league);
     ctx.status = 201;
   }
@@ -38,15 +38,13 @@ fantasyTeamRouter.get(
       .sort({ name: 1 })
       .exec();
     for (const fantasyTeam of fantasyTeams) {
-      await fantasyTeam.populate("owners").execPopulate();
-      await fantasyTeam
-        .populate({
-          path: "fantasyRosters",
-          match: {
-            realFixture: nextRealFixture._id,
-          },
-        })
-        .execPopulate();
+      await fantasyTeam.populate("owners");
+      await fantasyTeam.populate({
+        path: "fantasyRosters",
+        match: {
+          realFixture: nextRealFixture._id,
+        },
+      });
     }
     ctx.body = fantasyTeams;
   }
@@ -98,15 +96,13 @@ fantasyTeamRouter.get(
     if (fantasyTeam == null) {
       ctx.throw(entityNotFound("FantasyTeam", ctx.params.id, league._id), 404);
     } else {
-      await fantasyTeam.populate("owners").execPopulate();
-      await fantasyTeam
-        .populate({
-          path: "fantasyRosters",
-          match: {
-            realFixture: nextRealFixture._id,
-          },
-        })
-        .execPopulate();
+      await fantasyTeam.populate("owners");
+      await fantasyTeam.populate({
+        path: "fantasyRosters",
+        match: {
+          realFixture: nextRealFixture._id,
+        },
+      });
       ctx.body = fantasyTeam;
     }
   }
@@ -121,7 +117,7 @@ fantasyTeamRouter.patch(
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
     const league: ILeague = await getLeague(ctx.get("league"));
     const nextRealFixture: IRealFixture = await league.nextRealFixture();
-    const updatedFantasyTeam: IFantasyTeam = ctx.request.body;
+    const updatedFantasyTeam: IFantasyTeam = ctx.request.body as IFantasyTeam;
     const fantasyTeamToUpdate = await FantasyTeam.findOne({
       _id: ctx.params.id,
       league: league._id,
@@ -162,14 +158,12 @@ fantasyTeamRouter.patch(
         await user.save();
       }
 
-      await fantasyTeam
-        .populate({
-          path: "fantasyRosters",
-          match: {
-            realFixture: nextRealFixture._id,
-          },
-        })
-        .execPopulate();
+      await fantasyTeam.populate({
+        path: "fantasyRosters",
+        match: {
+          realFixture: nextRealFixture._id,
+        },
+      });
 
       // history
       const balance =

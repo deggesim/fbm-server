@@ -16,7 +16,7 @@ export const parseToken = () => {
     const id = user._id;
     const userDb = await User.findById(id).exec();
     ctx.state.user = userDb;
-    const token: string = ctx.request.header.authorization.replace(
+    const token: string | undefined = ctx.request.header.authorization?.replace(
       "Bearer ",
       ""
     );
