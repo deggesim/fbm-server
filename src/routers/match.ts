@@ -171,7 +171,7 @@ matchRouter.post(
         notifyFixtureCompleted(league, fixture);
       }
     }
-    await match.populate("homeTeam", "awayTeam");
+    await match.populate("homeTeam awayTeam");
     ctx.body = match;
   }
 );
