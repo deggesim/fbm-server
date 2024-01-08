@@ -99,7 +99,7 @@ lineupRouter.post(
       ctx.params.fixtureId
     );
     for (const lineup of oldLineup) {
-      lineup.remove();
+      lineup.deleteOne();
     }
     const realFixture: IRealFixture = await RealFixture.findByFixture(
       league._id,
