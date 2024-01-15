@@ -93,14 +93,11 @@ lineupRouter.post(
       ctx.throw("Utente non autorizzato all'operazione richiesta", 403);
     }
     // delete old items
-    const oldLineup: ILineup[] = await Lineup.getLineupByFantasyTeamAndFixture(
+    await Lineup.deleteLineupByFantasyTeamAndFixture(
       league._id,
       ctx.params.fantasyTeamId,
       ctx.params.fixtureId
     );
-    for (const lineup of oldLineup) {
-      lineup.deleteOne();
-    }
     const realFixture: IRealFixture = await RealFixture.findByFixture(
       league._id,
       ctx.params.fixtureId

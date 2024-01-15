@@ -30,6 +30,7 @@ app.use(async (ctx, next) => {
   try {
     await next();
   } catch (err) {
+    console.log(err);
     ctx.status = (err as any).statusCode || (err as any).status || 500;
     ctx.body = (err as any).message || erroreImprevisto;
   }

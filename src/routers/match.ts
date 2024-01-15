@@ -37,14 +37,10 @@ matchRouter.get(
       _id: ctx.params.fixtureId,
       league: ctx.get("league"),
     }).exec()) as IFixture;
-    for (let i = 0; i < fixture.matches.length; i++) {
-      await fixture.populate({
-        path: `matches.${i}`,
-        populate: {
-          path: "homeTeam awayTeam",
-        },
-      });
-    }
+
+    await Fixture.populate(fixture, [
+      { path: "matches", populate: { path: "homeTeam awayTeam" } },
+    ]);
     ctx.body = fixture.matches;
   }
 );

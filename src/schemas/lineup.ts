@@ -1,5 +1,5 @@
-import { ObjectId } from "mongodb";
-import { Model, model, Schema } from "mongoose";
+import { DeleteResult, ObjectId } from "mongodb";
+import { Model, Schema, model } from "mongoose";
 import { FantasyRoster, IFantasyRoster } from "./fantasy-roster";
 import { IFixture } from "./fixture";
 import { ITenant } from "./league";
@@ -36,6 +36,12 @@ export interface ILineupModel extends Model<ILineupDocument> {
     fantasyTeamId: string | ObjectId,
     fixtureId: string | ObjectId
   ) => Promise<ILineup[]>;
+
+  deleteLineupByFantasyTeamAndFixture: (
+    leagueId: string | ObjectId,
+    fantasyTeamId: string | ObjectId,
+    fixtureId: string | ObjectId
+  ) => Promise<DeleteResult>;
 }
 
 const schema = new Schema<ILineup>(
@@ -113,6 +119,29 @@ schema.statics.getLineupByFantasyTeamAndFixture = async (
     .sort({ spot: 1 })
     .exec();
   return lineup;
+};
+
+schema.statics.deleteLineupByFantasyTeamAndFixture = async (
+  leagueId: string | ObjectId,
+  fantasyTeamId: string | ObjectId,
+  fixtureId: string | ObjectId
+) => {
+  const realFixture: IRealFixture = await RealFixture.findByFixture(
+    leagueId,
+    fixtureId
+  );
+  const fantasyRosters: IFantasyRoster[] = await FantasyRoster.find({
+    league: leagueId,
+    fantasyTeam: fantasyTeamId,
+    realFixture: realFixture._id,
+  }).exec();
+  const fantasyRostersId: string[] = fantasyRosters.map((fr) => fr._id);
+  const result: DeleteResult = await Lineup.deleteMany({
+    league: leagueId,
+    fixture: fixtureId,
+    fantasyRoster: { $in: fantasyRostersId },
+  }).exec();
+  return result;
 };
 
 export const Lineup = model<ILineup, ILineupModel>("Lineup", schema);
