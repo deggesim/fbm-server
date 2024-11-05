@@ -13,8 +13,8 @@
   },
   "homepage": "https://github.com/deggesim/fbm-server#readme",
   "engines": {
-    "node": "18.x",
-    "npm": "9.x"
+    "node": "20.x",
+    "npm": "10.x"
   },
   "main": "index.js",
   "scripts": {
@@ -24,7 +24,8 @@
     "start:dev": "env-cmd -f ./config/dev.env nodemon --config nodemon.json src/index.ts",
     "start:prod": "env-cmd -f ./config/prod.env nodemon --config nodemon.json src/index.ts",
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
-    "postinstall": "npm run build"
+    "postinstall": "npm run build",
+    "package": "npm i --package-lock-only"
   },
   "dependencies": {
     "@koa/cors": "^3.4.3",
