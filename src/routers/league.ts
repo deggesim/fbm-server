@@ -14,7 +14,7 @@ leagueRouter.get(
   auth(),
   parseToken(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    ctx.body = await League.find().sort({ updatedAt: -1 }).exec();
+    ctx.body = await League.find().sort({ createdAt: -1 }).exec();
   }
 );
 
