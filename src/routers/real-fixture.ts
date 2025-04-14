@@ -27,10 +27,16 @@ realFixtureRouter.get(
     await RealFixture.populate(realFixtures, [
       {
         path: "fixtures",
-        populate: {
-          path: "matches",
-          populate: [{ path: "homeTeam" }, { path: "awayTeam" }],
-        },
+        populate: [
+          {
+            path: "matches",
+            populate: [{ path: "homeTeam" }, { path: "awayTeam" }],
+          },
+          {
+            path: "round",
+            populate: { path: "competition" },
+          },
+        ],
       },
       { path: "teamsWithNoGame" },
     ]);

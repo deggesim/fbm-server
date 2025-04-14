@@ -14,7 +14,14 @@ fixtureRouter.get(
   parseToken(),
   tenant(),
   async (ctx: Router.IRouterContext, next: Koa.Next) => {
-    ctx.body = await Fixture.find({ league: ctx.get("league") }).exec();
+    const fixtures = await Fixture.find({ league: ctx.get("league") })
+      .sort({ _id: 1 })
+      .exec();
+    await Fixture.populate(fixtures, {
+      path: "round",
+      populate: { path: "competition" },
+    });
+    ctx.body = fixtures;
   }
 );
 
