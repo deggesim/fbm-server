@@ -58,19 +58,20 @@ export interface LegabasketPerformance {
 }
 
 export const boxscore = async (performances: IPerformance[], url: string) => {
-  const tokenResponse = await fetch.default(
-    "https://www.legabasket.it/api/oauth"
-  );
-  const tokenValue = await tokenResponse.text();
-  const tokenObj = JSON.parse(tokenValue);
-  const token = tokenObj.data.token;
+  // const tokenResponse = await fetch.default(
+  //   "https://www.legabasket.it/api/oauth"
+  // );
+  // const tokenValue = await tokenResponse.text();
+  // const tokenObj = JSON.parse(tokenValue);
+  // const token = tokenObj.data.token;
   const gameId = url.split("/")[4];
-  const headers = new fetch.Headers();
-  headers.set("Authorization", `Bearer ${token}`);
+  // const headers = new fetch.Headers();
+  // headers.set("Authorization", `Bearer ${token}`);
 
   const response = await fetch.default(
-    `https://api-lba.procne.cloud/api/v1/championships_matches/${gameId}/scores`,
-    { headers }
+    // `https://api-lba.procne.cloud/api/v1/championships_matches/${gameId}/scores`,
+    `https://www.legabasket.it/api/championships/get-championships-matches-scores-by-id?id=${gameId}&info=true`
+    // { headers }
   );
   const boxscoreJSON = await response.text();
   const boxscore: LegabasketBoxscore = JSON.parse(boxscoreJSON);
